@@ -1,0 +1,21 @@
+function output = F_multi_softmax(input, TaskVocabSizes)
+[D,T,N] = size(input);
+    
+if N>1; [mask, variableLength] = CheckTrajectoryLength(input); end
+    
+if length(TaskVocabSizes)==1    % this is for when you have the same task, e.g. skip gram
+    if D>TaskVocabSizes
+        input2 = reshape(input, TaskVocabSizes, D/TaskVocabSizes, T, N);
+        output = F_softmax(input2);
+        output = reshape(output, D, T, N);
+    else        % this is normal softmax
+        output = F_softmax(input);
+    end
+    
+else    % this is for when you have different tasks
+    % to be implemented
+end
+
+if N>1 && variableLength; output = PadShortTrajectory(output, mask, -1e10); end
+
+end
