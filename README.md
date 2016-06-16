@@ -10,3 +10,13 @@ SignalGraph is a Matlab-based tool for building directed acyclic graphs (DAG) fo
 It supports several common types of neural networks, such as feedforward deep neural networks (DNN), long-short term memory (LSTM) recurrent neural network (RNN), and convolutional neural network (CNN, currently only support temporal convolution which is the 1-dimensional convolution). 
 It also supports common signal processing modules, such as extracting of MFCC features, overlap-and-add for speech enhancement, extraction of generalized cross correlation (GCC) from multi-channel waveforms, etc. 
 I will try to implement more signal processing and neural network types in the future. 
+
+
+Things to do:
+
+1. Add comments to functions
+
+2. Better design of the achitecture
+
+3. Examples to building various network types, such as DNN, CNN, and LSTM. 
+
