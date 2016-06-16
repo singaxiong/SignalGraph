@@ -160,9 +160,14 @@ cost_func.cost = sum(cost_func.subcost);
 cost_func.cost_pure = cost_func.cost;
 
 if para.NET.L2weight>0
+    L2weight = para.NET.L2weight;
+    if para.useGPU
+        L2weight = gpuArray(L2weight);
+    end
     for i=2:nLayer
 		if isfield(layer{i}, 'W') && layer{i}.update
-			cost_func.cost = cost_func.cost + 0.5* para.NET.L2weight * sum(sum(layer{i}.W.*layer{i}.W));
+            tmp = layer{i}.W.*layer{i}.W;
+			cost_func.cost = cost_func.cost + 0.5* L2weight * sum(sum(tmp));
 		end
     end
 end
