@@ -1,7 +1,9 @@
 # SignalGraph
 
 Author: Xiong Xiao, Nanyang Technological University, Singapore
+
 Date created: 16 Jun 2016
+
 Email: xiao.xiong.1981@gmail.com / xiaoxiong@ntu.edu.sg
 
 SignalGraph is a Matlab-based tool for building directed acyclic graphs (DAG) for signal processing. The original purpose is to perform deep learning on speech signals on the Matlab platform for fast development. It should also be applied to other tasks, especially involving temporal trajectory data. 
