@@ -12,7 +12,7 @@ The tool now supports several common types of neural networks, such as feedforwa
 
 The tool also supports common signal processing modules, such as extracting of MFCC features, overlap-and-add for speech enhancement, extraction of generalized cross correlation (GCC) from multi-channel waveforms, etc. Matlab is a great platform for signal processing. One of the major goal of this tool is to promote deep learning in classic signal processing areas. More signal processing functions and neural network types will be added in the future. 
 
-Examples of using the tool for various purpose is provided, e.g. acoustic modeling for speech recognition, denoising speech, implementing beamforming using neural networks, fixed-dimensional embedding of sequential data, etc. Some of these examples will be added later as I am still working on them. I encourage those using this tool to publish your recipe in the examples/ directory so we can form a community and share the latest research results. 
+Examples of using the tool for various purposes are provided, e.g. acoustic modeling for speech recognition, denoising speech, implementing beamforming using neural networks, fixed-dimensional embedding of sequential data, etc. Some of these examples will be added later as I am still working on them. I encourage those using this tool to publish your recipe in the examples/ directory so we can form a community and share the latest research results. 
 
 Things to do:
 
