@@ -22,8 +22,8 @@ input = permute(input, [1 3 2]);
 
 nCell = LSTM_layer.dim(1);  % number of LSTM cells in the layer
 
-useHidden = 1;
-usePastState = 1;
+useHidden = single(1);
+usePastState = single(1);
 usePastStateAsFeature = LSTM_layer.usePastState;
 
 grad_ht_cost = future_grad;

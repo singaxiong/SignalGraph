@@ -2,6 +2,7 @@ function [output,idx] = F_tmaxpool(input, curr_layer)
 
 % the input contains N samples, each of DxT size
 [D,T,N] = size(input);
+precision = class(gather(input(1)));
 
 if isfield(curr_layer, 'context')
     context = curr_layer.context;
@@ -19,9 +20,9 @@ if context==0 || stride==0  % global pooling
 else
     nWindow = length(1:stride:(T-context+1));
     if strcmpi(class(input), 'gpuArray')
-        output = gpuArray.zeros(D, length(nWindow), N);
+        output = gpuArray.zeros(D, length(nWindow), N, precision);
     else
-        output = zeros(D, length(nWindow), N);
+        output = zeros(D, length(nWindow), N, precision);
     end
     idx = output;
     for i=1:nWindow

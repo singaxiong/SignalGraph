@@ -26,7 +26,7 @@ for i=1:length(para.hiddenLayerSizeLSTM)
     layer{end}.update = 1;
 end
 
-layer2 = genNetworkFeedForward_v2(layer{end}.dim(1), para.hiddenLayerSizeFeedforward, para.outputDim, para.costFn, para.LastActivation4MSE);
+layer2 = genNetworkFeedForward_v2(layer{end}.dim(1), para.hiddenLayerSizeFF, para.outputDim, para.costFn, para.LastActivation4MSE);
 
 layer = [layer layer2(2:end)];
 
