@@ -1,15 +1,15 @@
 function [cost,acc] = F_multi_cross_entropy(input_layers, CE_layer)
-[nSeg, output, target] = prepareCostEvaluation(input_layers, CE_layer);
+[nSeg, output, target, scale] = prepareCostEvaluation(input_layers, CE_layer);
+if ~isempty(scale); hasScale = 1; else hasScale = 0; end
 
 TaskVocabSizes = CE_layer.TaskVocabSizes;
 
 if length(TaskVocabSizes)==1    % this is for when you have the same task, e.g. skip gram
     [D,T] = size(output);
-    if D>TaskVocabSizes
-%         output = reshape(output, TaskVocabSizes, D/TaskVocabSizes, T);
-%         target = reshape(target, 1, D/TaskVocabSizes, T);
-        output = reshape(output, TaskVocabSizes, D/TaskVocabSizes*T);
-        target = reshape(target, 1, D/TaskVocabSizes*T);
+    nTasks = D/TaskVocabSizes;
+    if nTasks>1
+        output = reshape(output, TaskVocabSizes, nTasks*T);
+        target = reshape(target, 1, nTasks*T);
     end
     m = size(output,2);
     [~, recogClass] = max(output);
@@ -21,8 +21,12 @@ if length(TaskVocabSizes)==1    % this is for when you have the same task, e.g. 
     offset = 0:dim:m*dim-1;
     idx = offset+trueClass;
     output2 = output(idx);
-    cost = -1/m*sum(log(output2));
-   
+    if hasScale
+        output3 = reshape(output2, nTasks, T);
+        cost = -1/sum(scale)/nTasks*sum( log(output3) * scale');
+    else
+        cost = -1/m*sum(log(output2));
+    end   
 else    % this is for when you have different tasks
     % to be implemented
 end

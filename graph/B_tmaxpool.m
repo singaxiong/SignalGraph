@@ -72,7 +72,17 @@ else
             offset2 = bsxfun(@plus, (max_idx-1)*D*N, offset*D*N);
             offset2 = reshape(offset2, numel(offset2),1);
             idx = offset2 + repmat([1:(D*N)]', T2,1);
-            grad(idx) = future_grad;
+
+            if stride<context
+                % some idx may be redundant due to the fact that the same
+                % element may go to multiple pooled elements.
+                idx = reshape(idx,D*N,T2);
+                for t=1:T2
+                    grad(idx(:,t)) = grad(idx(:,t)) + future_grad(:,t);
+                end
+            else
+                grad(idx) = future_grad;                
+            end
         end
         grad = permute(reshape(grad, D,N,T), [1 3 2]);
     end
