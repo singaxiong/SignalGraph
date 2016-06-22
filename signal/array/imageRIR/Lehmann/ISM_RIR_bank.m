@@ -143,7 +143,7 @@ for mm=1:nMics,
     for tt=1:nSPts,         % compute ISM room impulse response for each source-receiver combinations
         if ~SilentFlag, PrintLoopPCw((mm-1)*nSPts+tt,nMics*nSPts); end;
         X_src = straj(tt,:);
-        RIR_cell{mm,tt} = ISM_RoomResp(Fs,beta,rttype,rtval,X_src,X_rcv,room,'SilentFlag',1,'c',cc,'Delta_dB',Delta_dB);
+        RIR_cell{mm,tt} = ISM_RoomResp_GPU(Fs,beta,rttype,rtval,X_src,X_rcv,room,'SilentFlag',1,'c',cc,'Delta_dB',Delta_dB);
     end
 end
 
