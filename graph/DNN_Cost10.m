@@ -216,7 +216,7 @@ for i=nLayer:-1:1
     if isfield(layer{i}, 'prev');   prev_layers = layer(i+layer{i}.prev);    end
     if isfield(layer{i}, 'next');   future_layers = layer(i+layer{i}.next);    end
     switch lower(layer{i}.name)
-        case {'input', 'idx2vec'} % do nothing
+        case {'input', 'idx2vec', 'enframe'} % do nothing
         
         % updatable layers
         case {'affine', 'mel'}
