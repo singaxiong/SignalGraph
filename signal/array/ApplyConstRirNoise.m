@@ -9,7 +9,7 @@ delay = gather(delay);
 before_impulse=floor(fs*0.001);
 after_impulse=floor(fs*0.05);
 RIR_direct=RIR(delay-before_impulse:delay+after_impulse,1);
-direct_signal=fconv(x,RIR_direct);
+direct_signal=freq_conv(x,RIR_direct);
 
 % obtain reverberant speech
 for ch=1:size(RIR,2)
