@@ -5,6 +5,13 @@ if nargin<4
     % required to generate the last frame
 end
 
+if strcmpi(class(x(1)), 'gpuArray')
+    useGPU = 1;
+    x = gather(x);
+else
+    useGPU = 0;
+end
+
 N_block_raw = (size(x,1)-frame_size)/frame_shift+1;
 N_block = floor(N_block_raw);
 overlap = frame_size - frame_shift;
@@ -26,5 +33,7 @@ if useLastPartialFrame && N_block < N_block_raw
         x_store(1:nSampleLastFrame,:, end+1) = lastFrame;
     end
 end
-
+if useGPU == 1
+    x_store = gpuArray(x_store);
+end
 end
