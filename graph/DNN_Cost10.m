@@ -108,6 +108,9 @@ for i=1:nLayer
     		layer{i}.a = F_beamforming(layer(i+layer{i}.prev));
         case 'filter'
             layer{i}.a = F_filter(layer(i+layer{i}.prev));
+        case 'comp_gcc'
+            layer{i}.a = F_comp_gcc(layer{i+layer{i}.prev}.a, layer{i});
+            
     	case 'tdoa2weight'
     		layer{i}.a = F_tdoa2weight(layer{i+layer{i}.prev}.a, layer{i}.freqBin);
     	case 'real_imag2bfweight'
@@ -216,7 +219,7 @@ for i=nLayer:-1:1
     if isfield(layer{i}, 'prev');   prev_layers = layer(i+layer{i}.prev);    end
     if isfield(layer{i}, 'next');   future_layers = layer(i+layer{i}.next);    end
     switch lower(layer{i}.name)
-        case {'input', 'idx2vec', 'enframe'} % do nothing
+        case {'input', 'idx2vec', 'enframe', 'comp_gcc'} % do nothing
         
         % updatable layers
         case {'affine', 'mel'}
