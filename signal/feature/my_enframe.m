@@ -36,4 +36,5 @@ end
 if useGPU == 1
     x_store = gpuArray(x_store);
 end
+clear x;
 end
