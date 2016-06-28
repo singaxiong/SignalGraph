@@ -57,7 +57,7 @@ for i=1:nLayer
         case 'linear'
             layer{i}.a = layer{i+layer{i}.prev}.a;
         case {'sigmoid'}
-            layer{i}.a = sigmoid(layer{i+layer{i}.prev}.a);
+            layer{i}.a = F_sigmoid(layer{i+layer{i}.prev}.a);
         case {'tanh'}
             layer{i}.a = tanh(layer{i+layer{i}.prev}.a);
         case 'softmax'

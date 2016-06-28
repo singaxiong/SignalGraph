@@ -1,5 +1,6 @@
 function grad = B_mean_square_error(input_layers, useMahaDist, CostLayer)
-[nSeg, output, target, scale, nFrOrig] = prepareCostEvaluation(input_layers, CostLayer);
+[nSeg, output, target, scale, nFrOrig, mask] = prepareCostEvaluation(input_layers, CostLayer);
+if ~isempty(mask); variableLength = 1; else variableLength = 0; end
 m = size(output,2);
 D = size(output,1); 
 nFr = size(output,2)/nSeg;

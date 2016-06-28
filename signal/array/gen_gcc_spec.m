@@ -19,11 +19,7 @@ gcc = []; gcc_interp = [];
 if para.genGCC
     gccWinSize = para.gccWinSize;
     gccOverlap = para.gccOverlap;
-    if isfield(para, 'use424shift') && para.use424shift == 1
-        [correlationVectors]=getCorrelationVector_SK8chcircular_424shift(wav, gccWinSize*fs, gccOverlap/gccWinSize);
-    else
-        [correlationVectors]=getCorrelationVector_fast2(wav, gccWinSize*fs, gccOverlap/gccWinSize);
-    end
+    [correlationVectors]=getCorrelationVector_fast2(wav, gccWinSize*fs, gccOverlap/gccWinSize);
     
     if isfield(para, 'gcc_bin_range') ==0  % note that we only need a small part of the GCC related to microphone array topology and sampling rate
         para.gcc_bin_range = 10;
