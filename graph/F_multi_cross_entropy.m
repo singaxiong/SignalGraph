@@ -31,12 +31,4 @@ else    % this is for when you have different tasks
     % to be implemented
 end
 
-if 0
-    figure(1);
-    imagesc(output); hold on
-    plot(target,'r'); hold off;
-    title(cost)
-%     pause
-end
-
 end

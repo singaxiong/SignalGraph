@@ -1,6 +1,6 @@
 function [input2, weight] =  prepareBeamforming(input_layers)
 for i=1:length(input_layers)
-    if strcmpi(input_layers{i}.name, 'input')
+    if ~strcmpi(input_layers{i}.name, 'real_imag2BFweight')
         input = input_layers{i}.a;
     else
         N = length(input_layers{i}.freqBin);

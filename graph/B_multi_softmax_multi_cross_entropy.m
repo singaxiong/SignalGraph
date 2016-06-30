@@ -31,40 +31,9 @@ if length(TaskVocabSizes)==1    % this is for when you have the same task, e.g. 
             grad = reshape(grad,D,T);
         end
     end
-end 
-if variableLength
-    if isfield(CE_layer, 'labelDelay') && CE_layer.labelDelay~=0
-        % when there is label delay, the mask does not match the grad
-        % anymore, we need to make a modified mask that fit the grad
-        nFrActual = sum(mask==0);
-        if CE_layer.labelDelay>0
-            mask = mask(CE_layer.labelDelay+1:end,:);
-        else
-            mask = mask(1:end-CE_layer.labelDelay,:);
-            for i=1:nSeg
-                mask(nFrActual(i)-CE_layer.labelDelay+1:end,i) = 1;
-            end
-        end
-    end
-    grad = PadGradientVariableLength(grad, mask);
-    
-    if isfield(CE_layer, 'labelDelay') && CE_layer.labelDelay~=0
-        grad = ShiftGradient(grad, CE_layer.labelDelay);
-    end
-    
-    if isfield(CE_layer, 'costFrameSelection')
-        [grad] = AssignCostGradFrame(grad, nFrOrig, nSeg, mask, CE_layer);
-    end
-else
-    if nSeg>1     % we reshape the gradient to match the output size
-        grad = reshape(grad, size(grad,1), nFr, nSeg);
-    end
-    if isfield(CE_layer, 'labelDelay') && CE_layer.labelDelay~=0
-        grad = ShiftGradient(grad, CE_layer.labelDelay);
-    end
-    if isfield(CE_layer, 'costFrameSelection')
-        [grad] = AssignCostGradFrame(grad, nFrOrig, nSeg, mask, CE_layer);
-    end
+else % when we have different tasks
+    % to be implemented
 end
+grad = PostprocessCostEvaluation(grad, output, mask, nSeg, nFrOrig, CE_layer);
 
 end

@@ -33,7 +33,7 @@ end
 
 if do_DC_remove
     % DC offset removing
-    x = DC_remove(x,0.999);
+    x = DC_remove(gather(x),0.999);
     % pre-emphasis, boost the high frequency spectrum
 
     if 0
@@ -44,7 +44,7 @@ if do_DC_remove
     else
         % Method 1: Call filter function. Too slow
         A    = [1 -0.97];
-        x = filter(A,1,x);
+        x = filter(A,1,gather(x));
     end
 end
 

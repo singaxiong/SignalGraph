@@ -59,7 +59,7 @@ for i=1:nLayer
         case {'sigmoid'}
             layer{i}.a = F_sigmoid(layer{i+layer{i}.prev}.a);
         case {'tanh'}
-            layer{i}.a = tanh(layer{i+layer{i}.prev}.a);
+            layer{i}.a = F_tanh(layer{i+layer{i}.prev}.a);
         case 'softmax'
             layer{i}.a = F_softmax(layer{i+layer{i}.prev}.a);
         case 'multi_softmax'
@@ -110,6 +110,8 @@ for i=1:nLayer
             layer{i}.a = F_filter(layer(i+layer{i}.prev));
         case 'comp_gcc'
             layer{i}.a = F_comp_gcc(layer{i+layer{i}.prev}.a, layer{i});
+        case 'stft'
+            layer{i}.a = F_stft(layer{i+layer{i}.prev}.a, layer{i});
             
     	case 'tdoa2weight'
     		layer{i}.a = F_tdoa2weight(layer{i+layer{i}.prev}.a, layer{i}.freqBin);
@@ -218,8 +220,9 @@ if para.DEBUG; hasnan=0; end
 for i=nLayer:-1:1
     if isfield(layer{i}, 'prev');   prev_layers = layer(i+layer{i}.prev);    end
     if isfield(layer{i}, 'next');   future_layers = layer(i+layer{i}.next);    end
+    if isfield(layer{i}, 'skipBP') && layer{i}.skipBP == 1; continue; end   % some layers do not need to compute gradients, such as comp_gcc and stft
     switch lower(layer{i}.name)
-        case {'input', 'idx2vec', 'enframe', 'comp_gcc'} % do nothing
+        case {'input', 'idx2vec', 'enframe', 'comp_gcc', 'stft'} % do nothing
         
         % updatable layers
         case {'affine', 'mel'}
@@ -298,7 +301,7 @@ for i=nLayer:-1:1
         	layer{i}.grad = B_relu(future_layers, layer{i}.a);
         case 'maxout'
         case 'tanh'
-            layer{i}.grad = (1-layer{i}.a.^2) .* future_layers{1}.grad;
+            layer{i}.grad = B_tanh(future_layers, layer{i}.a);
         case {'sigmoid'}
         	layer{i}.grad = B_sigmoid(future_layers, layer{i}.a);
         case 'softmax'
