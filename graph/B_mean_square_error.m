@@ -15,17 +15,6 @@ else
 end
 grad = grad / m;
 
-if nSeg>1     % we are having multiple sequences in one minibatch
-    grad = reshape(grad, D,nFr, nSeg);
-end
+grad = PostprocessCostEvaluation(grad, output, mask, nSeg, nFrOrig, CostLayer);
 
-if isfield(CostLayer, 'labelDelay') && CostLayer.labelDelay~=0
-    grad = ShiftGradient(grad, CostLayer.labelDelay);
-end
-if isfield(CostLayer, 'costFrameSelection')
-    switch CostLayer.costFrameSelection
-        case 'last'
-
-    end
-end
 end

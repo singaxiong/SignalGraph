@@ -22,8 +22,8 @@ x_store = zeros(frame_size, nCh, N_block);
 for ii=1:nCh
     x_store(:,ii,:) = buffer(x(overlap+1:needed_size,ii),frame_size,overlap);
 end
-x_store(:,:,1) = x(1:frame_size,:);
-x_store(:,:,2) = x(frame_shift+1:frame_shift+frame_size,:);
+if N_block>=1; x_store(:,:,1) = x(1:frame_size,:); end
+if N_block>=2; x_store(:,:,2) = x(frame_shift+1:frame_shift+frame_size,:); end
 
 if useLastPartialFrame && N_block < N_block_raw
     idx1 = N_block*frame_shift + 1;

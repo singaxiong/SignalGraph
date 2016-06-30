@@ -17,14 +17,6 @@ else
     output(idx) = output(idx) - 1;
     grad = output/m;
 end 
-if nSeg>1     % we reshape the gradient to match the output size
-    grad = reshape(grad, size(grad,1), nFr, nSeg);
-end
+grad = PostprocessCostEvaluation(grad, output, mask, nSeg, nFrOrig, CE_layer);
 
-if isfield(CE_layer, 'labelDelay') && CE_layer.labelDelay~=0
-    grad = ShiftGradient(grad, CE_layer.labelDelay);
-end
-if isfield(CE_layer, 'costFrameSelection')
-    [grad] = AssignCostGradFrame(grad, nFrOrig, nSeg, mask, CE_layer);
-end
 end

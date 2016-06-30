@@ -3,7 +3,6 @@ function [cost,acc] = F_cross_entropy(input_layers, CE_layer)
 m = size(output,2);
 
 [~, recogClass] = max(output);
-% [~, trueClass] = max(target);
 trueClass = target;
 acc = sum(recogClass==trueClass)/m;
 
@@ -29,9 +28,4 @@ else
     end
 end
 
-if 0
-    imagesc(output);    hold on
-    plot(target,'r');   hold off
-    pause
-end
 end

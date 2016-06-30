@@ -1,4 +1,33 @@
-% This function decide which input is system output and which is desired target.
+% This function is intended to be called from mean square erorr or cross
+% entropy cost function layers. It decides which input stream is system 
+% output and which is desired target and scale of frames.
+% 
+% The function also applies following operations on the output and target: 
+%   1) labelDelay: delay the target for (negative) integer number of time
+%   steps (frames).
+%   2) costFrameSelection: only compute cost function for a selected number
+%   of time steps (frames). Following ways to selecting frames is supported
+%   or plan to be supported:
+%       a) "last", use the last frame 
+%       b) "last N", use the last N frames. 
+%       c) "first" and "first N", first or first N frames. 
+%       d) to be supported
+%   3) scale: assign weights to different time steps (frames) in the cost
+%   function. the "scale" matrix, if available, will be multiplied to the
+%   time steps. In fact, "scale" can also achieve all the functionality of
+%   costFrameSelection, but in sometimes, the later is easier to use. 
+%   4) variableLength: in CNN or LSTM networks, a minibatch may consists of
+%   segments that have different lengths. We need to take care of this in
+%   this function. 
+%
+% Note that there is a function called PostprocessCostEvaluation() that
+% reverses everything we have done in this function such that the gradient
+% can be passed back in correct format. 
+%
+% Author: Xiong Xiao, Temasek Labs, NTU, Singapore. 
+% Created: 2014
+% Last Modified: 28 Jun 2016
+%   
 function [nSeg, output, target, scale, nFrOrig, mask] = prepareCostEvaluation(input_layers, Cost_layer)
 % If there are two input layers, the second must be target, and the other is the system prediction.
 % If there are 3 input layers, the third one will be the weights of frames.
@@ -11,7 +40,7 @@ if length(input_layers)==3
 end
 [~,~,nSeg] = size(output);
 if nSeg>1; 
-    [mask, variableLength] = CheckTrajectoryLength(output);
+    [mask, variableLength] = CheckTrajectoryLength(output);     % check whether we have multiple segments of different lengths
 else variableLength=0; mask = []; 
 end
 
