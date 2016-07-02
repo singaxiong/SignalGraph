@@ -30,9 +30,6 @@ end
 nCorreVect = M*(M-1)/2;    %%compute the number of permutations for the correlation vectors given M channels
 %%for example, if M=3, the correlations are (1,2), (1,3), and (2,3)
 
-if useGPU
-    X = gpuArray(X);
-end
 Xfft = fft(bsxfun(@times,X,window));
 Xfft = permute(Xfft, [1 3 2]);
 

@@ -40,7 +40,7 @@ else
         [grad] = AssignCostGradFrame(grad, nFrOrig, nSeg, mask, CostLayer);
     end
     if isfield(CostLayer, 'labelDelay') && CostLayer.labelDelay~=0
-        grad = ShiftGradient(grad, CE_layer.labelDelay);
+        grad = ShiftGradient(grad, CostLayer.labelDelay);
     end
 end
 
