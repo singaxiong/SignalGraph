@@ -5,36 +5,39 @@ if nargin<4
     % required to generate the last frame
 end
 
-if strcmpi(class(x(1)), 'gpuArray')
-    useGPU = 1;
-    x = gather(x);
+[nSample, nCh] = size(x);
+
+idx = enframe_core((1:nSample)',frame_size,frame_shift, useLastPartialFrame);  % get the index of samples in each frame
+if isempty(idx)
+    x_store = [];
 else
-    useGPU = 0;
-end
-
-N_block_raw = (size(x,1)-frame_size)/frame_shift+1;
-N_block = floor(N_block_raw);
-overlap = frame_size - frame_shift;
-nCh = size(x,2);
-needed_size = (N_block-1)*frame_shift + frame_size;
-
-x_store = zeros(frame_size, nCh, N_block);
-for ii=1:nCh
-    x_store(:,ii,:) = buffer(x(overlap+1:needed_size,ii),frame_size,overlap);
-end
-if N_block>=1; x_store(:,:,1) = x(1:frame_size,:); end
-if N_block>=2; x_store(:,:,2) = x(frame_shift+1:frame_shift+frame_size,:); end
-
-if useLastPartialFrame && N_block < N_block_raw
-    idx1 = N_block*frame_shift + 1;
-    lastFrame = x(idx1:end,:);
-    nSampleLastFrame = size(lastFrame,1);
-    if nSampleLastFrame/frame_size > useLastPartialFrame
-        x_store(1:nSampleLastFrame,:, end+1) = lastFrame;
+    if useLastPartialFrame>0
+        idx2 = max(1,idx);
+        x_store = x(idx2,:);      % index all channels simultaneously for speed
+        x_store(idx==0,:) = 0;      % sometimes, the last frames are padded with 0
+    else
+        x_store = x(idx,:);
     end
+    x_store = reshape(x_store, frame_size, size(idx,2), nCh);
+    x_store = permute(x_store, [1 3 2]);
 end
-if useGPU == 1
-    x_store = gpuArray(x_store);
 end
-clear x;
+
+%% enframe_core can enframe single channel data in CPU memory. 
+% But it is better to use it to enframe the sample indexes for easier
+% handling with GPU memory variables and faster processing of multi-channel
+% data. 
+function x_store = enframe_core(x, frame_size, frame_shift, useLastPartialFrame)
+overlap = frame_size - frame_shift;
+N_block_raw = (size(x,1)-frame_size)/frame_shift+1;
+if useLastPartialFrame>0 && mod(N_block_raw,1)>useLastPartialFrame && mod(N_block_raw,1) < 1    % decide the number of frames
+    N_block = ceil(N_block_raw);
+else
+    N_block = floor(N_block_raw);
+end
+
+x_store = buffer(x(overlap+1:end),frame_size,overlap, x(1:overlap));       % buffer will append 0 to the data to form integer number of frames
+if size(x_store,2)>N_block
+    x_store(:,N_block+1:end) = [];     % we may remove the last frames
+end
 end

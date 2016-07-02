@@ -24,6 +24,7 @@ configGeneral = {'useGPU',     0, 	'whether to use GPU for computation. The othe
     'displayGPUstatus', 0, 'whether to display GPU status after every block of training samples.';
     'checkGradient',    0, 'whether to check gradient computation is correct.';
     'saveModelEveryXIter', 1, 'for every X number of iterations, the network will be saved.';
+    'saveModelEveryXhours', 0, 'for every X hours of training data (360000 time steps an hour following MFCC features, the network will be saved.';
     'cost_func',        [], 'the structure that defines the cost function information.';
     'preprocessing',    [], 'a cell array that defines the preprocessing of input streams. Each cell itself is a cell array that defines the steps of the processing for the corresponding stream.';
     'output',           '', 'the file name prefix (including path) of the output model.';

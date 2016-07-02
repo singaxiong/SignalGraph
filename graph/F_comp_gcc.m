@@ -4,15 +4,9 @@ frame_shift = curr_layer.frame_shift;
 
 [nSample, nCh] = size(input);
 
-if strcmpi(class(input(1)), 'gpuArray');
-    useGPU = 1;
-else
-    useGPU = 0;
-end
-
 gcc_dim = curr_layer.dim(1) / (nCh*(nCh-1)/2);
 
-[gcc]=getCorrelationVector_fast2(input', frame_len, 1 - frame_shift/frame_len, useGPU);
+[gcc]=getCorrelationVector_fast2(input', frame_len, 1 - frame_shift/frame_len, IsInGPU(input));
 
 gcc_bin_range = (gcc_dim-1)/2;
 

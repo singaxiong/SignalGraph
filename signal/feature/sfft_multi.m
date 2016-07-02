@@ -48,12 +48,11 @@ if do_DC_remove
     end
 end
 
-
+if useGPU && ~IsInGPU(x)
+    x = gpuArray(x);
+end
 x_store = my_enframe(x, frame_size, frame_shift);
 x_store = bsxfun(@times, x_store, window);
 
-if useGPU
-    x_store = gpuArray(x_store);
-end
 fft_x = fft(x_store,FFT_length);
 
