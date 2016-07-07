@@ -113,6 +113,13 @@ for i=1:nLayer
         case 'stft'
             layer{i}.a = F_stft(layer{i+layer{i}.prev}.a, layer{i});
             
+        case 'cov'
+            layer{i}.a = F_cov(layer{i+layer{i}.prev}.a);
+        case 'logdet'
+            layer{i}.a = F_logdet(layer{i+layer{i}.prev}.a);
+        case 'll_gmm'
+            layer{i} = F_ll_gmm(layer{i+layer{i}.prev}.a, layer{i});
+            
     	case 'tdoa2weight'
     		layer{i}.a = F_tdoa2weight(layer{i+layer{i}.prev}.a, layer{i}.freqBin);
     	case 'real_imag2bfweight'
@@ -171,8 +178,15 @@ if para.NET.L2weight>0
     end
     for i=2:nLayer
 		if isfield(layer{i}, 'W') && layer{i}.update
-            tmp = layer{i}.W.*layer{i}.W;
-			cost_func.cost = cost_func.cost + 0.5* L2weight * sum(sum(tmp));
+            if isfield(layer{i}, 'W0')
+                tmp = layer{i}.W - layer{i}.W0;   % if we are given a initial weight matrix W0, we measure the difference between W and W0.
+            else
+                tmp = layer{i}.W;   % otherwise, we measure the difference between W and a matrix of zeros.
+            end
+            if isfield(layer{i}, 'mask')        % the mask defines what values can be tuned and what cannot be tuned. 
+                tmp = tmp .* layer{i}.mask;
+            end
+			cost_func.cost = cost_func.cost + 0.5* L2weight * sum(sum(tmp.*tmp));
 		end
     end
 end
@@ -318,6 +332,15 @@ for i=nLayer:-1:1
         case 'cosine'
             layer{i}.grad = B_cosine(prev_layers, future_layers);
                 
+        case 'cov'
+            layer{i}.grad = B_cov(layer{i+layer{i}.prev}.a, future_layers);
+        case 'logdet'
+            layer{i}.grad = B_logdet(layer{i+layer{i}.prev}.a);
+            layer{i}.grad = SetCostWeightOnGrad(layer{i}.grad, para.cost_func, i);
+        case 'll_gmm'
+            layer{i}.grad = B_ll_gmm(layer{i+layer{i}.prev}.a, layer{i});
+            layer{i}.grad = SetCostWeightOnGrad(layer{i}.grad, para.cost_func, i);
+            
         case 'inner_product_normalized'
             layer{i}.grad = B_inner_product_normalized(prev_layers, future_layers);
         case 'concatenate'
@@ -330,7 +353,11 @@ for i=nLayer:-1:1
         if issparse(layer{i}.grad_W)
             layer{i}.grad_W = AddSpMatMat_sparseonly(1, layer{i}.grad_W, para.NET.L2weight, layer{i}.W);
         else
-            layer{i}.grad_W = layer{i}.grad_W + para.NET.L2weight * layer{i}.W;
+            if isfield(layer{i}, 'W0')
+                layer{i}.grad_W = layer{i}.grad_W + para.NET.L2weight * (layer{i}.W - layer{i}.W0);
+            else
+                layer{i}.grad_W = layer{i}.grad_W + para.NET.L2weight * layer{i}.W;
+            end
         end
     end
     if para.DEBUG

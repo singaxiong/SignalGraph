@@ -67,26 +67,8 @@ for i=1:length(layer)
         end
     end
 end
-for i=1:length(layer)
-    if isfield(layer{i}, 'W')
-        if para.singlePrecision==1
-            layer{i}.W = single(layer{i}.W);
-        end
-        if para.useGPU
-            layer{i}.W = gpuArray(layer{i}.W);
-        end
-    end
-    if isfield(layer{i}, 'b')
-        if para.singlePrecision==1
-            layer{i}.b = single(layer{i}.b);
-        end
-        if para.useGPU
-            layer{i}.b = gpuArray(layer{i}.b);
-        end
-    end
-end
 
-if length(para.NET.WeightTyingSet)>0
+if ~isempty(para.NET.WeightTyingSet)
     for i=1:length(para.NET.WeightTyingSet)
         currTyingSet = para.NET.WeightTyingSet{i};
         baseNode = layer{currTyingSet(1)};

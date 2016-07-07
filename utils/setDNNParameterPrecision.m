@@ -1,20 +1,21 @@
-function layer = setDNNParameterPrecision(layer, singlePrecision)
-if singlePrecision
-    for i=1:length(layer)
-        if isfield(layer{i}, 'W')
-            layer{i}.W = single(layer{i}.W);
-        end
-        if isfield(layer{i}, 'b')
-            layer{i}.b = single(layer{i}.b);
-        end
-    end
-else
-    for i=1:length(layer)
-        if isfield(layer{i}, 'W')
-            layer{i}.W = double(layer{i}.W);
-        end
-        if isfield(layer{i}, 'b')
-            layer{i}.b = double(layer{i}.b);
+% set the weights precision to desired precision. Move weights to GPU if
+% required. 
+%
+function layer = setDNNParameterPrecision(layer, singlePrecision, useGPU)
+
+WeightNames = WeightNameList('all');
+
+for i=1:length(layer)
+    for j=1:length(WeightNames)
+        if isfield(layer{i}, WeightNames{j})
+            if singlePrecision
+                layer{i}.(WeightNames{j}) = single(layer{i}.(WeightNames{j}));
+            else
+                layer{i}.(WeightNames{j}) = double(layer{i}.(WeightNames{j}));
+            end
+            if useGPU
+                layer{i}.(WeightNames{j}) = gpuArray(layer{i}.(WeightNames{j}));
+            end
         end
     end
 end

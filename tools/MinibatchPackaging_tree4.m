@@ -43,13 +43,15 @@ for i = 1:nStream   % for each input stream
                     tmp_feat = data(i).base(tmp_feat_idx);
             end
         end
-        tmp_feat2 = FeaturePipe(tmp_feat, para.preprocessing{i});   % apply preprocessing
-        if strcmpi(datatype, 'single')
-            tmp_feat2 = single(tmp_feat2);
-        else
-            tmp_feat2 = double(tmp_feat2);
+        if isfield(para, 'preprocessing') && length(para.preprocessing)>=i
+            tmp_feat = FeaturePipe(tmp_feat, para.preprocessing{i});   % apply preprocessing
         end
-        feat{i,utt_i} = full(tmp_feat2);
+        if strcmpi(datatype, 'single')
+            tmp_feat = single(tmp_feat);
+        else
+            tmp_feat = double(tmp_feat);
+        end
+        feat{i,utt_i} = full(tmp_feat);
     end
 end
 
