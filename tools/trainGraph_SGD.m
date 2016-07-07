@@ -34,10 +34,10 @@
 % Updates in Version 9: 1) support multi task learning that use the same
 % inputs. 2) Support gated connection weighted_average; 
 %
-function train_DNN_SGD13(layer, data, data_t, para, LOG)
+function trainGraph_SGD(layer, data, data_t, para, LOG)
 para = ParseOptions2(para);
 layer = initializeParametersDNN_tree(layer, para);    % Use random initialization if a weight matrix is not defined.
-layer = setDNNParameterPrecision(layer, para.singlePrecision);
+layer = setDNNParameterPrecision(layer, para.singlePrecision, para.useGPU);
 LOG = initializeLog(LOG);
 para.NET.WeightUpdateOrder = genWeightUpdateOrder(layer, para.NET.WeightTyingSet);
 

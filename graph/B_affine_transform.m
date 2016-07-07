@@ -31,7 +31,14 @@ if curr_layer.update
     else
         grad_W = future_grad * input';
     end
-    grad_b = sum(future_grad,2);
+    if isfield(curr_layer, 'mask')
+        grad_W = grad_W .* curr_layer.mask;
+    end
+    if isfield(curr_layer, 'updateBias') && ~curr_layer.updateBias  % sometimes, we don't use bias
+        grad_b = future_grad(:,1)*0;
+    else
+        grad_b = sum(future_grad,2);
+    end
 end
 if skip_grad==0
     grad = transform' * future_grad;
