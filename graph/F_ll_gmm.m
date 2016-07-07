@@ -16,7 +16,9 @@ else
     if d3==1; diagCov = 1; else diagCov = 0; end
 end
 
-[LL, post, avgLL] = compLikelihoodGMM(input, prior, mu, invCov, diagCov, useGPU);
+if isfield(curr_layer, 'gconst');    gconst = curr_layer.gconst; else gcost = []; end
+
+[LL, post] = compLikelihoodGMMFast(input, gconst, prior, mu, invCov, diagCov, useGPU);
 
 % output is the EM auxiliary function
 

@@ -14,4 +14,7 @@ cost = cost_func.cost;
 % retrieve the gradient from layer and store it into vector format
 [grad] = NetWeights_layer2vec(layer, 1, para.useGPU);
 
+cost = gather(cost);
+grad = gather(grad);
+
 end
