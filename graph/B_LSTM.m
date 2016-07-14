@@ -2,7 +2,8 @@
 % Author: Xiong Xiao, Temasek Labs, NTU, Singapore.
 % Last modified: 13 Oct 2015
 %
-function [grad, grad_W, grad_b] = B_LSTM(input, LSTM_layer, future_layers)
+function [grad, grad_W, grad_b] = B_LSTM(input_layer, LSTM_layer, future_layers)
+input = input_layer.a;
 W = LSTM_layer.W;
 if strcmpi(class(input), 'gpuArray'); useGPU=1; else useGPU = 0; end
 precision = class(gather(input(1)));
@@ -11,7 +12,7 @@ future_grad = GetFutureGrad(future_layers, LSTM_layer);
 
 [dim, nFr, nSeg] = size(input);
 if nSeg>1
-    [mask, variableLength] = CheckTrajectoryLength(future_grad);
+    [mask, variableLength] = getValidFrameMask(input_layer);
     if variableLength;
         future_grad = PadShortTrajectory(future_grad, mask, 0);
         input = PadShortTrajectory(input, mask, 0);

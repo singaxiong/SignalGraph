@@ -15,5 +15,6 @@ for i=1:length(files)
     else
         [wav{i},fs] = audioread(files{i});
     end
+    wav{i} = wav{i}';
 end
 end

@@ -14,19 +14,46 @@ function output = PadShortTrajectory(input, mask, padnumber)
 
 output = input;
 if strcmpi(padnumber, 'last')   % pad the last frame
-    for i=1:N
-        idx = find(mask(:,i)==1);
-        if ~isempty(idx)
-            output(:,idx,i) = repmat(input(:,idx(1)-1,i), 1, length(idx));
+    % find the index of the last valide frame in all sequences
+    delta = mask(2:end,:) - mask(1:end-1,:);
+    [max_delta, max_idx] = max(delta);
+    max_idx(max_delta==0) = T;
+    max_idx = gather(max_idx);
+    % pad the last valid frame to the invalide frames
+    if 0    % 1 direct implementation
+        for i=1:N
+            output(:,max_idx(i)+1:end,i) = repmat(input(:,max_idx(i),i), 1, T-max_idx(i));
         end
+    else    % 2 index based implementation
+        fr_idx = reshape(1:T*N, T,N); %repmat( (1:T)', 1, N );
+        for i=1:N
+            fr_idx(max_idx(i)+1:end,i) = fr_idx(max_idx(i),i);
+        end
+        output = input(:,fr_idx);
+        output = reshape(output,D,T,N);
     end
+    
+    % older implementation
+%     for i=1:N
+%         idx = gather(find(mask(:,i)==1,1));
+%         if ~isempty(idx)
+%             output(:,idx:end,i) = repmat(input(:,idx-1,i), 1, T-idx+1);
+%             idx2(i) = idx;
+%         end
+%     end
+
 elseif padnumber==0
-    idx = find(reshape(mask, 1, T*N)==1);
-    if ~isempty(idx)
-        output = reshape(output, D,T*N);
-        output(:,idx) = padnumber;
-        output = reshape(output, D,T,N);
-    end
+
+    % simple implementation
+    output(:,mask==1) = padnumber;
+    
+    % more complicated implementation
+%     idx = find(reshape(mask, 1, T*N)==1);
+%     if ~isempty(idx)
+%         output = reshape(output, D,T*N);
+%         output(:,idx) = padnumber;
+%         output = reshape(output, D,T,N);
+%     end
 else
     tmp = squeeze(output(1,:,:));
     output(1,:,:) = tmp .* (1-mask) + padnumber*mask;

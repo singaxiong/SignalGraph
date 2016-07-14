@@ -40,7 +40,7 @@ if length(input_layers)==3
 end
 [~,~,nSeg] = size(output);
 if nSeg>1; 
-    [mask, variableLength] = CheckTrajectoryLength(output);     % check whether we have multiple segments of different lengths
+    [mask, variableLength] = getValidFrameMask(input_layers{1});     % check whether we have multiple segments of different lengths
 else variableLength=0; mask = []; 
 end
 
@@ -69,9 +69,20 @@ if variableLength   % if we have multiple sequences in the minibatch and they ha
     
     [D,nFr,nSeg] = size(output);
     nFrOrig = nFr;
-    [output] = ExtractVariableLengthTrajectory(output);
-    [target] = ExtractVariableLengthTrajectory(target);
-    if hasScale; [scale] = ExtractVariableLengthTrajectory(scale); end
+    [output] = ExtractVariableLengthTrajectory(output, mask);
+    [target] = ExtractVariableLengthTrajectory(target, mask);
+    if hasScale; [scale] = ExtractVariableLengthTrajectory(scale, mask); end
+    for i=1:nSeg
+        if size(target{i},2)==1
+            if size(output{i},2)>1
+                target{i} = repmat(target{i}, 1, size(output{i},2));
+            end
+%         elseif size(target{i},2) ~= size(output{i},2)
+%             nFrUtt = min(size(target{i},2), size(output{i},2));
+%             target{i} = target{i}(:,1:nFrUtt);
+%             output{i} = output{i}(:,1:nFrUtt);
+        end
+    end
 
     if isfield(Cost_layer, 'costFrameSelection')
         [output, target] = SelectCostFrame(output, target, Cost_layer);     % currently, we don't support costFrameSelection together with scale as this is not likely to happen

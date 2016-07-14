@@ -18,6 +18,6 @@ for i=1:nSeg
     idx1 = sum(nFrActual(1:i-1))+1;
     idx2 = nFrActual(i)+idx1-1;
     gradOut(:,1:nFrActual(i),i) = grad(:,idx1:idx2);
-    gradOut(1,nFrActual(i)+1:end,i) = -1e10;
+    %gradOut(1,nFrActual(i)+1:end,i) = -1e10;
 end
 end

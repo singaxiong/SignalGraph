@@ -28,6 +28,8 @@ nBlock = ceil(nSent/double(nSentInBlock));
 if para.IO.ClassLabel4EvenBlock>0   % the blocks should contain as diverse classes as possible. To use this option, each sentence should have exactly one class label.
     label = cell2mat(data(para.IO.ClassLabel4EvenBlock).data);
     sentIdxInBlock = AssignSamples2BlocksByLabel(label, nBlock, nSentInBlock, para.IO.ClassLabel4EvenBlock_refill, isDev);
+elseif para.NET.nSequencePerMinibatch>1 && para.IO.shuffleByDurationStreamIdx
+    sentIdxInBlock = AssignSamples2BlocksByDuration(data(para.IO.shuffleByDurationStreamIdx).data, nBlock, nSentInBlock);
 else
     if para.NET.randomizedBlock==0
         randomSentIdx = 1:nSent;

@@ -79,6 +79,8 @@ configIO = {'mode', 'normal', 'input modes: 1) normal; 2) dynamicPair; 3) dynami
     'frame_rate',   100, 'the number of frames per second.';
     'ClassLabel4EvenBlock', 0, 'the stream ID that contains the class label information for generating blocks covers as diverse classes as possible. This option is disabled by default.';
     'ClassLabel4EvenBlock_refill', 0, 'whether to refill a minority class after its samples are used up.';
+    'shuffleByDurationStreamIdx', 0, 'set to positive stream index if we want to shuffle the data based on duration. Useful for variable length multi-sentence minibatch.\n';
+    'blockSizeMultiplier', 1, 'multiply the block size by a number.';
     };
 
 if DisplayHelpInfoOnly

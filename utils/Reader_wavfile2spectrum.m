@@ -25,7 +25,7 @@ for i=1:length(files)
             else
                 [wav, fs] = Reader_waveform(files(1));
             end
-            wav = wav{1};
+            wav = wav{1}';
         end
         if fs>8000
             FFT_length = 512;
@@ -50,7 +50,7 @@ for i=1:length(files)
         else
             [wav, fs] = Reader_waveform(files(i));
         end
-        [~,tmp] = wav2abs(wav{1}, fs, [], [], [], useGPU);
+        [~,tmp] = wav2abs(wav{1}', fs, [], [], [], useGPU);
         nFFT = size(tmp,1);
         tmp_feat = tmp(1:nFFT/2+1,:);
     end

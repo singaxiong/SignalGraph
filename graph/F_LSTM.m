@@ -2,7 +2,7 @@
 % Author: Xiong Xiao, Temasek Labs, NTU, Singapore. 
 % Last modified: 13 Oct 2015
 %
-function [LSTM_layer] = F_LSTM(input, LSTM_layer)
+function [LSTM_layer] = F_LSTM(input_layer, LSTM_layer)
 %
 % The weight matrix of LSTM is organized as follows:
 % W = [ W_cf W_hf W_xf;
@@ -26,12 +26,15 @@ function [LSTM_layer] = F_LSTM(input, LSTM_layer)
 % input are multiple trajectories, usually of different lengths. We need to
 % first find the number of effective frames
 
+input = input_layer.a;
 [dim, nFr, nSeg] = size(input);
 if nSeg>1
-    [mask, variableLength] = CheckTrajectoryLength(input);
+    [mask, variableLength] = getValidFrameMask(input_layer);
     if variableLength; input = PadShortTrajectory(input, mask, 0); end
+else
+    mask = [];
 end
-
+LSTM_layer.validFrameMask = mask;
 
 input = permute(input, [1 3 2]);
 if strcmpi(class(input), 'gpuArray'); useGPU=1; else useGPU = 0; end
@@ -77,7 +80,9 @@ else
 end
     
 % batch transform the input features for fast speed
-z_from_inputs = F_affine_transform(input, Wx, b);
+fakeLayer.a = input;
+fakeLayer.validFrameMask = mask;
+z_from_inputs = F_affine_transform(fakeLayer, Wx, b);
 
 for i=1:nFr
     if i==1     % for the first frame, use default values for past state and hidden values.

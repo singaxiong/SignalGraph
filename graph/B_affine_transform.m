@@ -1,7 +1,7 @@
-function [grad, grad_W, grad_b]= B_affine_transform(prev_layer, curr_layer, future_layers, skip_grad)
+function [grad, grad_W, grad_b, validFrameMask]= B_affine_transform(prev_layer, curr_layer, future_layers, skip_grad)
 
 transform = curr_layer.W;
-grad = [];
+validFrameMask = [];
 
 if curr_layer.update==0
     grad_W = [];
@@ -13,10 +13,12 @@ input = prev_layer{1}.a;
 
 [n1,n2,n3] = size(future_grad);
 if n3>1     % reshape the matrix to 2D
-    [mask, variableLength] = CheckTrajectoryLength(future_grad);
+    [validFrameMask, variableLength] = getValidFrameMask(prev_layer{1});
     if variableLength; 
-        future_grad = PadShortTrajectory(future_grad, mask, 0); 
-        input = PadShortTrajectory(input, mask, 0);
+        future_grad = PadShortTrajectory(future_grad, validFrameMask, 0); 
+%         input = PadShortTrajectory(input, validFrameMask, 0);
+%         future_grad = future_grad(:,validFrameMask==0);
+%         input = input(:,validFrameMask==0);
     end
     future_grad = reshape(future_grad, n1,n2*n3);
     input = reshape(input, size(input,1), n2*n3);
@@ -45,8 +47,9 @@ if skip_grad==0
 end
 
 if n3>1
+%     grad = PadGradientVariableLength(grad, validFrameMask);
+
     grad = reshape(grad, size(grad,1), n2, n3);
-    if variableLength; grad = PadShortTrajectory(grad, mask, -1e10); end
 end
 
 end

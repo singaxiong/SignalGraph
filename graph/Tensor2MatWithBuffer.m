@@ -7,10 +7,11 @@ end
 
 halfB = floor((buffer_size-1)/2);
 
+precision = class(gather(input(1)));
 if strcmpi(class(input), 'gpuArray')
-    input2 = gpuArray.zeros(D,T+buffer_size,N);
+    input2 = gpuArray.zeros(D,T+buffer_size,N, precision);
 else
-    input2 = zeros(D,T+buffer_size,N);    
+    input2 = zeros(D,T+buffer_size,N, precision);    
 end
 input2(:,halfB+1:halfB+T,:) = input;
 if replicateBoundary

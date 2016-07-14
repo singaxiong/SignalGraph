@@ -1,4 +1,7 @@
-function D = genDeltaTransform(nFr, delta_order, type)
+function D = genDeltaTransform(nFr, delta_order, type, precision)
+if nargin<4
+    precision = 'single';
+end
 if nargin<3
     type = 1;
 end
@@ -12,7 +15,7 @@ if 0
         end
     end
 else
-    D = zeros(nFr,nFr+delta_order*2);
+    D = zeros(nFr,nFr+delta_order*2, precision);
     for j=1:delta_order
         t = 1:nFr;
         idx = (t+j+delta_order-1)*nFr + t;
