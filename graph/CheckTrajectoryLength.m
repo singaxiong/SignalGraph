@@ -5,9 +5,7 @@
 function [mask, variableLength] = CheckTrajectoryLength(data)
 
 mask = squeeze(data(1,:,:)) == -1e10;
-if sum(sum(mask))==0    % all have equal length
-    variableLength = 0;
-else
-    variableLength = 1;
-end
+
+variableLength = sum(mask(:));
+
 end

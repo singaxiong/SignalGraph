@@ -1,35 +1,34 @@
-function grad = B_real_imag2BFweight_beamforming_power(X, beamform_layer, after_power_layer, weight_layer, BF_frame_number)
+function grad = B_real_imag2BFweight_beamforming_power(X, beamform_layer, after_power_layer, weight_layer, real_imag_weight)
 % X is the multichannel complex spectrum inputs
-[N,C,T] = size(X);
+[N,C,T,nSent] = size(X);
 % Y is the beamforming's output
 Y = beamform_layer.a;
 % weight is the beamforming weight
 weight = weight_layer.a;
 % future_grad is the gradient of the power specturm of beamformed signal
 future_grad = after_power_layer.grad;
+online = size(weight,2)==T;
 
-if size(weight,2)==T
-    online = 1;
+if nSent==1
+    grad = BP_single_sentence(X, Y, future_grad, online, size(real_imag_weight,2));
 else
-    online = 0;
+    [mask] = getValidFrameMask(after_power_layer);
+    future_grad2 = ExtractVariableLengthTrajectory(future_grad, mask);
+    X2 = ExtractVariableLengthTrajectory(reshape(X,N*C,T,nSent), mask); 
+    Y2 = ExtractVariableLengthTrajectory(Y, mask);
+    maskWeight = CheckTrajectoryLength(real_imag_weight);
+    for i=1:nSent
+        grad{i} = BP_single_sentence(reshape(X2{i},N,C,size(X2{i},2)), Y2{i}, future_grad2{i}, online, sum(maskWeight(:,i)==0));
+    end
+    grad = cell2mat_gpu(grad);
+    grad = PadGradientVariableLength(grad, maskWeight);
 end
 
-% real_grad = zeros(N,C);
-% imag_grad = zeros(N,C);
-% tic
-% for t = 1:T
-%     for k= 1:N
-%         for c = 1:C
-%             tmp = Y(k,t)*conj(X(c,t,k));
-%             real_grad(k,c) = real_grad(k,c) + future_grad(k,t)*2*real(tmp);
-%             imag_grad(k,c) = imag_grad(k,c) + future_grad(k,t)*2*imag(tmp);
-%         end
-%     end
-% end
-% toc;
-% tic
-% real_grad = zeros(N,C);
-% imag_grad = zeros(N,C);
+end
+
+%%
+function grad = BP_single_sentence(X, Y, future_grad, online, BF_frame_number)
+[N,C,T] = size(X);
 future_grad_Y = future_grad.*Y;
 if 0
     for c = 1:C
@@ -56,5 +55,4 @@ else
         grad = repmat(grad/BF_frame_number, 1, BF_frame_number);
     end
 end
-
 end

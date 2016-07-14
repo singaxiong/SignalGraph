@@ -165,13 +165,13 @@ for itr = startItr:para.maxItr
                 fprintf(' - %s - %s\n', datestr(now), para.displayTag);
                 pause(0.01);
             end
+            layer = clean_network_layer(layer);
         end
         cost_train = [cost_train [cost_func.cost]];
         cost_train_pure = [cost_train_pure [cost_func.cost_pure]];
         subcost = [subcost [cost_func.subcost]];
         subacc = [subacc [cost_func.subacc]];
         clear minibatch;
-        layer = clean_network_layer(layer);
     end
     LOG.cost(itr) = gather(mean(cost_train));
     LOG.subcost(:,itr) = gather(mean(subcost,2));

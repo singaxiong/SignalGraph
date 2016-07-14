@@ -1,7 +1,7 @@
 % Concatenate the neighbouring frames vectors to higher dimensional vectors
 % Input is Number of dimension x number of frames
 function [y] = ExpandContext_v2(x, context, window_type)
-[dim nFr] = size(x);
+[dim, nFr, nSeg] = size(x);
 
 if nargin<3
     window_type = 'null';
@@ -29,8 +29,8 @@ if context_size > 1
 %             all_idx3(i,:) = min(nFr,max(1, (1:nFr) + context(i)));
         end
         all_idx2 = cell2mat(all_idx');
-        y_tmp = x(:,all_idx2);
-        y = reshape(y_tmp, dim*context_size,nFr);
+        y_tmp = x(:,all_idx2,:);
+        y = reshape(y_tmp, dim*context_size,nFr, nSeg);
     end
 else
     y = x;

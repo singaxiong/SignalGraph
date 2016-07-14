@@ -1,7 +1,8 @@
 
 function grad = B_log(future_layers, input,b)
-grad = 0;
-for i=1:length(future_layers)
-	grad = grad + 1./(input+b).*future_layers{i}.grad;
-end
+future_grad = GetFutureGrad(future_layers, {});
+
+grad = 1./(input+b).*future_grad;
+
+
 end

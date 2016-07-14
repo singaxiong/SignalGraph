@@ -29,113 +29,128 @@ else     precision = 'single'; end
 nLayer = length(layer);
 % Run forward propogation
 for i=1:nLayer
+    if isfield(layer{i}, 'prev');   prev_layers = layer(i+layer{i}.prev);    end
     switch lower(layer{i}.name)
         case 'ignore'
             % just pass
     	case 'input'
     		layer{i}.a = data{layer{i}.inputIdx};
         case 'idx2vec'
-            layer{i}.a = F_idx2vec(layer{i+layer{i}.prev}.a, layer{i}, para.singlePrecision);
+            layer{i}.a = F_idx2vec(prev_layers{1}.a, layer{i}, para.singlePrecision);       % do not support variable length yet
     	case 'affine'
-    		prev_layer = layer{i+layer{i}.prev};
-        	if strcmpi(prev_layer.name, 'input') && para.IO.sparse(prev_layer.inputIdx)
-        		layer{i}.a = F_sparse_affine_transform(prev_layer.a, layer{i}.W, layer{i}.b, para.singlePrecision);
+        	if strcmpi(prev_layers{1}.name, 'input') && para.IO.sparse(prev_layers{1}.inputIdx)
+        		[layer{i}.a, layer{i}.validFrameMask] = F_sparse_affine_transform(prev_layers{1}, layer{i}.W, layer{i}.b, para.singlePrecision);
             else
-                if issparse(prev_layer.a)
-                    prev_layer.a = full(prev_layer.a);
-                end
-        		layer{i}.a = F_affine_transform(prev_layer.a, layer{i}.W, layer{i}.b);
+                if issparse(prev_layers{1}.a);  prev_layers{1}.a = full(prev_layers{1}.a); end
+        		[layer{i}.a, layer{i}.validFrameMask] = F_affine_transform(prev_layers{1}, layer{i}.W, layer{i}.b);
             end
         case 'word2vec'
-            layer{i}.a = F_word2vec(layer{i+layer{i}.prev}.a, layer{i}.W, para.singlePrecision);
+            layer{i}.a = F_word2vec(prev_layers{1}.a, layer{i}.W, para.singlePrecision);    % do not support variable length yet
         case 'concatenate'
-            layer{i}.a = F_concatenate(layer(i+layer{i}.prev));
+            layer{i}.a = F_concatenate(prev_layers);    % do not support variable length yet
+        case 'extractdims'
+            layer{i}.a = F_ExtractDims(prev_layers{1}, layer{i}.dimIndex);
         case 'weighting'
-            layer{i}.a = F_weighting(layer{i+layer{i}.prev}.a, layer{i}.W, layer{i}.b);
+            layer{i}.a = F_weighting(prev_layers{1}.a, layer{i}.W, layer{i}.b);             % do not support variable length yet
         case 'cmn'
-            layer{i}.a = CMN(layer{i+layer{i}.prev}.a')';
+            [layer{i}.a, layer{i}.validFrameMask] = F_cmn(prev_layers{1});
         case 'linear'
-            layer{i}.a = layer{i+layer{i}.prev}.a;
+            layer{i}.a = prev_layers{1}.a;
         case {'sigmoid'}
-            layer{i}.a = F_sigmoid(layer{i+layer{i}.prev}.a);
+            layer{i}.a = F_sigmoid(prev_layers{1});
         case {'tanh'}
-            layer{i}.a = F_tanh(layer{i+layer{i}.prev}.a);
+            layer{i}.a = F_tanh(prev_layers{1});
         case 'softmax'
-            layer{i}.a = F_softmax(layer{i+layer{i}.prev}.a);
+            layer{i}.a = F_softmax(prev_layers{1});
         case 'multi_softmax'
-            layer{i}.a = F_multi_softmax(layer{i+layer{i}.prev}.a, layer{i}.TaskVocabSizes);
+            layer{i}.a = F_multi_softmax(prev_layers{1}.a, layer{i}.TaskVocabSizes);
         case 'logistic'
-            [layer{i}.a, layer{i}.acc] = F_logistic(layer(i+layer{i}.prev), layer{i});
+            [layer{i}.a, layer{i}.acc] = F_logistic(prev_layers, layer{i});
         case 'cosine'
-            layer{i}.a = F_cosine(layer(i+layer{i}.prev));
+            layer{i}.a = F_cosine(prev_layers);
         case 'inner_product'
-            layer{i}.a = F_inner_product(layer(i+layer{i}.prev));
+            layer{i}.a = F_inner_product(prev_layers);
         case 'inner_product_normalized'
-            layer{i}.a = F_inner_product_normalized(layer(i+layer{i}.prev));
+            layer{i}.a = F_inner_product_normalized(prev_layers);
         case 'relu'
-        	layer{i}.a = max(0,layer{i+layer{i}.prev}.a);
+        	layer{i}.a = max(0,prev_layers{1}.a);
         case 'maxout'
             
         case 'mean'
-            layer{i}.a = F_mean(layer{i+layer{i}.prev}.a);
+            layer{i}.a = F_mean(prev_layers{1}.a);
             
         case 'max'
-            layer{i}.a = F_max(layer{i+layer{i}.prev}.a);
+            layer{i}.a = F_max(prev_layers{1}.a);
             
         case 'tconv'
-            [layer{i}.a, layer{i}.X2] = F_tconv(layer{i+layer{i}.prev}.a, layer{i});
+            [layer{i}.a, layer{i}.X2] = F_tconv(prev_layers{1}.a, layer{i});
         case 'tmaxpool'
-            [layer{i}.a, layer{i}.idx] = F_tmaxpool(layer{i+layer{i}.prev}.a, layer{i});
+            [layer{i}.a, layer{i}.idx] = F_tmaxpool(prev_layers{1}.a, layer{i});
             
         case 'weighted_average'
-            [layer{i}.a,layer{i}.weights] = F_weighted_average(layer(i+layer{i}.prev));
+            [layer{i}.a,layer{i}.weights] = F_weighted_average(prev_layers);
         	
         case 'multisoftmax'
-            layer{i}.a = F_multisoftmax(layer{i+layer{i}.prev}.a, para.classID);
+            layer{i}.a = F_multisoftmax(prev_layers{1}.a, para.classID);
     	case 'delta'
-    		layer{i}.a = F_dynamic_feat(layer{i+layer{i}.prev}.a);
+    		[layer{i}.a, layer{i}.validFrameMask] = F_dynamic_feat(prev_layers{1});
     	case 'log'
-    		layer{i}.a = log(layer{i}.const+layer{i+layer{i}.prev}.a);
+    		[layer{i}.a, layer{i}.validFrameMask] = F_log(prev_layers{1}, layer{i}.const);
     	case 'power'
-    		layer{i}.a = F_power_spectrum(layer{i+layer{i}.prev}.a);
+    		layer{i}.a = F_power_spectrum(prev_layers{1});
         case 'splice'
-            layer{i}.a = F_splice(layer{i+layer{i}.prev}.a, layer{i}.context);
+            [layer{i}.a, layer{i}.validFrameMask] = F_splice(prev_layers{1}, layer{i}.context);
         case 'mel'
-            layer{i}.a = F_affine_transform(layer{i+layer{i}.prev}.a, layer{i}.W, layer{i}.b);
+            [layer{i}.a, layer{i}.validFrameMask] = F_affine_transform(prev_layers{1}, layer{i}.W, layer{i}.b);
     	case 'power_split'
-    		layer{i}.a = F_power_spectrum_split(layer{i+layer{i}.prev}.a);
+    		layer{i}.a = F_power_spectrum_split(prev_layers{1}.a);
     	case 'beamforming'
-    		layer{i}.a = F_beamforming(layer(i+layer{i}.prev));
+    		[layer{i}.a, layer{i}.validFrameMask] = F_beamforming(prev_layers);
         case 'filter'
-            layer{i}.a = F_filter(layer(i+layer{i}.prev));
+            layer{i}.a = F_filter(prev_layers);
         case 'comp_gcc'
-            layer{i}.a = F_comp_gcc(layer{i+layer{i}.prev}.a, layer{i});
+            [layer{i}.a, layer{i}.validFrameMask] = F_comp_gcc(prev_layers{1}, layer{i});
         case 'stft'
-            layer{i}.a = F_stft(layer{i+layer{i}.prev}.a, layer{i});
+            [layer{i}.a, layer{i}.validFrameMask] = F_stft(prev_layers{1}, layer{i});
+            
+        case 'spatialcovmask'
+            layer{i}.a = F_SpatialCovMask(prev_layers, layer{i});       % do not support variable length yet
+        case 'mvdr_spatialcov'
+            layer{i}.a = F_MVDR_spatialCov(prev_layers{1}, layer{i});       % do not support variable length yet
             
         case 'cov'
-            layer{i}.a = F_cov(layer{i+layer{i}.prev}.a);
+            layer{i}.a = F_cov(prev_layers{1}.a);       % do not support variable length yet
         case 'logdet'
-            layer{i}.a = F_logdet(layer{i+layer{i}.prev}.a);
+            layer{i}.a = F_logdet(prev_layers{1}.a);    % do not support variable length yet
         case 'll_gmm'
-            layer{i} = F_ll_gmm(layer{i+layer{i}.prev}.a, layer{i});
+            layer{i} = F_ll_gmm(prev_layers{1}.a, layer{i});    % do not support variable length yet
             
     	case 'tdoa2weight'
-    		layer{i}.a = F_tdoa2weight(layer{i+layer{i}.prev}.a, layer{i}.freqBin);
+    		layer{i}.a = F_tdoa2weight(prev_layers{1}.a, layer{i}.freqBin);
     	case 'real_imag2bfweight'
             if isfield(layer{i}, 'online')==0; layer{i}.online = 0; end
-    		layer{i}.a = F_real_imag2BFweight(layer{i+layer{i}.prev}.a, layer{i}.freqBin, layer{i}.online);
+    		[layer{i}.a, layer{i}.validFrameMask] = F_real_imag2BFweight(prev_layers{1}, layer{i}.freqBin, layer{i}.online);
     	case 'mse'
-    		layer{i}.a = F_mean_square_error(layer(i+layer{i}.prev), layer{i}.useMahaDist, layer{i});
+    		layer{i}.a = F_mean_square_error(prev_layers, layer{i}.useMahaDist, layer{i});
     	case 'cross_entropy';
-    		[layer{i}.a, layer{i}.acc] = F_cross_entropy(layer(i+layer{i}.prev), layer{i});
+    		[layer{i}.a, layer{i}.acc] = F_cross_entropy(prev_layers, layer{i});
     	case 'multi_cross_entropy';
-    		[layer{i}.a, layer{i}.acc] = F_multi_cross_entropy(layer(i+layer{i}.prev), layer{i});
+    		[layer{i}.a, layer{i}.acc] = F_multi_cross_entropy(prev_layers, layer{i});
         case 'lstm'
-            [layer{i}] = F_LSTM(layer{i+layer{i}.prev}.a, layer{i});
+            layer{i} = F_LSTM(prev_layers{1}, layer{i});
         otherwise
             fprintf('Error: unknown output node type %s!\n', layer{i}.name);
     end
+    
+    % pass validFrameMask from layer to layer
+    if isfield(layer{i}, 'prev') && ~isfield(layer{i}, 'validFrameMask')
+        if size(layer{i}.a,3)>1      % for those layers that do not need validFrameMask for computing, we compute the mask here.
+            layer{i}.validFrameMask = getValidFrameMask(prev_layers{1}); 
+        else    % for two dimensional activations, there is no need to have mask
+            layer{i}.validFrameMask = [];
+        end
+    end
+    
     if i<nLayer
         if para.NET.L1weight>0
             layer{i}.rho = mean(layer{i}.a,2);
@@ -246,7 +261,7 @@ for i=nLayer:-1:1
         case {'weighting'}
             [layer{i}.grad, layer{i}.grad_W, layer{i}.grad_b] = B_weighting(prev_layers, layer{i}, future_layers);
         case 'lstm'
-             [layer{i}.grad, layer{i}.grad_W, layer{i}.grad_b] = B_LSTM(prev_layers{1}.a, layer{i}, future_layers);
+             [layer{i}.grad, layer{i}.grad_W, layer{i}.grad_b] = B_LSTM(prev_layers{1}, layer{i}, future_layers);
 
         % cost layers
         
@@ -301,15 +316,20 @@ for i=nLayer:-1:1
             power_layer = layer{i+beamform_layer.next+layer{i}.next};
             after_power_layer = layer{i+beamform_layer.next+layer{i}.next+power_layer.next};
             layer{i}.grad = B_tdoa2weight_beamforming_power(X, beamform_layer, after_power_layer, layer{i});
-%     		layer{i}.grad = B_tdoa2weight(layer{i+layer{i}.next}.grad, layer{i}, layer{i+layer{i}.prev}.a);
+    		% layer{i}.grad = B_tdoa2weight(layer{i+layer{i}.next}.grad, layer{i}, layer{i+layer{i}.prev}.a);
         case 'real_imag2bfweight'
             beamform_layer = layer{i+layer{i}.next};
             [X] = prepareBeamforming(layer(i+layer{i}.next+beamform_layer.prev));
             power_layer = layer{i+beamform_layer.next+layer{i}.next};
             after_power_layer = layer{i+beamform_layer.next+layer{i}.next+power_layer.next};
-            layer{i}.grad = B_real_imag2BFweight_beamforming_power(X, beamform_layer, after_power_layer, layer{i}, size(layer{i-1}.a,2));
-%             layer{i}.grad = B_real_imag2BFweight(layer{i+layer{i}.next}.grad, size(layer{i+layer{i}.prev}.a,2));
-
+            layer{i}.grad = B_real_imag2BFweight_beamforming_power(X, beamform_layer, after_power_layer, layer{i}, layer{i-1}.a);
+            % layer{i}.grad = B_real_imag2BFweight(layer{i+layer{i}.next}.grad, size(layer{i+layer{i}.prev}.a,2));
+        case 'spatialcovmask'
+            layer{i}.grad = B_SpatialCovMask(layer(i+layer{i}.prev), layer{i});
+        case 'mvdr_spatialcov'
+            beamform_layer = layer{i+layer{i}.next};
+            layer{i}.grad = B_MVDR_spatialCov(layer{i+layer{i}.prev}.a, layer{i});
+            
         % other non-updatable layers
         case 'relu'
         	layer{i}.grad = B_relu(future_layers, layer{i}.a);
@@ -401,4 +421,20 @@ end
 %     pause
 % end
 
+if 0    % for debugging purpose, check whether precision is violated
+    for i=1:length(layer)
+        if isfield(layer{i}, 'a')
+            fprintf('layer %d %s activation has precision "%s"\n', i, layer{i}.name, class(gather(layer{i}.a(1))));
+        end
+        if isfield(layer{i}, 'grad')
+            fprintf('layer %d %s gradient has precision "%s"\n', i, layer{i}.name,  class(gather(layer{i}.grad(1))));
+        end
+        if isfield(layer{i}, 'grad_W') && ~isempty(layer{i}.grad_W)
+            fprintf('layer %d %s gradient has precision "%s"\n', i, layer{i}.name,  class(gather(layer{i}.grad_W(1))));
+        end
+        if isfield(layer{i}, 'grad_b') && ~isempty(layer{i}.grad_b)
+            fprintf('layer %d %s gradient has precision "%s"\n', i, layer{i}.name,  class(gather(layer{i}.grad_b(1))));
+        end
+    end
+end
 end
