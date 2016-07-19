@@ -2,7 +2,8 @@
 % specifies speech presense probability at all time frequency locations,
 % with a 1 means speech present and 0 means speech absent. 
 %
-function output = F_MVDR_spatialCov(input, curr_layer)
+function output = F_MVDR_spatialCov(input_layer, curr_layer)
+input = input_layer.a;
 fs = curr_layer.fs;
 freqBin = curr_layer.freqBin;
 nFreqBin = length(freqBin);
