@@ -48,10 +48,15 @@ startItr = length(LOG.actual_LR)+1;
 theta = NetWeights_layer2vec(layer, 0, para.useGPU);
 for itr = startItr:para.maxItr
     old_theta = theta;
+    
+    [cost_func, layer] = DNN_Cost10(layer, batch_data, para, mode);     % run the DNN_Cost once to generate some parameters, such as posteriors of Gaussians
+    
     [theta, cost] = minFunc( @(x) DNN_cost_wrapper(x, layer, batch_data, para, mode), theta, options); % optimization
     LOG.cost(itr) = gather(cost);
 
     layer = NetWeights_vec2layer(theta, layer, 0);
+    
+    layer = clean_network_layer(layer);         % clean the network, such as posteriors of Gaussians
     
     fprintf('Cost for epoch %d = %f - %s\n', itr, LOG.cost(itr), datestr(now));
     

@@ -17,7 +17,12 @@ for i=1:length(layer)
         if randomParaLoc
             nPara = 5;
         else
-            nPara = m*n;
+            if isfield(layer{i}, 'mask')
+                [idx_m, idx_n] = find(layer{i}.mask==1);
+                nPara = length(idx_m);
+            else
+                nPara = m*n;
+            end
         end
         for j=1:nPara
             if randomParaLoc
@@ -27,12 +32,24 @@ for i=1:length(layer)
                     idx1 = nonzero_idx1(rand_idx(1));
                     idx2 = nonzero_idx2(rand_idx(1));
                 else
-                    idx1 = randperm(m); idx1 = idx1(1);
-                    idx2 = randperm(n); idx2 = idx2(1);
+                    if isfield(layer{i}, 'mask')
+                        [idx1, idx2] = find(layer{i}.mask==1);
+                        random_idx = randperm(length(idx1));
+                        idx1 = idx1(random_idx(1));
+                        idx2 = idx2(random_idx(1));
+                    else
+                        idx1 = randperm(m); idx1 = idx1(1);
+                        idx2 = randperm(n); idx2 = idx2(1);
+                    end
                 end
             else
-                idx2 = ceil(j/m);
-                idx1 = j-(idx2-1)*m;
+                if isfield(layer{i}, 'mask')
+                    idx1 = idx_m(j);
+                    idx2 = idx_n(j);
+                else
+                    idx2 = ceil(j/m);
+                    idx1 = j-(idx2-1)*m;
+                end
             end
             
             init_val = layer{i}.W(idx1,idx2);

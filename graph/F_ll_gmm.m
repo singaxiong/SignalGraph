@@ -18,7 +18,11 @@ end
 
 if isfield(curr_layer, 'gconst');    gconst = curr_layer.gconst; else gcost = []; end
 
-[LL, post] = compLikelihoodGMMFast(input, gconst, prior, mu, invCov, diagCov, useGPU);
+if isfield(curr_layer, 'post')
+    post = curr_layer.post;
+else
+    [~, post] = compLikelihoodGMMFast(input, gconst, prior, mu, invCov, diagCov, useGPU);
+end
 
 % output is the EM auxiliary function
 
@@ -36,16 +40,10 @@ else    % vectorized version
     Z_sigma_mu = sum(sum( (invCov.*mu)' * input    .* post ));
 end
 
-if 0
-%     output = Z_sigma_Z/2 - Z_sigma_mu;
-   output = Z_sigma_Z/2;
-% output = sum(sum(   invCov'      * input.^2 ));
-else
-    GaussianOccupation = sum(post,2)';
-    mu_sigma_mu = sum( GaussianOccupation .* sum( mu.^2 .* invCov ) );
-    norm_term   = sum( GaussianOccupation .* sum(log(invCov)) ) - dim * log(2*pi)*nFr;
-    output = Z_sigma_Z/2 - Z_sigma_mu;% + mu_sigma_mu/2 + norm_term/2;
-end
+% GaussianOccupation = sum(post,2)';
+% mu_sigma_mu = sum( GaussianOccupation .* sum( mu.^2 .* invCov ) );
+% norm_term   = sum( GaussianOccupation .* sum(log(invCov)) ) - dim * log(2*pi)*nFr;
+output = Z_sigma_Z/2 - Z_sigma_mu;% + mu_sigma_mu/2 + norm_term/2;
 curr_layer.a = output / nFr;   % we actually minimize negative likelihood
 curr_layer.post = post;
 

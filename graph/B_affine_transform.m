@@ -44,12 +44,11 @@ if curr_layer.update
 end
 if skip_grad==0
     grad = transform' * future_grad;
-end
-
-if n3>1
-%     grad = PadGradientVariableLength(grad, validFrameMask);
-
-    grad = reshape(grad, size(grad,1), n2, n3);
+    if n3>1
+        grad = reshape(grad, size(grad,1), n2, n3);
+    end
+else
+    grad = [];
 end
 
 end
