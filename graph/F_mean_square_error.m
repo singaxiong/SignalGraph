@@ -8,6 +8,7 @@ if useMahaDist ==1  % in case 1, we use diagonal covariance matrix, which can be
 elseif useMahaDist ==2  % in case 2, we use full covariance matrix, which can only be global and not class-dependent
    cost = 0.5/m * trace(diff' * cost_scale * diff);
 else
-   cost = 0.5/m * sum(sum( diff.*diff ));
+   cost = 0.5/m * sum(sum( diff .* conj(diff) ));   % support both real and complex numbers
 end
+
 end

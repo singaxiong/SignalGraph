@@ -17,6 +17,7 @@ end
 nCh = D2/D;
 data = reshape(data, D, nCh, T, N);
 data = permute(data, [2 3 1 4]);
+% data = abs(data);
 
 if windowSize == 0      % utterance mode, estimate two spatial covariance matrixes for each utterance, one is speech and the other is noise.
     if 0    % for loop version
@@ -26,19 +27,27 @@ if windowSize == 0      % utterance mode, estimate two spatial covariance matrix
         else
             scm_speech = zeros(nCh, nCh, D, N);
             scm_noise = zeros(nCh, nCh, D, N);
-        end        
-        
+        end    
         for d=1:D
             for n=1:N
-                curr_mask = mask(d,:,n) ;
-                curr_data = data(:, :, d, n);
-                weighted_data = bsxfun(@times, curr_data, sqrt(curr_mask));
-                scm_speech(:,:,d,n) = weighted_data * weighted_data' / sum(curr_mask);
-                weighted_data = bsxfun(@times, curr_data, sqrt(1-curr_mask));
-                scm_noise(:,:,d,n) = weighted_data * weighted_data' / (T-sum(curr_mask));
+                for t=1:T
+                    scm_speech(:,:,d,n) = scm_speech(:,:,d,n) + mask(d,t,n) * data(:,t,d) * data(:,t,d)';
+                    scm_noise(:,:,d,n) = scm_noise(:,:,d,n) + (1-mask(d,t,n)) * data(:,t,d) * data(:,t,d)';
+                end
+                scm_speech(:,:,d,n) = scm_speech(:,:,d,n) / sum(mask(d,:,n));
+                scm_noise(:,:,d,n) = scm_noise(:,:,d,n) / (T-sum(mask(d,:,n)));
             end
         end
     else        % vectorized
+%         data_cell = num2cell(data, [1]);
+%         mask_cell = num2cell(permute(mask, [3 2 1]), [1]);
+%         scm_speech_cell = cellfun(@(x,y) (reshape(x*y*y',nCh^2,1)), mask_cell, data_cell, 'UniformOutput', 0);
+%         scm_noise_cell = cellfun(@(x,y) (reshape((1-x)*y*y',nCh^2,1)), mask_cell, data_cell, 'UniformOutput', 0);
+%         scm_speech = reshape(sum(cell2mat(scm_speech_cell),2),nCh,nCh,D);
+%         scm_speech = bsxfun(@times, scm_speech, permute(1./sum(mask,2), [3 2 1]));
+%         scm_noise = reshape(sum(cell2mat(scm_noise_cell),2),nCh,nCh,D);
+%         scm_noise = bsxfun(@times, scm_noise, permute(1./sum(1-mask,2), [3 2 1]));
+        
         mask2 = permute(mask, [4 2 1 3]);
         scm_speech = ComputeCovMask(data, mask2);
         scm_noise = ComputeCovMask(data, 1-mask2);

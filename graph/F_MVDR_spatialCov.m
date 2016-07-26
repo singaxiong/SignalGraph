@@ -2,7 +2,7 @@
 % specifies speech presense probability at all time frequency locations,
 % with a 1 means speech present and 0 means speech absent. 
 %
-function output = F_MVDR_spatialCov(input_layer, curr_layer)
+function curr_layer = F_MVDR_spatialCov(input_layer, curr_layer)
 input = input_layer.a;
 fs = curr_layer.fs;
 freqBin = curr_layer.freqBin;
@@ -24,11 +24,21 @@ speechCov_cell = num2cell(speechCov, [1 2]);       % convert to cell array and c
 noiseCov_cell = num2cell(noiseCov, [1 2]); 
 
 ninv_x = cellfun(@(x,n) (inv(n)*x), speechCov_cell, noiseCov_cell, 'UniformOutput', 0);
-weight = cellfun(@(x) x(:,1), ninv_x, 'UniformOutput', 0);
 lambda = cellfun(@(x) abs(trace(x)), ninv_x, 'UniformOutput', 0);
-output = cellfun(@(x,y) x/y, weight, lambda, 'UniformOutput', 0);
-output = cell2mat(output);
+if 0    % only lambda
+    weight = cellfun(@(x,y) ones(size(x,1),1)/y, ninv_x, lambda, 'UniformOutput', 0);
+elseif 0    % no lambda
+    weight = cellfun(@(x) x(:,1), ninv_x, 'UniformOutput', 0);
+else
+    weight = cellfun(@(x,y) x(:,1)/y, ninv_x, lambda, 'UniformOutput', 0);
+end
+output = cell2mat(weight);
 output = permute(output, [3 1 2]);
 output = reshape(output, nFreqBin*nCh, T, N);
+
+curr_layer.a = output;
+curr_layer.lambda = lambda;
+curr_layer.phi_s = speechCov_cell;
+curr_layer.phi_n = noiseCov_cell;
 
 end

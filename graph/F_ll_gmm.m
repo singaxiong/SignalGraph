@@ -16,7 +16,7 @@ else
     if d3==1; diagCov = 1; else diagCov = 0; end
 end
 
-if isfield(curr_layer, 'gconst');    gconst = curr_layer.gconst; else gcost = []; end
+if isfield(curr_layer, 'gconst');    gconst = curr_layer.gconst; else gconst = []; end
 
 if isfield(curr_layer, 'post')
     post = curr_layer.post;

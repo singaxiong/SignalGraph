@@ -116,7 +116,7 @@ for i=1:nLayer
         case 'spatialcovmask'
             layer{i}.a = F_SpatialCovMask(prev_layers, layer{i});       % do not support variable length yet
         case 'mvdr_spatialcov'
-            layer{i}.a = F_MVDR_spatialCov(prev_layers{1}, layer{i});       % do not support variable length yet
+            layer{i} = F_MVDR_spatialCov(prev_layers{1}, layer{i});       % do not support variable length yet
             
         case 'cov'
             layer{i}.a = F_cov(prev_layers{1}.a);       % do not support variable length yet
@@ -297,18 +297,16 @@ for i=nLayer:-1:1
     	case 'log'
     		layer{i}.grad = B_log(future_layers, layer{i+layer{i}.prev}.a, layer{i}.const);
     	case 'power'
-    		layer{i}.grad = B_power_spectrum(future_layers);
+    		layer{i}.grad = B_power_spectrum(prev_layers{1}.a, future_layers);
     	case 'power_split'
     		layer{i}.grad = B_power_spectrum_split(future_layers, layer{i+layer{i}.prev}.a);
     	case 'filter'
     		layer{i}.grad = B_filter(future_layers, layer(i+layer{i}.prev));
     	case 'beamforming'
-            % do not implement this now
-%             future_layer = layer{i+layer{i}.next};
 %             if strcmpi(future_layer.name, 'power')  % we implement the gradient of beamforming and power spectrum together for simplicity
 %                 layer{i}.grad = B_beamforming_power(layer(i+layer{i}.next+future_layer.next), layer{i}, layer(i+layer{i}.prev));
 %             else
-%                 layer{i}.grad = B_beamforming(layer(i+layer{i}.next));
+                layer{i}.grad = B_beamforming(future_layers, prev_layers);
 %             end
     	case 'tdoa2weight'
             beamform_layer = layer{i+layer{i}.next};
@@ -325,10 +323,13 @@ for i=nLayer:-1:1
             layer{i}.grad = B_real_imag2BFweight_beamforming_power(X, beamform_layer, after_power_layer, layer{i}, layer{i-1}.a);
             % layer{i}.grad = B_real_imag2BFweight(layer{i+layer{i}.next}.grad, size(layer{i+layer{i}.prev}.a,2));
         case 'spatialcovmask'
-            layer{i}.grad = B_SpatialCovMask(layer(i+layer{i}.prev), layer{i});
+            layer{i}.grad = B_SpatialCovMask(future_layers, layer(i+layer{i}.prev), layer{i});
         case 'mvdr_spatialcov'
             beamform_layer = layer{i+layer{i}.next};
-            layer{i}.grad = B_MVDR_spatialCov(layer{i+layer{i}.prev}.a, layer{i});
+            [X] = prepareBeamforming(layer(i+layer{i}.next+beamform_layer.prev));
+            power_layer = layer{i+beamform_layer.next+layer{i}.next};
+            after_power_layer = layer{i+beamform_layer.next+layer{i}.next+power_layer.next};
+            layer{i}.grad = B_MVDR_spatialCov(X, layer{i}, beamform_layer, after_power_layer);
             
         % other non-updatable layers
         case 'relu'

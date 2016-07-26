@@ -1,9 +1,6 @@
-function grad = B_power_spectrum(future_layers)
-% we don't implement this function now, as it will be used with
-% beamforming. We will implement the joint gradient of Power spectrum and
-% frequency domain beamforming. 
-grad = 0;
-% for i=1:length(future_layers)
-% 	grad = grad + future_layers.grad;
-% end
+function grad = B_power_spectrum(ComplexSpectrum, future_layers)
+
+future_grad = GetFutureGrad(future_layers, {});
+grad = 2 * future_grad .* conj(ComplexSpectrum);      % see eq (211) of matrix cookbook 2008 version.
+
 end
