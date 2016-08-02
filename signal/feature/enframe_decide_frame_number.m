@@ -1,5 +1,5 @@
 function nFr = enframe_decide_frame_number(nSample, frame_size, frame_shift, useLastPartialFrame)
-if nargin<3
+if nargin<4
     useLastPartialFrame = 0;
 end
 

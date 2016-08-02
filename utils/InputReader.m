@@ -16,11 +16,7 @@ end
 
 switch lower(reader.name)
     case 'wavfile'
-        if isfield(reader, 'fs')
-            [feat, fs] = Reader_waveform(files, reader.fs);
-        else
-            [feat, fs] = Reader_waveform(files);
-        end
+        [feat] = Reader_waveform(files, reader);
     case 'htk'
         if isfield(reader, 'big_endian')
             feat = Reader_HTK(files, reader.big_endian, precision);
