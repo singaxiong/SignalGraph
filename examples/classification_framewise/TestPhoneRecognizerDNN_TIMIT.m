@@ -1,4 +1,4 @@
-function TestPhoneRecognizerDNN_AU4()
+function TestPhoneRecognizerDNN_TIMIT()
 
 modeldir = my_dir('nnet');
 modelfiles = findFiles(['nnet/' modeldir{1}], 'mat');
@@ -9,7 +9,7 @@ para = dnn.para;
 layer = dnn.layer(1:end-2);     % we discard the last two layers that is not useful for ASR
 
 clean_cond = 1;
-[~, Data_cv, para] = LoadData_AU4(para, clean_cond);
+[Data_cv, ~, para] = LoadData_TIMIT(para, 'test');
 
 para.out_layer_idx = length(layer) + [0];   % you can specify which layers' activation will be outputed
 output = FeatureTree2(Data_cv, para, layer);

@@ -143,7 +143,7 @@ for i=1:nLayer
     end
     
     % pass validFrameMask from layer to layer
-    if isfield(layer{i}, 'prev') && ~isfield(layer{i}, 'validFrameMask')
+    if isfield(layer{i}, 'prev') && ~isfield(layer{i}, 'validFrameMask') && ~strcmpi(layer{i}.name, 'ignore')
         if size(layer{i}.a,3)>1      % for those layers that do not need validFrameMask for computing, we compute the mask here.
             layer{i}.validFrameMask = getValidFrameMask(prev_layers{1}); 
         else    % for two dimensional activations, there is no need to have mask
