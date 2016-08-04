@@ -27,7 +27,11 @@ if 0    % note that due to the taking of double delta, the N=1 and N>1 cases are
 else    % this version produces exact results
     if variableLength
         input2 = ExtractVariableLengthTrajectory(input, validFrameMask);
-        output = gpuArray.zeros(D*3,T,N);
+        if IsInGPU(input)
+            output = gpuArray.zeros(D*3,T,N);
+        else
+            output = zeros(D*3,T,N);
+        end
         for i=1:N
             output(:,1:size(input2{i},2),i) = comp_dynamic_feature(input2{i}',2,2)';
         end

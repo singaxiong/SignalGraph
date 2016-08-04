@@ -15,10 +15,10 @@ function output = PadShortTrajectory(input, mask, padnumber)
 output = input;
 if strcmpi(padnumber, 'last')   % pad the last frame
     % find the index of the last valide frame in all sequences
-    delta = mask(2:end,:) - mask(1:end-1,:);
-    [max_delta, max_idx] = max(delta);
-    max_idx(max_delta==0) = T;
-    max_idx = gather(max_idx);
+%     delta = mask(2:end,:) - mask(1:end-1,:);
+%     [max_delta, max_idx] = max(delta);
+%     max_idx(max_delta==0) = T;
+    max_idx = gather(GetLastValidFrameIndex(mask));
     % pad the last valid frame to the invalide frames
     if 0    % 1 direct implementation
         for i=1:N
