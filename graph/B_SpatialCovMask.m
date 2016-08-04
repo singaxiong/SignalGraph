@@ -19,9 +19,14 @@ future_grad_speech = reshape(future_grad(1:D*nCh^2,:,:), nCh^2,1,D,N);
 future_grad_noise = reshape(future_grad(D*nCh^2+1:end,:,:), nCh^2,1,D,N);
 
 % from speech covariance
-data_cell = num2cell(data, [1]); 
-xx = cellfun(@(x) (reshape(x*x',nCh^2,1)), data_cell, 'UniformOutput', 0);
-xx2 = cell2mat(xx);
+if 0    % slow implementation
+    data = gather(data);
+    data_cell = num2cell(data, [1]);
+    tic; xx = cellfun(@(x) (reshape(x*x',nCh^2,1)), data_cell, 'UniformOutput', 0);toc;
+    xx2 = cell2mat(xx);
+else    % really fast implementation
+    xx2 = reshape(outProdND(data), nCh^2, T,D);
+end
 
 gradFromSpeech = bsxfun(@minus, xx2, speechCov);
 gradFromSpeech = bsxfun(@times, gradFromSpeech, future_grad_speech);
