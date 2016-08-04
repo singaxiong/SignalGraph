@@ -50,6 +50,10 @@ for i=1:nLayer
             layer{i}.a = F_concatenate(prev_layers);    % do not support variable length yet
         case 'extractdims'
             layer{i}.a = F_ExtractDims(prev_layers{1}, layer{i}.dimIndex);
+        case 'frame_select'
+            [layer{i}.a, layer{i}.validFrameMask] = F_frame_select(prev_layers{1}, layer{i});
+        case 'frame_shift'
+            [layer{i}.a, layer{i}.validFrameMask] = F_frame_shift(prev_layers{1}, layer{i});
         case 'weighting'
             layer{i}.a = F_weighting(prev_layers{1}.a, layer{i}.W, layer{i}.b);             % do not support variable length yet
         case 'cmn'
@@ -63,7 +67,7 @@ for i=1:nLayer
         case 'softmax'
             layer{i}.a = F_softmax(prev_layers{1});
         case 'multi_softmax'
-            layer{i}.a = F_multi_softmax(prev_layers{1}.a, layer{i}.TaskVocabSizes);
+            layer{i}.a = F_multi_softmax(prev_layers{1}, layer{i}.TaskVocabSizes);
         case 'logistic'
             [layer{i}.a, layer{i}.acc] = F_logistic(prev_layers, layer{i});
         case 'cosine'
@@ -90,8 +94,6 @@ for i=1:nLayer
         case 'weighted_average'
             [layer{i}.a,layer{i}.weights] = F_weighted_average(prev_layers);
         	
-        case 'multisoftmax'
-            layer{i}.a = F_multisoftmax(prev_layers{1}.a, para.classID);
     	case 'delta'
     		[layer{i}.a, layer{i}.validFrameMask] = F_dynamic_feat(prev_layers{1});
     	case 'log'
@@ -160,7 +162,14 @@ end
 
 if mode ==3
     for i=1:length(para.out_layer_idx)
-        output{i} = layer{para.out_layer_idx(i)}.a;
+        tmpOutput = layer{para.out_layer_idx(i)}.a;
+        [~,~,N] = size(tmpOutput);
+        if N==1
+            output{i} = tmpOutput;
+        else
+            mask = layer{para.out_layer_idx(i)}.validFrameMask;
+            output{i} = PadShortTrajectory(tmpOutput, mask, -1e10);
+        end
     end
     cost_func = [];
     return;

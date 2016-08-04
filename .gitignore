@@ -1,3 +1,5 @@
 *.asv
 
 utils/io/htk2ark.c
+examples/regression/nnet/
+examples/classification_framewise/nnet/

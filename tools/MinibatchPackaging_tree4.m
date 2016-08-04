@@ -55,9 +55,9 @@ for i = 1:nStream   % for each input stream
     end
 end
 
-if length(feat)>1 && size(feat{2,1},1)==1 && para.DEBUG
-    fprintf('There are %d unique classes in this block\n', length(unique(cell2mat(feat(2,:)))));
-end
+% if length(feat)>1 && size(feat{2,1},1)==1 && para.DEBUG
+%     fprintf('There are %d unique classes in this block\n', length(unique(cell2mat(feat(2,:)))));
+% end
 [feat, isVAD] = SynchronizeDataStreams3(feat, para);
 
 if sum(para.IO.isTensor)>0      % At least one stream contains tensors, i.e. a training example is a matrix, e.g. a 2D image

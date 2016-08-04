@@ -6,6 +6,15 @@ Date created: 16 Jun 2016
 
 Email: xiao.xiong.1981@gmail.com / xiaoxiong@ntu.edu.sg
 
+Lastest update
+
+Added examples of LSTM based classification task (acoustic modeling on TIMIT) (03 Aug 2016)
+
+Added examples for DNN based regression and classification tasks (16 Jun 2016)
+
+
+Introduction
+
 SignalGraph is a Matlab-based tool for building arbitrary directed acyclic graphs (DAG) for signal processing. The original purpose is to make it easy to apply deep learning techniques on speech signals on the Matlab platform. It should also be applied to other tasks, especially involving temporal trajectory data. 
 
 The tool now supports several common types of neural networks, such as feedforward deep neural networks (DNN), long-short term memory (LSTM) recurrent neural network (RNN), and convolutional neural network (CNN, currently only support temporal convolution). It allows arbitrary connections between the layers as far as there is no loop (recurrent connections). Recurrency is allowed within a layer, such as in a LSTM layer, but not allowed between layers. 
