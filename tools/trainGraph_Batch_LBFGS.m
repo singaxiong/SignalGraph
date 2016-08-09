@@ -46,6 +46,9 @@ options.display = 0;    % disable the message from the minFunc package
 mode = 1;
 startItr = length(LOG.actual_LR)+1;
 theta = NetWeights_layer2vec(layer, 0, para.useGPU);
+
+[cost_func, layer] = DNN_Cost10(layer, batch_data, para, mode); 
+LOG.cost0 = cost_func.cost;
 for itr = startItr:para.maxItr
     old_theta = theta;
     
@@ -56,7 +59,9 @@ for itr = startItr:para.maxItr
 
     layer = NetWeights_vec2layer(theta, layer, 0);
     
-    layer = clean_network_layer(layer);         % clean the network, such as posteriors of Gaussians
+    if ~isfield(para, 'cleanLayer') || para.cleanLayer
+        layer = clean_network_layer(layer);         % clean the network, such as posteriors of Gaussians
+    end
     
     fprintf('Cost for epoch %d = %f - %s\n', itr, LOG.cost(itr), datestr(now));
     
@@ -67,7 +72,7 @@ for itr = startItr:para.maxItr
     end
     
     % stopping criterion
-    if itr>=para.minItr && (LOG.cost(end-1)-LOG.cost(end))/LOG.cost(end) <para.NET.stopImprovement/100
+    if itr>1 && itr>=para.minItr && (LOG.cost(end-1)-LOG.cost(end))/LOG.cost(end) <para.NET.stopImprovement/100
         fprintf('Improvement is less than %2.3f%%, stop the training!\n', para.NET.stopImprovement);
         break;
     end

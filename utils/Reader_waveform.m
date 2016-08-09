@@ -51,6 +51,16 @@ for i=1:length(files)
             [wav, fs] = Reader_waveform_core(files{i});
         end
     end
+    if isfield(reader, 'precision')
+        switch lower(reader.precision)
+            case 'int16'
+                wav = StoreWavInt16(wav);
+            case 'single'
+                wav = single(wav);
+            case 'double'
+                wav = double(wav);
+        end
+    end
     all_wav{i} = wav;
 end
 end

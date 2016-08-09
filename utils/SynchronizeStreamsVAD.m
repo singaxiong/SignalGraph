@@ -12,19 +12,18 @@ action = words{1};
 % first
 switch lower(action)
     case 'concatenation'
-        nFr = size(data,2);
-%         [n1,n2,n3] = size(data);
-%         if n3>1
-%             nFr = n3;
-%         else
-%             nFr = n2;   % this would be erronous if the input is a tensor with just one frame. But this should be almost impossible as we will not use vad in this case. 
-%         end
+        [n1,n2,n3] = size(data);
+        if n3>1
+            nFr = n3;
+        else
+            nFr = n2;   % this would be erronous if the input is a tensor with just one frame. But this should be almost impossible as we will not use vad in this case. 
+        end
         vad(nFr+1:end) = [];
-%         if n3>1
-%             output = data(:,:,vad==1);
-%         else
+        if n3>1
+            output = data(:,:,vad==1);
+        else
             output = data(:,vad==1);
-%         end
+        end
         
     case 'segmentation'
         seglen = str2num(words{2});

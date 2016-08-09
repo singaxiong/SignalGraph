@@ -13,6 +13,9 @@ function output = PadShortTrajectory(input, mask, padnumber)
 [D,T,N] = size(input);
 
 output = input;
+if ~sum(mask(:))  % all have the same length
+    return;
+end
 if strcmpi(padnumber, 'last')   % pad the last frame
     % find the index of the last valide frame in all sequences
 %     delta = mask(2:end,:) - mask(1:end-1,:);
