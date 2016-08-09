@@ -89,7 +89,7 @@ for i=1:nLayer
         case 'tconv'
             [layer{i}.a, layer{i}.X2] = F_tconv(prev_layers{1}.a, layer{i});
         case 'tmaxpool'
-            [layer{i}.a, layer{i}.idx] = F_tmaxpool(prev_layers{1}.a, layer{i});
+            [layer{i}.a, layer{i}.idx, layer{i}.validFrameMask] = F_tmaxpool(prev_layers{1}, layer{i});
             
         case 'weighted_average'
             [layer{i}.a,layer{i}.weights] = F_weighted_average(prev_layers);
@@ -108,6 +108,8 @@ for i=1:nLayer
     		layer{i}.a = F_power_spectrum_split(prev_layers{1}.a);
     	case 'beamforming'
     		[layer{i}.a, layer{i}.validFrameMask] = F_beamforming(prev_layers);
+        case 'beamforming_freeweight'
+            layer{i}.a = F_beamforming_freeWeight(prev_layers{1}, layer{i});
         case 'filter'
             layer{i}.a = F_filter(prev_layers);
         case 'comp_gcc'
@@ -317,6 +319,8 @@ for i=nLayer:-1:1
 %             else
                 layer{i}.grad = B_beamforming(future_layers, prev_layers);
 %             end
+        case 'beamforming_freeweight'
+            [layer{i}.grad, layer{i}.grad_W] = B_beamforming_freeWeight(future_layers, prev_layers{1}, layer{i});
     	case 'tdoa2weight'
             beamform_layer = layer{i+layer{i}.next};
             [X] = prepareBeamforming(layer(i+layer{i}.next+beamform_layer.prev));

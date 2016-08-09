@@ -1,4 +1,5 @@
-function [output,idx] = F_tmaxpool(input, curr_layer)
+function [output,idx,validFrameMask] = F_tmaxpool(input_layer, curr_layer)
+input = input_layer.a;
 
 % the input contains N samples, each of DxT size
 [D,T,N] = size(input);
@@ -17,6 +18,7 @@ end
 
 if context==0 || stride==0  % global pooling
     [output,idx] = max(input,[], 2);
+    validFrameMask = zeros(1,N);
 else
     nWindow = length(1:stride:(T-context+1));
     if strcmpi(class(input), 'gpuArray')
@@ -29,6 +31,7 @@ else
         offset = (i-1)*stride;
         [output(:,i,:), idx(:,i,:)] = max(input(:,offset+1:offset+context,:), [], 2);
     end
+    validFrameMask = zeros(nWindow,N);
 end
 
 end

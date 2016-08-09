@@ -24,7 +24,9 @@ ApplyVADSet = para.IO.ApplyVADSet;
 DataSyncSet = para.IO.DataSyncSet;
 
 for vi=1:length(ApplyVADSet)
-    isVAD(ApplyVADSet{vi}(end))=1;      % set whether a stream is VAD stream or not
+    if ~isempty(ApplyVADSet{vi})
+        isVAD(ApplyVADSet{vi}(end))=1;      % set whether a stream is VAD stream or not
+    end
 end
 
 if isempty(DataSyncSet) && isempty(ApplyVADSet)

@@ -71,7 +71,7 @@ else
             offset = (0:(T2-1))*stride;
             offset2 = bsxfun(@plus, (max_idx-1)*D*N, offset*D*N);
             offset2 = reshape(offset2, numel(offset2),1);
-            idx = offset2 + repmat([1:(D*N)]', T2,1);
+            idx = double(offset2) + repmat([1:(D*N)]', T2,1);   % have to use double precision as sometimes the index can be very big
 
             if stride<context
                 % some idx may be redundant due to the fact that the same

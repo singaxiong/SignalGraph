@@ -25,7 +25,8 @@ context = -halfP : halfP;
 X2 = ExpandContext_v2(X, context);
 
 % then just perform convolution like affine transform
-Y2 = F_affine_transform(X2, W, b);
+fakeLayer.a = X2;
+Y2 = F_affine_transform(fakeLayer, W, b);
 
 % now divide the output back to samples
 Y = reshape(Y2, H, T+P, N);
