@@ -9,6 +9,7 @@ freqBin = curr_layer.freqBin;
 nFreqBin = length(freqBin);
 
 [D,T,N] = size(input);
+noiseCovRegularization = 0.1;
 
 D = D/2;
 speechCov = input(1:D,:,:,:);
@@ -23,7 +24,7 @@ noiseCov = reshape(noiseCov, nCh, nCh, nFreqBin, T, N);
 speechCov_cell = num2cell(speechCov, [1 2]);       % convert to cell array and call cellfun for speed
 noiseCov_cell = num2cell(noiseCov, [1 2]); 
 
-ninv_x = cellfun(@(x,n) (inv(n)*x), speechCov_cell, noiseCov_cell, 'UniformOutput', 0);
+ninv_x = cellfun(@(x,n) (inv( n )*x), speechCov_cell, noiseCov_cell, 'UniformOutput', 0);
 lambda = cellfun(@(x) abs(trace(x)), ninv_x, 'UniformOutput', 0);
 if 0    % only lambda
     weight = cellfun(@(x,y) ones(size(x,1),1)/y, ninv_x, lambda, 'UniformOutput', 0);
