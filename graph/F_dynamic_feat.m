@@ -1,6 +1,7 @@
 function [output,validFrameMask] = F_dynamic_feat(input_layer)
 input = input_layer.a;
 [D, T, N] = size(input);
+precision = class(gather(input));
 
 if N>1
     [validFrameMask, variableLength] = getValidFrameMask(input_layer);
@@ -28,9 +29,9 @@ else    % this version produces exact results
     if variableLength
         input2 = ExtractVariableLengthTrajectory(input, validFrameMask);
         if IsInGPU(input)
-            output = gpuArray.zeros(D*3,T,N);
+            output = gpuArray.zeros(D*3,T,N, precision);
         else
-            output = zeros(D*3,T,N);
+            output = zeros(D*3,T,N, precision);
         end
         for i=1:N
             output(:,1:size(input2{i},2),i) = comp_dynamic_feature(input2{i}',2,2)';
