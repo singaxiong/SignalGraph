@@ -44,6 +44,8 @@ for i=1:nLayer
                 if issparse(prev_layers{1}.a);  prev_layers{1}.a = full(prev_layers{1}.a); end
         		[layer{i}.a, layer{i}.validFrameMask] = F_affine_transform(prev_layers{1}, layer{i}.W, layer{i}.b);
             end
+        case 'hadamard'
+            [layer{i}.a, layer{i}.validFrameMask] = F_hadamard(prev_layers);
         case 'word2vec'
             layer{i}.a = F_word2vec(prev_layers{1}.a, layer{i}.W, para.singlePrecision);    % do not support variable length yet
         case 'concatenate'
@@ -119,6 +121,8 @@ for i=1:nLayer
             
         case 'spatialcovmask'
             layer{i}.a = F_SpatialCovMask(prev_layers, layer{i});       % do not support variable length yet
+        case 'spatialcovsplitmask'
+            layer{i}.a = F_SpatialCovSplitMask(prev_layers, layer{i});       % do not support variable length yet
         case 'mvdr_spatialcov'
             layer{i} = F_MVDR_spatialCov(prev_layers{1}, layer{i});       % do not support variable length yet
             
@@ -267,6 +271,8 @@ for i=nLayer:-1:1
         % updatable layers
         case {'affine', 'mel'}
             [layer{i}.grad, layer{i}.grad_W, layer{i}.grad_b] = B_affine_transform(prev_layers, layer{i}, future_layers, i==2);
+        case 'hadamard'
+            [layer{i}.grad] = B_hadamard(prev_layers, layer{i}, future_layers);
         case 'word2vec'
             [layer{i}.grad, layer{i}.grad_W] = B_word2vec(prev_layers, layer{i}, future_layers, para.singlePrecision);
         case {'weighting'}
@@ -337,6 +343,8 @@ for i=nLayer:-1:1
             % layer{i}.grad = B_real_imag2BFweight(layer{i+layer{i}.next}.grad, size(layer{i+layer{i}.prev}.a,2));
         case 'spatialcovmask'
             layer{i}.grad = B_SpatialCovMask(future_layers, layer(i+layer{i}.prev), layer{i});
+        case 'spatialcovsplitmask'
+            layer{i}.grad = B_SpatialCovSplitMask(future_layers, layer(i+layer{i}.prev), layer{i});
         case 'mvdr_spatialcov'
             beamform_layer = layer{i+layer{i}.next};
             [X] = prepareBeamforming(layer(i+layer{i}.next+beamform_layer.prev));
@@ -351,7 +359,7 @@ for i=nLayer:-1:1
         case 'tanh'
             layer{i}.grad = B_tanh(future_layers, layer{i}.a);
         case {'sigmoid'}
-        	layer{i}.grad = B_sigmoid(future_layers, layer{i}.a);
+        	layer{i}.grad = B_sigmoid(future_layers, layer{i});
         case 'softmax'
             future_layer = layer{i+layer{i}.next};      % we only allow one future layer connected to softmax
             if strcmpi(future_layer.name, 'cross_entropy')  % it is necessary to compute the gradient of 
