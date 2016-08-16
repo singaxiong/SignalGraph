@@ -100,7 +100,7 @@ for itr = startItr:para.maxItr
         pause(.1);
         
         if isfield(para, 'saveModelEveryXhours') && para.saveModelEveryXhours > 0
-            nHour = (nFr_seen/36e4);
+            nHour = (nFr_seen/3600/para.IO.frame_rate(1));
             if nHour >=next_Milestong_save
                 modelfile = [para.output sprintf('.hours%d.LR%s.mat', round(nHour), FormatFloat4Name(learning_rate))];
                 SaveDNN(layer, para, LOG, modelfile);
