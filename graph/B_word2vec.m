@@ -19,7 +19,12 @@ future_grad = GetFutureGrad(future_layers, curr_layer);
 nVec = nFr*nSeg;
 
 if curr_layer.update
-    grad_W = sparse(size(W,1),size(W,2));
+    if IsInGPU(input(1))
+        precision = class(gather(input(1)));
+        grad_W = gpuArray.zeros(size(W,1),size(W,2), precision);
+    else
+        grad_W = sparse(size(W,1),size(W,2));
+    end
     if 1
         curr_input = reshape(input, n, context * nVec);
         future_grad2 = reshape(future_grad, m, context*nVec);
