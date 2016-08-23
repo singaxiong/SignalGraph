@@ -52,6 +52,10 @@ for i=1:nLayer
             layer{i}.a = F_concatenate(prev_layers);    % do not support variable length yet
         case 'extractdims'
             layer{i}.a = F_ExtractDims(prev_layers{1}, layer{i}.dimIndex);
+        case 'reshape'
+            layer{i}.a = F_reshape(prev_layers{1}, layer{i});
+        case 'permute'
+            layer{i}.a = F_permute(prev_layers{1}, layer{i});
         case 'frame_select'
             [layer{i}.a, layer{i}.validFrameMask] = F_frame_select(prev_layers{1}, layer{i});
         case 'frame_shift'
@@ -83,10 +87,13 @@ for i=1:nLayer
         case 'maxout'
             
         case 'mean'
-            layer{i}.a = F_mean(prev_layers{1}.a);
-            
+            layer{i}.a = F_mean(prev_layers{1}, layer{i});
+        case 'median'
+            layer{i}.a = F_median(prev_layers{1}, layer{i});
         case 'max'
-            layer{i}.a = F_max(prev_layers{1}.a);
+            layer{i}.a = F_max(prev_layers{1}, layer{i});
+        case 'min'
+            layer{i}.a = F_min(prev_layers{1}, layer{i});
             
         case 'tconv'
             [layer{i}.a, layer{i}.X2] = F_tconv(prev_layers{1}.a, layer{i});

@@ -1,8 +1,9 @@
-function output = F_mean(input)
-T = size(input,2);
-
-mu = mean(input,2);
-output = mu;
-%output = repmat(mu, 1,T);
-
+function output = F_mean(input_layer, curr_layer)
+input = input_layer.a;
+if isfield(curr_layer, 'idx')
+    output = mean(input, curr_layer.idx);
+else
+    output = mean(input,2);
 end
+end
+
