@@ -25,8 +25,8 @@ for i=1:length(files)
         reader = SetDefaultValue(reader, 'useGPU', 0);
         
         FFT_length = 2^nextpow2(reader.frame_len);
-        nCh = size(wav,2);
-        tmp = sfft_multi(wav, reader.frame_len, reader.frame_shift, FFT_length, reader.window_type, reader.removeDC, reader.useGPU);
+        nCh = size(wav',2);
+        tmp = sfft_multi(wav', reader.frame_len, reader.frame_shift, FFT_length, reader.window_type, reader.removeDC, reader.useGPU);
         % take the first half of the Fourier coefficients
         tmp = tmp(1:FFT_length/2+1,:,:);
         % reshape multi-channel Fourier coefficients into a vector
