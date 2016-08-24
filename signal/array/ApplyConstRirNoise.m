@@ -8,7 +8,7 @@ function [y]=ApplyConstRirNoise(x,fs,RIR,NOISE,SNRdB)
 delay = gather(delay);
 before_impulse=floor(fs*0.001);
 after_impulse=floor(fs*0.05);
-RIR_direct=RIR(delay-before_impulse:delay+after_impulse,1);
+RIR_direct=RIR(max(1,delay-before_impulse):delay+after_impulse,1);
 direct_signal=freq_conv(x,RIR_direct);
 
 % obtain reverberant speech
