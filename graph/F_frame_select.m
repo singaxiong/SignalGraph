@@ -19,7 +19,7 @@ switch selectionType
                 output(:,:,i) = input{i}(:,(last_idx(i)-nFrameSelect+1):last_idx(i));
             end
         else
-            output = input(:,end-nFrameSelect+1:end,:);
+            output = input(:,max(1,end-nFrameSelect+1):end,:);
         end
         validFrameMask = zeros(nFrameSelect,N);
 

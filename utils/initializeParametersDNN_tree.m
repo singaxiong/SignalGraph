@@ -71,12 +71,18 @@ end
 if ~isempty(para.NET.WeightTyingSet)
     for i=1:length(para.NET.WeightTyingSet)
         currTyingSet = para.NET.WeightTyingSet{i};
+        [dimMismatch, isTranspose] = VerifyTiedLayers(layer(currTyingSet));
+        
         baseNode = layer{currTyingSet(1)};
         for j=2:length(currTyingSet)
             if isfield(baseNode, 'W')
-                layer{currTyingSet(j)}.W = baseNode.W;
+                if isTranspose(j)
+                    layer{currTyingSet(j)}.W = baseNode.W';
+                else
+                    layer{currTyingSet(j)}.W = baseNode.W;
+                end
             end
-            if isfield(baseNode, 'b')
+            if isfield(baseNode, 'b')   && ~isTranspose(j)  % if the two shared layers are transpose of each other, we don't share the bias
                 layer{currTyingSet(j)}.b = baseNode.b;
             end
         end

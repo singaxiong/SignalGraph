@@ -59,6 +59,7 @@ configNet = {'sequential',       0, 'whether to use sequential training.';
     'gradientClipThreshold', 0, 'if the absolute valude of the gradient of a parameter is larger than this threshold, it will be set to this value, with sign unchanged. Disabled if set to 0.';
     'weight_clip',      0, 'if the absolute value of a weight is larger than this threshold, clip the weight value. Disabled if it is set to 0.';
     'restore2prevModelIfFail', 1, 'if the cross validation cost increases after one iteration of training, restore the network to the previous version.';
+    'displayLBFGS', 0, 'whether to display LBFGS progress.';
     };
 
 configIO = {'mode', 'normal', 'input modes: 1) normal; 2) dynamicPair; 3) dynamicDistortion.';

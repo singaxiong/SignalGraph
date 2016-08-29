@@ -19,7 +19,7 @@ layer{3}.dim(2) = vocabSize;
 lstm_idx = ReturnLayerIdxByName(layer, 'LSTM');
 shareUntil = lstm_idx + para.shareNLayersAfterLSTM;
 
-layer2 = genNetworkFeedForward_v2(layer{shareUntil}.dim(1), [], vocabSize, 'cross_entropy');
+layer2 = genNetworkFeedForward_v2(layer{shareUntil}.dim(1), para.hiddenLayerSizeFFNgram, vocabSize, 'cross_entropy');
 layer2 = layer2(2:end);
 layer2{1}.prev = shareUntil - length(layer) -1;
 layer2{end-1}.inputIdx = 3;

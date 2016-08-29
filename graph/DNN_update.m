@@ -18,11 +18,16 @@ end
     
 for i=1:length(WeightUpdateOrder)
     Lidx = WeightUpdateOrder{i};
+    [~, isTranspose] = VerifyTiedLayers(layer(Lidx));
     
     % collect gradients
     grad_W = layer{Lidx(1)}.grad_W;
     for k=2:length(Lidx)
-        grad_W = grad_W + layer{Lidx(k)}.grad_W;
+        if isTranspose(k)
+            grad_W = grad_W + layer{Lidx(k)}.grad_W';
+        else
+            grad_W = grad_W + layer{Lidx(k)}.grad_W;
+        end
     end
     
     if para.NET.gradientClipThreshold > 0
@@ -67,7 +72,11 @@ for i=1:length(WeightUpdateOrder)
     end
     
     for k=2:length(Lidx)   % copy weights to other tied layers
-        layer{Lidx(k)}.W = layer{Lidx(1)}.W;
+        if isTranspose(k)
+            layer{Lidx(k)}.W = layer{Lidx(1)}.W';
+        else
+            layer{Lidx(k)}.W = layer{Lidx(1)}.W;
+        end
     end
     
     if para.DEBUG
@@ -83,7 +92,9 @@ for i=1:length(WeightUpdateOrder)
     if has_bias
         grad_b = layer{Lidx(1)}.grad_b;
         for k=2:length(Lidx)
-            grad_b = grad_b + layer{Lidx(k)}.grad_b;
+            if ~isTranspose(k)      % if the layer is a transpose of first layer, its grad_b is not used and its b won't be trained
+                grad_b = grad_b + layer{Lidx(k)}.grad_b;
+            end
         end
         if para.NET.rmsprop_decay>0
 %             layer{k}.gradb_avg_square = layer{k}.gradb_avg_square * para.rmsprop_decay + ...
@@ -102,7 +113,9 @@ for i=1:length(WeightUpdateOrder)
         end
         layer{Lidx(1)}.b = layer{Lidx(1)}.b - update{i}.b;
         for k=2:length(Lidx)   % copy biases to other tied layers
-            layer{Lidx(k)}.b = layer{Lidx(1)}.b;
+            if ~isTranspose(k)
+                layer{Lidx(k)}.b = layer{Lidx(1)}.b;
+            end
         end
     end
 end

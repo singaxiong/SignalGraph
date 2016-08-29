@@ -95,6 +95,9 @@ for i=1:nLayer
         case 'min'
             layer{i}.a = F_min(prev_layers{1}, layer{i});
             
+        case 'weight2activation'
+            layer{i} = F_weight2activation(layer{i});
+            
         case 'tconv'
             [layer{i}.a, layer{i}.X2] = F_tconv(prev_layers{1}.a, layer{i});
         case 'tmaxpool'
@@ -116,7 +119,7 @@ for i=1:nLayer
     	case 'power_split'
     		layer{i}.a = F_power_spectrum_split(prev_layers{1}.a);
     	case 'beamforming'
-    		[layer{i}.a, layer{i}.validFrameMask] = F_beamforming(prev_layers);
+    		[layer{i}.a] = F_beamforming(prev_layers, layer{i});
         case 'beamforming_freeweight'
             layer{i}.a = F_beamforming_freeWeight(prev_layers{1}, layer{i});
         case 'filter'
@@ -145,6 +148,8 @@ for i=1:nLayer
     	case 'real_imag2bfweight'
             if isfield(layer{i}, 'online')==0; layer{i}.online = 0; end
     		[layer{i}.a, layer{i}.validFrameMask] = F_real_imag2BFweight(prev_layers{1}, layer{i}.freqBin, layer{i}.online);
+        case 'realimag2complex'
+            layer{i}.a = F_realImag2complex(prev_layers{1});
     	case 'mse'
     		layer{i}.a = F_mean_square_error(prev_layers, layer{i}.useMahaDist, layer{i});
     	case 'cross_entropy';
@@ -180,8 +185,13 @@ if mode ==3
         if N==1
             output{i} = tmpOutput;
         else
-            mask = layer{para.out_layer_idx(i)}.validFrameMask;
-            output{i} = PadShortTrajectory(tmpOutput, mask, -1e10);
+            currLayer = layer{para.out_layer_idx(i)};
+            if isfield(currLayer, 'validFrameMask')
+                mask = currLayer.validFrameMask;
+                output{i} = PadShortTrajectory(tmpOutput, mask, -1e10);
+            else
+                output{i} = tmpOutput;
+            end
         end
     end
     cost_func = [];
@@ -275,6 +285,8 @@ for i=nLayer:-1:1
     switch lower(layer{i}.name)
         case {'input', 'idx2vec', 'enframe', 'comp_gcc', 'stft'} % do nothing
         
+        case 'frame_select'
+            layer{i}.grad = B_frame_select(prev_layers{1}, future_layers, layer{i});
         % updatable layers
         case {'affine', 'mel'}
             [layer{i}.grad, layer{i}.grad_W, layer{i}.grad_b] = B_affine_transform(prev_layers, layer{i}, future_layers, i==2);
@@ -317,6 +329,9 @@ for i=nLayer:-1:1
         case 'cmn'
             layer{i}.grad = B_cmn(future_layers);
             
+        case 'weight2activation'
+            [layer{i}.grad, layer{i}.grad_W] = B_weight2activation(layer{i}, future_layers);
+            
         % signal processing layers
     	case 'log'
     		layer{i}.grad = B_log(future_layers, layer{i+layer{i}.prev}.a, layer{i}.const);
@@ -330,7 +345,7 @@ for i=nLayer:-1:1
 %             if strcmpi(future_layer.name, 'power')  % we implement the gradient of beamforming and power spectrum together for simplicity
 %                 layer{i}.grad = B_beamforming_power(layer(i+layer{i}.next+future_layer.next), layer{i}, layer(i+layer{i}.prev));
 %             else
-                layer{i}.grad = B_beamforming(future_layers, prev_layers);
+                layer{i}.grad = B_beamforming(future_layers, prev_layers, layer{i});
 %             end
         case 'beamforming_freeweight'
             [layer{i}.grad, layer{i}.grad_W] = B_beamforming_freeWeight(future_layers, prev_layers{1}, layer{i});
@@ -348,6 +363,8 @@ for i=nLayer:-1:1
             after_power_layer = layer{i+beamform_layer.next+layer{i}.next+power_layer.next};
             layer{i}.grad = B_real_imag2BFweight_beamforming_power(X, beamform_layer, after_power_layer, layer{i}, layer{i-1}.a);
             % layer{i}.grad = B_real_imag2BFweight(layer{i+layer{i}.next}.grad, size(layer{i+layer{i}.prev}.a,2));
+        case 'realimag2complex'
+            layer{i}.grad = B_realImag2complex(future_layers, layer{i});
         case 'spatialcovmask'
             layer{i}.grad = B_SpatialCovMask(future_layers, layer(i+layer{i}.prev), layer{i});
         case 'spatialcovsplitmask'
@@ -410,7 +427,15 @@ for i=nLayer:-1:1
         end
     end
     if para.DEBUG
-        if isfield(layer{i},'grad'); hasnan = hasnan + sum(sum(isnan(layer{i}.grad))); end
+        if isfield(layer{i},'grad'); 
+            if iscell(layer{i}.grad)
+                for grad_i = 1:length(layer{i}.grad)
+                    hasnan = hasnan + sum(sum(isnan(layer{i}.grad{grad_i})));
+                end
+            else
+                hasnan = hasnan + sum(sum(isnan(layer{i}.grad)));
+            end
+        end
         if isfield(layer{i},'grad_b'); hasnan = hasnan + sum(sum(isnan(layer{i}.grad_b))); end
         if isfield(layer{i},'grad_W'); hasnan = hasnan + sum(sum(isnan(layer{i}.grad))); end
     end

@@ -6,6 +6,10 @@ selectionType = words{1};
 
 switch selectionType
     case 'last'
+        if strcmpi(Cost_layer.name, 'MSE')
+            return;
+        end
+        
         if length(words)>1
             N = str2num(words{2});
         else

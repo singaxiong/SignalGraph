@@ -41,7 +41,7 @@ end
 
 options.maxIter = para.NET.maxItrLBFGS;
 options.Method = 'LBFGS';
-options.display = 0;    % disable the message from the minFunc package
+options.display = para.NET.displayLBFGS;    % disable the message from the minFunc package
 
 mode = 1;
 startItr = length(LOG.actual_LR)+1;
