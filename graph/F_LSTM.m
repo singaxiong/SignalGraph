@@ -41,7 +41,11 @@ if strcmpi(class(input), 'gpuArray'); useGPU=1; else useGPU = 0; end
 precision = class(gather(input(1)));
 
 useHidden = 1;
-usePastStateAsFeature = LSTM_layer.usePastState;
+if isfield(LSTM_layer, 'usePastState')
+    usePastStateAsFeature = LSTM_layer.usePastState;
+else
+    usePastStateAsFeature=0;
+end
 usePastState = 1;
 
 nCell = LSTM_layer.dim(1);  % number of LSTM cells in the layer

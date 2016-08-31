@@ -122,6 +122,8 @@ for i=1:nLayer
     		[layer{i}.a] = F_beamforming(prev_layers, layer{i});
         case 'beamforming_freeweight'
             layer{i}.a = F_beamforming_freeWeight(prev_layers{1}, layer{i});
+        case 'beamforming_gaintdoa'
+            layer{i}.a = F_beamforming_gainTDOA(prev_layers{1}, layer{i});
         case 'filter'
             layer{i}.a = F_filter(prev_layers);
         case 'comp_gcc'
@@ -287,6 +289,8 @@ for i=nLayer:-1:1
         
         case 'frame_select'
             layer{i}.grad = B_frame_select(prev_layers{1}, future_layers, layer{i});
+        case 'reshape'
+            layer{i}.grad = B_reshape(prev_layers{1}, future_layers, layer{i});
         % updatable layers
         case {'affine', 'mel'}
             [layer{i}.grad, layer{i}.grad_W, layer{i}.grad_b] = B_affine_transform(prev_layers, layer{i}, future_layers, i==2);
@@ -349,13 +353,15 @@ for i=nLayer:-1:1
 %             end
         case 'beamforming_freeweight'
             [layer{i}.grad, layer{i}.grad_W] = B_beamforming_freeWeight(future_layers, prev_layers{1}, layer{i});
+        case 'beamforming_gaintdoa'
+            [layer{i}.grad, layer{i}.grad_W, layer{i}.grad_b] = B_beamforming_gainTDOA(future_layers, prev_layers{1}, layer{i});
     	case 'tdoa2weight'
-            beamform_layer = layer{i+layer{i}.next};
-            [X] = prepareBeamforming(layer(i+layer{i}.next+beamform_layer.prev));
-            power_layer = layer{i+beamform_layer.next+layer{i}.next};
-            after_power_layer = layer{i+beamform_layer.next+layer{i}.next+power_layer.next};
-            layer{i}.grad = B_tdoa2weight_beamforming_power(X, beamform_layer, after_power_layer, layer{i});
-    		% layer{i}.grad = B_tdoa2weight(layer{i+layer{i}.next}.grad, layer{i}, layer{i+layer{i}.prev}.a);
+%             beamform_layer = layer{i+layer{i}.next};
+%             [X] = prepareBeamforming(layer(i+layer{i}.next+beamform_layer.prev));
+%             power_layer = layer{i+beamform_layer.next+layer{i}.next};
+%             after_power_layer = layer{i+beamform_layer.next+layer{i}.next+power_layer.next};
+%             layer{i}.grad = B_tdoa2weight_beamforming_power(X, beamform_layer, after_power_layer, layer{i});
+    		layer{i}.grad = B_tdoa2weight(future_layers, layer{i});
         case 'real_imag2bfweight'
             beamform_layer = layer{i+layer{i}.next};
             [X] = prepareBeamforming(layer(i+layer{i}.next+beamform_layer.prev));
