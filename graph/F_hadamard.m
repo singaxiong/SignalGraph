@@ -1,8 +1,8 @@
 function [output, validFrameMask] = F_hadamard(input_layers)
 input = input_layers{1}.a;
-mask = input_layers{2}.a;
+input2 = input_layers{2}.a;
 
-output = input .* mask;
+output = input .* input2;
 
 [D,M,N] = size(input);
 if N==1

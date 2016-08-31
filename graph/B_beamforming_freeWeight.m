@@ -12,7 +12,7 @@ input2 = reshape(input, nBin, nCh, T, N);
 future_grad = GetFutureGrad(future_layers, curr_layer);
 future_grad = reshape(future_grad,nBin,1,T,N);
 
-grad_W = bsxfun(@times, input2, future_grad);
+grad_W = bsxfun(@times, input2, conj(future_grad));
 grad_W = sum(reshape(grad_W,nBin,nCh,T*N),3);
 grad_W = grad_W.';
 grad_W = [real(grad_W); imag(grad_W)];
