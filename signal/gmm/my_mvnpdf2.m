@@ -1,9 +1,9 @@
-function prob = my_mvnpdf(x,mu,invCov)
+function prob = my_mvnpdf2(x,mu,invCov)
 diagCov = size(invCov,1) ~= size(invCov,2);
 [dim, nFr] = size(x);
 
 if diagCov == 0
-    prob = mvnpdf(x,mu,invCov);
+    prob = mvnpdf(x',mu,inv(invCov));
 else
     norm_term = ( (2*pi)^(dim/2) ) / prod( sqrt(invCov) );
     tmp = bsxfun(@minus, x, mu(:));

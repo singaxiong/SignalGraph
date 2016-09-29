@@ -44,6 +44,8 @@ for i=1:nLayer
                 if issparse(prev_layers{1}.a);  prev_layers{1}.a = full(prev_layers{1}.a); end
         		[layer{i}.a, layer{i}.validFrameMask] = F_affine_transform(prev_layers{1}, layer{i}.W, layer{i}.b);
             end
+        case 'add'
+            layer{i}.a = F_add(prev_layers);
         case 'hadamard'
             [layer{i}.a, layer{i}.validFrameMask] = F_hadamard(prev_layers);
         case 'word2vec'
@@ -316,7 +318,7 @@ for i=nLayer:-1:1
             
         % temporal layers: require sequential training
         case 'mean'
-            layer{i}.grad = B_mean(prev_layers, future_layers);
+            layer{i}.grad = B_mean(prev_layers{1}, future_layers, layer{i});
             
         case 'tconv'
             [layer{i}.grad, layer{i}.grad_W, layer{i}.grad_b]  = B_tconv(prev_layers, layer{i}, future_layers, i==2);

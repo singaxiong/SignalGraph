@@ -1,10 +1,16 @@
-function grad = B_mean(prev_layer, future_layers)
-T = size(prev_layer{1}.a,2);
+function grad = B_mean(input_layer, future_layers, curr_layer)
+input = input_layer.a;
+[D,T,N] = size(input);
 
-grad = 0;
-for i=1:length(future_layers)
-    % grad = grad + repmat(sum(future_layers{i}.grad,2), 1, T)/T;
-    grad = grad + repmat(future_layers{i}.grad, 1, T)/T;
+future_grad = GetFutureGrad(future_layers, curr_layer);
+
+poolIdx = curr_layer.pool_idx;
+if poolIdx==3
+    grad = repmat(future_grad/N, [1 1 N]);
+elseif poolIdx==2
+    grad = repmat(future_grad/T, [1 T 1]);
+else
+    grad = repmat(future_grad/D, [D 1 1]);    
 end
 
 end
