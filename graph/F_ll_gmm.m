@@ -8,9 +8,9 @@ mu = curr_layer.mu;
 invCov = curr_layer.invCov;
 
 [dim,nFr] = size(input);
-nMix = length(prior);
+nGaussian = length(prior);
 [d1,d2,d3] = size(invCov);
-if nMix==1
+if nGaussian==1
     if d2==1; diagCov = 1; else diagCov = 0; end
 else
     if d3==1; diagCov = 1; else diagCov = 0; end
@@ -21,23 +21,61 @@ if isfield(curr_layer, 'gconst');    gconst = curr_layer.gconst; else gconst = [
 if isfield(curr_layer, 'post')
     post = curr_layer.post;
 else
-    [~, post] = compLikelihoodGMMFast(input, gconst, prior, mu, invCov, diagCov, useGPU);
+    if isfield(curr_layer, 'projection')
+        [~, post] = compLikelihoodGMMFast(input, gconst, prior, mu, invCov, diagCov, curr_layer.projection);
+    else
+        [~, post] = compLikelihoodGMMFast(input, gconst, prior, mu, invCov, diagCov);
+    end
 end
 
 % output is the EM auxiliary function
 
-if 0    % for loop version
-    Z_sigma_Z = 0;
-    Z_sigma_mu = 0;
-    for t=1:nFr
-        for j=1:nMix
-            Z_sigma_Z = Z_sigma_Z + post(j,t) * sum( input(:,t).^2 .* invCov(:,j) );
-            Z_sigma_mu = Z_sigma_mu + post(j,t) * sum( input(:,t) .* invCov(:,j) .* mu(:,j) );
+if diagCov
+    if 0    % for loop version
+        Z_sigma_Z = 0;
+        Z_sigma_mu = 0;
+        for t=1:nFr
+            for j=1:nGaussian
+                Z_sigma_Z = Z_sigma_Z + post(j,t) * sum( input(:,t).^2 .* invCov(:,j) );
+                Z_sigma_mu = Z_sigma_mu + post(j,t) * sum( input(:,t) .* invCov(:,j) .* mu(:,j) );
+            end
+        end
+    else    % vectorized version
+        Z_sigma_Z = sum(sum(   invCov'      * input.^2 .* post ));
+        Z_sigma_mu = sum(sum( (invCov.*mu)' * input    .* post ));
+    end
+else
+    if 0    % for loop version
+        Z_sigma_Z2 = 0;
+        Z_sigma_mu2 = 0;
+        for t=1:nFr
+            for j=1:nGaussian
+                Z_sigma_Z2 = Z_sigma_Z2 + post(j,t) * input(:,t)' * invCov(:,:,j) * input(:,t);
+                Z_sigma_mu2 = Z_sigma_mu2 + post(j,t) * input(:,t)' * invCov(:,:,j) * mu(:,j);
+            end
+        end        
+    end
+    
+    if isfield(curr_layer, 'projection')
+        projection = curr_layer.projection;
+    else
+        if IsInGPU(invCov); projection = gpuArray.zeros(dim*nGaussian, dim); else projection = zeros(dim*nGaussian, dim); end
+        for i=1:nGaussian
+            projection((i-1)*dim+1:i*dim,:) = chol(invCov(:,:,i));
         end
     end
-else    % vectorized version
-    Z_sigma_Z = sum(sum(   invCov'      * input.^2 .* post ));
-    Z_sigma_mu = sum(sum( (invCov.*mu)' * input    .* post ));
+    
+    data_proj = projection * input;
+    data_proj = reshape(data_proj, dim, nGaussian, nFr);
+    Z_sigma_Z =  sum(sum( squeeze(sum(data_proj.^2)) .* post ));
+    
+    mu_proj = projection * mu;
+    mu_proj = reshape(mu_proj, dim, nGaussian, nGaussian);
+    for i=1:nGaussian
+        mu_proj2(:,i) = mu_proj(:,i,i);
+    end
+    
+    Z_sigma_mu = sum(sum( squeeze(sum(bsxfun(@times, data_proj, mu_proj2))) .* post ));
 end
 
 % GaussianOccupation = sum(post,2)';

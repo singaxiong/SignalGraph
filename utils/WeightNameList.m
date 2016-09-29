@@ -5,7 +5,7 @@ switch lower(type)
     case 'tunable'
         list = {'W', 'b'};
     case 'all'
-        list = {'W', 'b', 'prior', 'mu', 'invCov', 'mask'};
+        list = {'W', 'b', 'prior', 'mu', 'invCov', 'mask', 'projection'};
 end
 
 end

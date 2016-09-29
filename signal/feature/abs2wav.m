@@ -1,3 +1,8 @@
+% len is frame size in samples, 
+% len1 is frame overlap in samples
+% mag_x is the magnitude (no log)
+% phase_x is the phase returned by angle(x), where x is the complex Fourier
+% coefficients. 
 function wav = abs2wav(mag_x, phase_x, len, len1)
 nFFT = size(mag_x,2)*2-2;
 img = sqrt(-1);
