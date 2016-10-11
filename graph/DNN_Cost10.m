@@ -56,6 +56,10 @@ for i=1:nLayer
             layer{i}.a = F_ExtractDims(prev_layers{1}, layer{i}.dimIndex);
         case 'reshape'
             layer{i}.a = F_reshape(prev_layers{1}, layer{i});
+        case 'repmat'
+            layer{i}.a = F_repmat(prev_layers{1}, layer{i});
+        case 'transpose'
+            layer{i}.a = F_transpose(prev_layers{1}, layer{i});
         case 'permute'
             layer{i}.a = F_permute(prev_layers{1}, layer{i});
         case 'frame_select'
@@ -293,6 +297,10 @@ for i=nLayer:-1:1
             layer{i}.grad = B_frame_select(prev_layers{1}, future_layers, layer{i});
         case 'reshape'
             layer{i}.grad = B_reshape(prev_layers{1}, future_layers, layer{i});
+        case 'repmat'
+            layer{i}.grad = B_repmat(future_layers, layer{i});
+        case 'transpose'
+            layer{i}.grad = B_transpose(future_layers, layer{i});
         % updatable layers
         case {'affine', 'mel'}
             [layer{i}.grad, layer{i}.grad_W, layer{i}.grad_b] = B_affine_transform(prev_layers, layer{i}, future_layers, i==2);
