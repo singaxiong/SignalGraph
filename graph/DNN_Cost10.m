@@ -160,6 +160,8 @@ for i=1:nLayer
             layer{i}.a = F_realImag2complex(prev_layers{1});
     	case 'mse'
     		layer{i}.a = F_mean_square_error(prev_layers, layer{i}.useMahaDist, layer{i});
+        case 'jointcost'
+            layer{i}.a = F_jointCost(prev_layers{1}, layer{i});
     	case 'cross_entropy';
     		[layer{i}.a, layer{i}.acc] = F_cross_entropy(prev_layers, layer{i});
     	case 'multi_cross_entropy';
@@ -312,11 +314,16 @@ for i=nLayer:-1:1
             [layer{i}.grad, layer{i}.grad_W, layer{i}.grad_b] = B_weighting(prev_layers, layer{i}, future_layers);
         case 'lstm'
              [layer{i}.grad, layer{i}.grad_W, layer{i}.grad_b] = B_LSTM(prev_layers{1}, layer{i}, future_layers);
+        case 'add'
+             [layer{i}.grad] = B_add(prev_layers, future_layers);
 
         % cost layers
         
         case 'mse'
     		layer{i}.grad = B_mean_square_error(prev_layers, layer{i}.useMahaDist, layer{i});
+            layer{i}.grad = SetCostWeightOnGrad(layer{i}.grad, para.cost_func, i);
+        case 'jointcost'
+    		layer{i}.grad = B_jointCost(prev_layers{1}, layer{i});
             layer{i}.grad = SetCostWeightOnGrad(layer{i}.grad, para.cost_func, i);
     	case {'multi_cross_entropy', 'cross_entropy'}    %compute the gradient together with softmax
     		% layer{i}.grad = B_cross_entropy(layer(i+layer{i}.prev));
