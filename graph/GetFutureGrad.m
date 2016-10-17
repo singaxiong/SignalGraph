@@ -15,7 +15,7 @@ for i=1:length(future_layers)
             else
                 tmp_grad = tmp_future_layer.grad;
             end
-        case {'inner_product_normalized', 'concatenate', 'cosine', 'spatialcovsplitmask', 'hadamard', 'lda', 'beamforming'}
+        case {'inner_product_normalized', 'concatenate', 'cosine', 'spatialcovsplitmask', 'hadamard', 'lda', 'beamforming', 'add'}
             idx = tmp_future_layer.prev == -curr_layer.next(i);    % find out which of the future grad cell contains the gradient for current layer. 
                                     % The prev of the future layer for the current layer mathces the negative of the next of the current layer for the future layer.
             tmp_grad = tmp_future_layer.grad{idx};
