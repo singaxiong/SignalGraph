@@ -315,7 +315,7 @@ for i=nLayer:-1:1
         case 'lstm'
              [layer{i}.grad, layer{i}.grad_W, layer{i}.grad_b] = B_LSTM(prev_layers{1}, layer{i}, future_layers);
         case 'add'
-             [layer{i}.grad] = B_add(prev_layers, future_layers);
+             [layer{i}.grad] = B_add(prev_layers, future_layers, layer{i});
 
         % cost layers
         
@@ -355,7 +355,7 @@ for i=nLayer:-1:1
             
         % signal processing layers
     	case 'log'
-    		layer{i}.grad = B_log(future_layers, layer{i+layer{i}.prev}.a, layer{i}.const);
+    		layer{i}.grad = B_log(future_layers, layer{i+layer{i}.prev}.a, layer{i});
     	case 'power'
     		layer{i}.grad = B_power_spectrum(prev_layers{1}.a, future_layers);
     	case 'power_split'
