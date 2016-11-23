@@ -18,7 +18,7 @@ if exist('useGPU')==0 || length(useGPU)==0
 end
 
 if exist('doDithering')==0 || length(doDithering)==0
-    x = x + randn(size(x))*eps;
+    x = x + randn(size(x))/2^32;
 end
 
 % produce the hamming windowm
