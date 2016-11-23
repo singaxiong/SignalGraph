@@ -69,23 +69,40 @@ end
 function [wav, fs] = Reader_waveform_core(file, fs)
 
 words = ExtractWordsFromString_v2(file);
-if length(words)==3
-    filename = words{1};
-    time1 = str2num(words{2});
-    time2 = str2num(words{3});
-    if nargin<2
-        [wav, fs] = ReadAudioSeg(filename, time1, time2);
-    else
-        [wav, fs] = ReadAudioSeg(filename, time1, time2, fs);
-    end
-else
-    [wav,fs] = audioread(file);
-end
-wav = wav';
 
+if nargin<2
+    hasFs = 0;
+else
+    hasFs = 1;
+end
+selectChannel = 0;
+selectTime = 0;
+
+filename = words{1};
 if length(words)==4 || length(words)==2
     channelID = str2num(words{end});
+    selectChannel = 1;
+end
+if length(words)>=3
+    time1 = str2num(words{2});
+    time2 = str2num(words{3});
+    selectTime = 1;
+end
+
+if selectTime
+    if hasFs
+        [wav, fs] = ReadAudioSeg(filename, time1, time2, fs);
+    else
+        [wav, fs] = ReadAudioSeg(filename, time1, time2);
+    end
+else
+    [wav, fs] = audioread(filename);
+end
+
+if selectChannel
     wav = wav(:,channelID);
 end
+
+wav = wav';
 
 end
