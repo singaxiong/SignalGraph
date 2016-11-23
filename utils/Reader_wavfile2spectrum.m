@@ -22,6 +22,7 @@ for i=1:length(files)
     reader = SetDefaultValue(reader, 'window_type', 'hamming');
     reader = SetDefaultValue(reader, 'removeDC', 0);
     reader = SetDefaultValue(reader, 'useGPU', 0);
+    reader = SetDefaultValue(reader, 'doDithering', 0);
     
     FFT_length = 2^nextpow2(reader.frame_len);
     nCh = size(wav',2);

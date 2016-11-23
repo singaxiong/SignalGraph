@@ -1,4 +1,4 @@
-function output = FeatureTree2(visible, para, layer)
+function [output, layerOut] = FeatureTree2(visible, para, layer)
 % remove target and cost function nodes if any
 for i=1:length(layer)
     if strcmpi(layer{i}.name, 'target') || strcmpi(layer{i}.name, 'cross_entropy') || strcmpi(layer{i}.name, 'mse') || strcmpi(layer{i}.name, 'logistic')
@@ -17,6 +17,10 @@ for utt_i = 1:minibatch.nBatch
     batch_data = GetMinibatch2(minibatch, para, utt_i);
     
     % Use mode=3 to generate network output only
-    [~, ~, output{utt_i}] = DNN_Cost10(layer, batch_data, para,3);
+    if nargout>1
+        [~, layerOut{utt_i}, output{utt_i}] = DNN_Cost10(layer, batch_data, para,3);
+    else
+        [~, ~, output{utt_i}] = DNN_Cost10(layer, batch_data, para,3);
+    end
 end
 end

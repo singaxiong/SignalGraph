@@ -83,4 +83,9 @@ else
 end
 wav = wav';
 
+if length(words)==4 || length(words)==2
+    channelID = str2num(words{end});
+    wav = wav(:,channelID);
+end
+
 end

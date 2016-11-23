@@ -63,7 +63,7 @@ for i=1:length(processing)
             if isfield(processing{i}, 'transform')
                 output = log(output+processing{i}.transform);
             else
-                output = log(output);
+                output = log(output+eps);
             end
         case 'power'
             output = real(output .* conj(output));
