@@ -5,7 +5,7 @@
 % Last modified: 24 Jun, 2006
 
 
-function fft_x = sfft_multi(x,frame_size,frame_shift,FFT_length,window_type,do_DC_remove, useGPU)
+function fft_x = sfft_multi(x,frame_size,frame_shift,FFT_length,window_type,do_DC_remove, useGPU, doDithering)
 
 % x should be a TxN matrix, where T is the number of samples, and N is the
 % number of channels. 
@@ -15,6 +15,10 @@ if exist('do_DC_remove')==0 || length(do_DC_remove)==0
 end
 if exist('useGPU')==0 || length(useGPU)==0
     useGPU = 0;
+end
+
+if exist('doDithering')==0 || length(doDithering)==0
+    x = x + randn(size(x))*eps;
 end
 
 % produce the hamming windowm
