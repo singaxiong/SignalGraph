@@ -1,3 +1,5 @@
+% verify that the global MVN is correct. 
+% Xiong Xiao
 function [processing] = VerifyPreprocessingTree(layer, Visible, para, nUttUsed)
 if exist('nUttUsed')==0 || isempty(nUttUsed)
     nUttUsed = 500;
