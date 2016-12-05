@@ -1,3 +1,8 @@
+% given a network and some data, compute the mean and variance of the
+% network output. This function is usually used to determine the global
+% mean and variance normalization parameters in the preprocessing. 
+% Xiong Xiao
+%
 function [W, b] = computeGlobalCMVN(Visible, nUttUsed, para, layer)
 if exist('nUttUsed')==0 || length(nUttUsed)==0
     nUttUsed = 500;
