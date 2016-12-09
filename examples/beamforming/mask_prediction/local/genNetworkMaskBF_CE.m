@@ -171,7 +171,7 @@ layer{end}.context = 11;
 layer{end}.dim = [layer{end}.context 1]*layer{length(layer)+layer{end}.prev}.dim(1);
 layer{end}.update = 0;
 
-layer{end+1}.name = 'Affine';   % diagonal transofrm
+layer{end+1}.name = 'Affine';   % diagonal transofrm for global MVN on fbank features
 layer{end}.prev = -1;
 layer{end}.W = []; % to be initialized randomly or by pretraining
 layer{end}.b = [];
