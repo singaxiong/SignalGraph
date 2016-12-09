@@ -9,9 +9,9 @@ function [layer, para] = Build_MaskBFnet_CE(Data_tr, para, stage)
 para.output = 'tmp';
 
 layer = genNetworkMaskBF_CE(para.topology);     % generate the network graph
-para.cost_func.layer_idx = length(layer);
-para.cost_func.layer_weight = [1];
-para.preprocessing{1} = {};
+para.cost_func.layer_idx = length(layer);       % specify which layers are cost function layers
+para.cost_func.layer_weight = [1];              % set the weights of each cost function layer
+para.preprocessing{1} = {};                     % optional preprocessing for each data stream
 para.preprocessing{2} = {};
 
 % generating the scaling factor for the input, as we will need to use a
@@ -72,7 +72,7 @@ else    % otherwise, we need to generate the preprocessing
     end
 end
 
-if ~strcmpi(para.topology.BfNetType, 'MVDR')
+if ~strcmpi(para.topology.BfNetType, 'MVDR')    % if we don't use MVDR, we can also use neural network to predict beamforming filters from spatial covariance matrices. This part is not implemented well yet, and not tested. 
     affine_layers = ReturnLayerIdxByName(layer, 'affine');
     tanh_layer = ReturnLayerIdxByName(layer, 'tanh');
     for i=affine_layers
@@ -82,7 +82,10 @@ if ~strcmpi(para.topology.BfNetType, 'MVDR')
     end
 end
 
-if stage<=2; return; end
+if stage<=2; return; end        % we only build the network up to beamforming filter estimation. Not tested, so don't use this option. 
+
+% below are code for integrating the beamforming front end with acoustic
+% model back end. 
 
 % set Mel filterbank linear transform
 layer = InitMelLayer(layer, para);
@@ -129,11 +132,8 @@ else        % we have no information to initialize this layer
     para1.out_layer_idx = length(layer1)+1;
     VerifyPreprocessingTree(layer(1:splice_layer_idx+1), Data_tr, para1, 100);
 end
-% if pretrainBF || pretrainAM
-%     para2 = para; para2.out_layer_idx = splice_layer_idx+1;
-%     VerifyPreprocessingTree(layer(1:splice_layer_idx+1), Data_tr, para2, 100);
-% end
+
 for i=1:length(para.topology.hiddenLayerSizeAM)+1
-    layer{splice_layer_idx + i*2}.update = para.topology.updateAM;
+    layer{splice_layer_idx + i*2}.update = para.topology.updateAM;  % set the update field of acoustic model. 
 end
 end
