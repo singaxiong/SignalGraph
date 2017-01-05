@@ -30,12 +30,12 @@ para.skipInitialEval = 1;
 para.displayTag = 'LSTM-Mask';
 
 % define local settings for the experiment, such as the data path.
-chime_root = 'F:/Data2/CHiME4';
+chime_root = ChoosePath4OS({'F:/Data/CHiME4', '/home/xiaoxiong/CHiME4'});   % you can set two paths, first for windows OS and second for Linux OS. 
 % ChoosePath4OS allows us to define two paths for the data, one for
 % Windows system and one for Linux system. The function will select the
 % correct path, so we don't need to change code for different platforms.
-para.local.wavroot_noisy = ChoosePath4OS({[chime_root '/audio/isolated'], '/home/xiaoxiong/CHiME3/isolated'});
-para.local.wavroot_clean = ChoosePath4OS({[chime_root '/audio/isolated/tr05_org'], '/home/xiaoxiong/CHiME3/isolated/tr05_org'});
+para.local.wavroot_noisy = [chime_root '/audio/isolated'];
+para.local.wavroot_clean = [chime_root '/audio/isolated/tr05_org'];
 % if you have at least 30GB free system memory, you can simply load all
 % CHiME-4 waveforms (about 20GB) into memory. Otherwise, it is better to
 % load the file names instead. Better to use SSD for fast loading speed.

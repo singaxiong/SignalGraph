@@ -6,20 +6,51 @@ data = prev_layers{3}.a;
 [D,T,N] = size(maskSpeech);
 [D2,T,N] = size(data);
 nCh = D2/D;
+spatCov = curr_layer.a;
+future_grad = GetFutureGrad(future_layers, curr_layer);
+
+% data = abs(data);
+if N>1
+    [validMask, variableLength] = getValidFrameMask(curr_layer);
+    maskSpeechUtt = ExtractVariableLengthTrajectory(maskSpeech, validMask);
+    maskNoiseUtt = ExtractVariableLengthTrajectory(maskNoise, validMask);
+    dataUtt = ExtractVariableLengthTrajectory(data, validMask);
+    precision = class(gather(future_grad(1)));
+    if IsInGPU(future_grad(1))
+        grad{1} = gpuArray.zeros(D,T,N, precision);
+        grad{2} = gpuArray.zeros(D,T,N, precision);
+    else
+        grad{1} = zeros(D,T,N, precision);
+        grad{2} = zeros(D,T,N, precision);
+    end
+    for i=1:N
+        gradTmp = GetGradUtt(dataUtt{i}, maskSpeechUtt{i}, maskNoiseUtt{i}, spatCov(:,:,i), future_grad(:,:,i));
+        nFrSeg = size(dataUtt{i},2);
+        grad{1}(:,1:nFrSeg,i) = gradTmp{1};
+        grad{2}(:,1:nFrSeg,i) = gradTmp{2};
+    end
+else
+    grad = GetGradUtt(data, maskSpeech, maskNoise, spatCov, future_grad);
+end
+end
+
+%%
+function grad = GetGradUtt(data, maskSpeech, maskNoise, spatCov, future_grad)
+[D,T,N] = size(maskSpeech);
+[D2,T,N] = size(data);
+nCh = D2/D;
+
 data = reshape(data, D, nCh, T, N);
 data = permute(data, [2 3 1 4]);
-% data = abs(data);
 
 maskSpeech_f = sum(maskSpeech,2);     % sum of mask over time
 maskNoise_f = sum(maskNoise,2);     % sum of mask over time
 
-spatCov = curr_layer.a;
-speechCov = reshape(spatCov(1:D*nCh^2,:,:,:), nCh^2,1,D,N);
-noiseCov = reshape(spatCov(D*nCh^2+1:end,:,:,:), nCh^2,1,D,N);
+speechCov = reshape(spatCov(1:D*nCh^2,:,:,:), nCh^2,1,D);
+noiseCov = reshape(spatCov(D*nCh^2+1:end,:,:,:), nCh^2,1,D);
 
-future_grad = GetFutureGrad(future_layers, curr_layer);
-future_grad_speech = reshape(future_grad(1:D*nCh^2,:,:), nCh^2,1,D,N);
-future_grad_noise = reshape(future_grad(D*nCh^2+1:end,:,:), nCh^2,1,D,N);
+future_grad_speech = reshape(future_grad(1:D*nCh^2,:,:), nCh^2,1,D);
+future_grad_noise = reshape(future_grad(D*nCh^2+1:end,:,:), nCh^2,1,D);
 
 % from speech covariance
 if 0    % slow implementation
@@ -48,5 +79,4 @@ grad{2} = real(gradFromNoise);
 % preserve the real-valued property of the mask, we just take the real part
 % of the gradient, which represents the search direction of mask in the
 % real domain.
-
 end

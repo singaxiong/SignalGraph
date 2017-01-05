@@ -5,12 +5,19 @@ function [layer, para, expTag] = BuildGeneralMaskBF_CHiME4(modelDir, iteration, 
 % poolingType = 'Median';
 
 expTag = [modelDir '_itr' num2str(iteration) '_' num2str(nCh) 'ch_' poolingType '_' poolingType2 '_pass' num2str(nPass)];
-modelfile = dir(['nnet/' modelDir '/nnet.itr' num2str(iteration) '.*']);
-modelfile = ['nnet/' modelDir '/' modelfile.name];
+
+% switch modelDir
+%     case {'SplitMaskBF_LSTM_MVDR_DNN.U8634_mixed_randPair.771-1024-AM0-7_2048-1981.L2_0.LR_3E-2',...    % it4
+%             'Split0_2chMaskBF_LSTM_MVDR_DNN.U8634_mixed_randPair.771-1024-AM0-7_2048-1981.L2_0.LR_3E-3',...
+%             'MaskBF_LSTM_MVDR_DNN.U8634_mixed_randPair.771-1024-AM0-7_2048-1981.L2_0.LR_3E-3',...
+%             'LSTM_Mask1ch.U69953.771-1024-257.L2_3E-4.LR_3E-2'}    % it2
+        modelfile = dir(['nnet/' modelDir '/nnet.itr' num2str(iteration) '.*']);
+        modelfile = ['nnet/' modelDir '/' modelfile.name];
+% end
+
 dnn = load(modelfile);
 para = dnn.para;
 layer = dnn.layer;
-
 CMN_idx = ReturnLayerIdxByName(layer, 'CMN');
 if length(CMN_idx)==1   % this is a MSE trained mask estimator
     para.topology = SetDefaultValue(para.topology, 'nChMask', 1);
@@ -41,9 +48,41 @@ layer{3}.b = zeros(layer{3}.dim(1),1);
 STFT_layer_idx = 3;
 
 % decide how many layers to feed into LSTM
+if ~strcmpi(poolingType, 'none')    % if we use pooling, we will process each channels individually. 
+    ExtractDims_idx = ReturnLayerIdxByName(layer, 'ExtractDims');
+    layer{ExtractDims_idx}.name = 'reshape';    % reshape speech into a tensor of nFreqBin x nFrame x nCh
+    layer{ExtractDims_idx}.sourceDims = para.topology.nFreqBin;
+    layer{ExtractDims_idx}.targetDims = [para.topology.nFreqBin nCh];
+    layer{ExtractDims_idx}.dim = [1 nCh] * para.topology.nFreqBin;
+    permuteLayer.name = 'permute';
+    permuteLayer.permute_order = [1 3 2];
+    permuteLayer.prev = -1;
+    permuteLayer.dim = [1 1]*layer{ExtractDims_idx}.dim(1);    
+    layer = [layer(1:ExtractDims_idx) permuteLayer layer(ExtractDims_idx+1:end)];
+end
+
+% add pooling layers
 if ~strcmpi(poolingType, 'none')
-    para.topology.poolingType = poolingType;
-    [layer2, para] = ConvertMaskBF2pooling(layer, para);
+    lstm_idx =  ReturnLayerIdxByName(layer, 'LSTM');
+    pool_layer.name = lower(poolingType);
+    pool_layer.prev = -1;
+    pool_layer.pool_idx = 3;     % pool over the third dimension, i.e. overal all channels
+    pool_layer.dim = [1 1] * para.topology.nFreqBin;
+    
+    [scm_layer, split] = GetScmLayer(layer); 
+    if ~split
+        layer2 = [layer(1:lstm_idx+2) pool_layer layer(lstm_idx+3:end)];
+        scm_layer = ReturnLayerIdxByName(layer, 'SpatialCovMask');
+        layer2{scm_layer}.prev = [-1 STFT_layer_idx-scm_layer];
+    else
+        layer2 = [layer(1:lstm_idx+2) pool_layer layer(lstm_idx+3:lstm_idx+4) pool_layer layer(lstm_idx+5:end)];
+        scm_layer = ReturnLayerIdxByName(layer2, 'SpatialCovSplitMask');
+        layer2{scm_layer}.prev = [-4 -1 STFT_layer_idx-scm_layer];
+        pool_idx = ReturnLayerIdxByName(layer2, poolingType);
+        layer2{pool_idx(1)+1}.prev = -4;
+        layer2{pool_idx(2)+1}.prev = [-4 -1 STFT_layer_idx-pool_idx(2)-1];
+    end
+    [layer2, scm_idx, split] = HandleSTFT(layer2, STFT_layer_idx, 1, para);
 else
     layer2 = layer;
 end

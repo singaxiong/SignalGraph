@@ -14,7 +14,7 @@ para.NET.batchSize = 256;   % minibatch size
 para.NET.learning_rate = 1e-2;      % global learning rate
 para.NET.momentum = [0.5];          % momentun
 para.NET.L2weight = 3e-4;           % L2 regularization weight
-para.useGPU = 0;                    % whether to use GPU
+para.useGPU = 1;                    % whether to use GPU
 para.displayInterval = 100;         % display training progress after N minibathces
 para.checkGradient = 0;             % whether to perform gradient checking before training
 para.stopImprovement = 0.1;         % when to stop the training, Most of time I use Ctr+C :)
@@ -36,7 +36,7 @@ plot(std(feat_tmp2')); hold off;
 para.preprocessing{2} = {};     % we don't need any preprocessing for the second stream, i.e. the label
 
 inputDim = para.preprocessing{1}{end}.outputDim;
-hiddenLayerSize = [512];        % you can generate deeper network by using something like: hiddenLayerSize = [512 512 200 512]. Then it will generate 4 hidden layers. 
+hiddenLayerSize = [2048 2048];        % you can generate deeper network by using something like: hiddenLayerSize = [512 512 200 512]. Then it will generate 4 hidden layers. 
 outputDim = size(feat_tmp,1);
 cost_function = 'mse';
 layer = genNetworkFeedForward_v2(inputDim, hiddenLayerSize, outputDim, cost_function);

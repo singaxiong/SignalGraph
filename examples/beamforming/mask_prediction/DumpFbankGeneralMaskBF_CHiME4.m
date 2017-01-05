@@ -2,43 +2,45 @@ function DumpFbankGeneralMaskBF_CHiME4
 addpath('../lib');
 addpath('local');
 
-nCh = 6;
-modelDir = 'F:\Dropbox\Workspace\Enhancement\Beamforming\CHiME4\XX\nnet\LSTM_Mask1chOfficial.U41972.771-1024-257.L2_3E-4.LR_3E-2';    % the directory in ./nnet to be used
-iteration = 8;      % the iteration number to be used
-nPass = 1;
-poolingType  = 'median';
-poolingType2 = 'none';
+if 1
+    nCh = 6;
+    modelDir = 'LSTM_Mask1chOfficial.U41972.771-1024-257.L2_3E-4.LR_3E-2';    % the directory in ./nnet to be used
+    iteration = 7;      % the iteration number to be used
+    nPass = 1;
+    poolingType  = 'none';
+    poolingType2 = 'none';
+else
+    nCh = 6;
+    modelDir = 'MaskBF6ch_split0_mean_LSTM_MVDR_DNN.U8634_mixed_randPair.771-1024-AM0-7_2048-1981.L2_0.LR_3E-3';    % the directory in ./nnet to be used
+    iteration = 1;      % the iteration number to be used
+    nPass = 1;
+    poolingType  = 'mean';
+    poolingType2 = 'none';
+end
 
+chime_root = ChoosePath4OS({'F:/Data/CHiME4', '/home/xiaoxiong/CHiME4'});   % you can set two paths, first for windows OS and second for Linux OS. 
+% build the network to apply beamforming on test data. This network may be
+% different from the network used during training. 
 [layer, para, expTag] = BuildGeneralMaskBF_CHiME4(modelDir, iteration, nCh, poolingType, poolingType2, nPass);
+para.local.wavroot_noisy = [chime_root '/audio/isolated'];
+para.local.fbankroot = [chime_root '/fbank/' expTag];
+% my_mkdir(para.local.fbankroot);
 
-wavlist = LoadCHiME4_test(nCh);
+wavlist = LoadWavTest_CHiME4(para);
 wavreader.name = 'wavfile';
 wavreader.array = 1;
 wavreader.multiArrayFiles = 1;
+[~,nUtt] = size(wavlist);
 
-fbankroot = ChoosePath4OS({['F:/Data/CHiME3/fbank/' expTag], ['/home/xiaoxiong/CHiME3/fbank/' expTag]});
-my_mkdir(fbankroot);
-
-[nCh,nUtt] = size(wavlist);
 for si = 1:nUtt
     [~,uttID] = fileparts(wavlist{1,si});
     PrintProgress(si, nUtt, 100, uttID);
 
     [wav] = InputReader(wavlist(:,si), wavreader);
-    wav = StoreWavInt16(wav);
-    if nCh==6
-        wav = wav([1 2 3 4 5 6], :);
-    end
-
-    if para.topology.useWav
-        Data(1).data{1} = wav;
-    end
+    Data(1).data{1} = StoreWavInt16(wav);
     
     output = FeatureTree2(Data, para, layer);
     
-    nBin = para.topology.fft_len/2+1;
-    nCh = para.topology.nCh;
-
     noisy_complex_spec = output{1}{1};
     enhanced_complex_spec = output{1}(2:2+nPass-1);
     offset = nPass+1;
@@ -67,16 +69,14 @@ for si = 1:nUtt
         end
         figure(2)
         imagesc(CMN(log(abs([noisy_complex_spec(1:257,:); cell2mat(enhanced_complex_spec')]))')');colorbar
-%         imagesc(enhanced_fbank);colorbar
         
         title(regexprep(uttID, '_', '\\_'));        pause(.1);
     end
     
     words = ExtractWordsFromString_v2(dos2unix(wavlist{1,si}), '/');
-    fbank_file = [fbankroot '/' words{end-2} '/' words{end-1} '/' uttID(1:end-4) '.CH5.fbank'];     % use a fake channel 5
+    fbank_file = [para.local.fbankroot '/' words{end-2} '/' words{end-1} '/' uttID(1:end-4) '.CH5.fbank'];     % use a fake channel 5
     dirname = fileparts(fbank_file);
     my_mkdir(dirname);
     writeHTK(fbank_file, enhanced_fbank', 'MFCC_0', 1);
-    
 end
 end

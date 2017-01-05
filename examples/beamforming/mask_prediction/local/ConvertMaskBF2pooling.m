@@ -8,11 +8,18 @@
 function [layer, para] = ConvertMaskBF2pooling(layer, para)
 
 ExtractDims_idx = ReturnLayerIdxByName(layer, 'ExtractDims');
+if isempty(ExtractDims_idx)     % if this layer does not exist, the model is already using mask pooling, do nothing. 
+    return;
+end
+
 STFT_layer_idx = ExtractDims_idx-1;
 layer{ExtractDims_idx}.name = 'reshape';    % reshape speech into a tensor of nFreqBin x nFrame x nCh. The network will treat it as nCh utterances, and hence predict masks for each channel independently. 
-layer{ExtractDims_idx}.sourceDims = para.topology.nFreqBin;
+layer{ExtractDims_idx}.sourceDims = para.topology.nFreqBin*para.topology.nCh;
 layer{ExtractDims_idx}.targetDims = [para.topology.nFreqBin para.topology.nCh];
 layer{ExtractDims_idx}.dim = [1 para.topology.nCh] * para.topology.nFreqBin;
+if isfield(layer{ExtractDims_idx}, 'dimIndex')
+    layer{ExtractDims_idx} = rmfield(layer{ExtractDims_idx}, 'dimIndex');
+end
 permuteLayer.name = 'permute';
 permuteLayer.permute_order = [1 3 2];
 permuteLayer.prev = -1;

@@ -13,7 +13,7 @@ addpath('../lib','local');
 para.IO.nStream = 2;        % two data streams, one is input signal, one is frame level triphone state label
 para.NET.sequential = 1;    % do not randomize at frame level, randomize at sentence level
 para.NET.variableLengthMinibatch = 1;   % a minibatch may contain multiple sentences of different lengths
-para.NET.nSequencePerMinibatch = 1;     % number of sentences per minibatch
+para.NET.nSequencePerMinibatch = 10;     % number of sentences per minibatch
 para.NET.maxNumSentInBlock = 100;       % maximum number of sentences in a block
 para.NET.learning_rate = 3e-3;
 para.NET.learning_rate_decay_rate = 0.995;
@@ -30,12 +30,12 @@ para.displayInterval = 3;
 para.saveModelEveryXhours = 5;     % if the training is slow, we want to save the model between two iterations
 
 % define local settings for the experiment, such as the data path.
-chime_root = 'F:/Data/CHiME4';
+chime_root = ChoosePath4OS({'F:/Data/CHiME4', '/home/xiaoxiong/CHiME4'});   % you can set two paths, first for windows OS and second for Linux OS. 
 % ChoosePath4OS allows us to define two paths for the data, one for
 % Windows system and one for Linux system. The function will select the
 % correct path, so we don't need to change code for different platforms.
-para.local.wavroot_noisy = ChoosePath4OS({[chime_root '/audio/isolated'], '/home/xiaoxiong/CHiME3/isolated'});
-para.local.wavroot_clean = ChoosePath4OS({[chime_root '/audio/isolated/tr05_org'], '/home/xiaoxiong/CHiME3/isolated/tr05_org'});
+para.local.wavroot_noisy = [chime_root '/audio/isolated'];
+para.local.wavroot_clean = [chime_root '/audio/isolated/tr05_org'];
 % if you have at least 30GB free system memory, you can simply load all
 % CHiME-4 waveforms (about 20GB) into memory. Otherwise, it is better to
 % load the file names instead. Better to use SSD for fast loading speed.
@@ -52,7 +52,7 @@ para.topology.nChMask = 1;          % the number of channels we want to use as i
 para.topology.MaskNetType = 'LSTM'; % define mask subnet type
 para.topology.BfNetType = 'MVDR';   % define beamforming subnet type
 para.topology.AmNetType = 'DNN';    % define acoustic model subnet type
-para.topology.initialMask = 'nnet/LSTM_Mask1chOfficial.U41972.771-1024-257.L2_3E-4.LR_3E-2/nnet.itr3.LR8.51E-3.CV8.559.mat';    % the initial mask prediction network. If you don't provide the intial network, random initialization will be used. 
+para.topology.initialMask = 'nnet/LSTM_Mask1chOfficial.U41972.771-1024-257.L2_3E-4.LR_3E-2/nnet.itr7.LR7.93E-4.CV8.118.mat';    % the initial mask prediction network. If you don't provide the intial network, random initialization will be used. 
 para.topology.initialAM_CE = '../Kaldi/exp-fbank/tri4a_dnn_tr05_multi_ch5';      % initial acoustic model, usually taking from Kaldi. If you don't provide the intial AM, random initialization will be used. 
 para.topology.updateBF = 1;         % whether we want to update the mask prediction and beamforming network
 para.topology.updateAM = 0;         % whether we want to update the acoustic model. 
@@ -62,7 +62,7 @@ para.topology.hiddenLayerSizeBF = [];           % size of beamforming network, d
 para.topology.hiddenLayerSizeAM = ones(1,7)*2048;   % size of acoustic model, set to 7x2048, the same as the CHiME-4 baseline system. 
 para.topology.splitMask = 1;        % set to 1 if we want to predict speech and noise masks independently. 
 para.topology.untieLSTM = 0;        % set to 1 if we don't want to share the LSTM between speech and noise mask prediction. 
-para.topology.poolingType= 'mean';  % type of pooling of masks of channels. 
+para.topology.poolingType= 'none';  % type of pooling of masks of channels. 
 
 % set a tag that will be displayed during training so we will know roughly
 % what is being trained. 
@@ -101,5 +101,5 @@ para.output = sprintf('%s-%d.L2_%s.LR_%s/nnet', para.output, para.topology.nSeno
 LOG = [];
 
 para
- trainGraph_SGD(layer, Data_tr, Data_cv, para, LOG);
+trainGraph_SGD(layer, Data_tr, Data_cv, para, LOG);
 

@@ -36,7 +36,7 @@ for i=1:nLayer
     	case 'input'
     		layer{i}.a = data{layer{i}.inputIdx};
         case 'idx2vec'
-            layer{i}.a = F_idx2vec(prev_layers{1}.a, layer{i}, para.singlePrecision);       % do not support variable length yet
+            [layer{i}.a, layer{i}.validFrameMask] = F_idx2vec(prev_layers{1}, layer{i}, para.singlePrecision);       % do not support variable length yet
     	case 'affine'
         	if strcmpi(prev_layers{1}.name, 'input') && para.IO.sparse(prev_layers{1}.inputIdx)
         		[layer{i}.a, layer{i}.validFrameMask] = F_sparse_affine_transform(prev_layers{1}, layer{i}.W, layer{i}.b, para.singlePrecision);

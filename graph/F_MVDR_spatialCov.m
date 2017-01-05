@@ -34,7 +34,7 @@ else
     weight = cellfun(@(x,y) x(:,1)/y, ninv_x, lambda, 'UniformOutput', 0);
 end
 output = cell2mat(weight);
-output = permute(output, [3 1 2]);
+output = permute(output, [3 1 2 4 5]);
 output = reshape(output, nFreqBin*nCh, T, N);
 
 curr_layer.a = output;

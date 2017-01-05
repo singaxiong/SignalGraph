@@ -7,7 +7,7 @@ input = input_layers{2}.a;
 [Dw,Tw,Nw] = size(weight);
 
 future_grad = GetFutureGrad(future_layers, curr_layer);
-
+future_grad = permute(future_grad, [1 2 4 3]);
 input = reshape(input, nBin,Di/nBin,Ti,Ni);
 
 input2 = permute(input, [1 3 2 4]);

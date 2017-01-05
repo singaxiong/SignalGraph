@@ -70,7 +70,11 @@ if variableLength   % if we have multiple sequences in the minibatch and they ha
     [D,nFr,nSeg] = size(output);
     nFrOrig = nFr;
     [output] = ExtractVariableLengthTrajectory(output, mask);
-    [target] = ExtractVariableLengthTrajectory(target, mask);
+    if size(target,2)>1
+        [target] = ExtractVariableLengthTrajectory(target, mask);
+    else % sometimes, the whole sentence has only one target, then no need to select target.
+        target = squeeze(num2cell(target, [1 2]))';
+    end  
     if hasScale; [scale] = ExtractVariableLengthTrajectory(scale, mask); end
     for i=1:nSeg
         if size(target{i},2)==1

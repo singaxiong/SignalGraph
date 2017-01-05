@@ -1,9 +1,18 @@
-function output = F_idx2vec(input, curr_layer, single_precision)
+function [output,validMask] = F_idx2vec(input_layer, curr_layer, single_precision)
+input = input_layer.a;
 [n1,n2,n3] = size(input);
 vocabSize = curr_layer.dim(1);
 
 if n3>1
-    input = reshape(input, n1,n2*n3);
+    [validMask, variableLength] = getValidFrameMask(input_layer);
+    if variableLength
+        data = ExtractVariableLengthTrajectory(input, validMask);
+        input = cell2mat_gpu(data);
+    else
+        input = reshape(input, n1,n2*n3);
+    end
+else
+    validMask = [];
 end
 
 if 1
@@ -26,7 +35,11 @@ end
 
 if n3>1
     output = full(output);
-    output = reshape(output, size(output,1), n2, n3);
+    if variableLength
+        output = PadGradientVariableLength(output, validMask);
+    else
+        output = reshape(output, size(output,1), n2, n3);
+    end
     if single_precision
         output = single(output);
     end
