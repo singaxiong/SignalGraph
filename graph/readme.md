@@ -23,3 +23,19 @@ This folder contains all the forward (F_xxx) and backward (B_xxx) functions of t
   - Enframe: output = F_enframe(input, frame_len, frame_shift). Put time domain signal into overlapping frames. Forward pass only. 
   - Extract dimensions: [output] = F_ExtractDims(input_layer, idx). Extract a subset of dimensions from the input, the subset is defined by "idx". 
   - Filter: output = F_filter(input_layers). Apply filter (from the first input layer) to data (from the second input layer). 
+  - Frame select: [output, validFrameMask] = F_frame_select(input_layer, curr_layer). Select certain column vectors (frames) of the input. 
+  - Frame shift: [output, validFrameMask] = F_frame_shift(input_layer, curr_layer). Shift the column vectors (frames) of the input. 
+  - Elementwise multiplication: [output, validFrameMask] = F_hadamard(input_layers). Multiply the activation of previous layers element-by-element. 
+  - Index to vector: [output,validMask] = F_idx2vec(input_layer, curr_layer, single_precision). Convert class label into one-hot representation. 
+  - Inner product: output = F_inner_product(input_layers). Compute inner product of two vectors. Applied to column vectors independently. 
+  - Inner product normalized: output = F_inner_product_normalized(input_layers). Same as inner product, but normalized by the size of column vectors. 
+  - Itakura Saito distance: output = F_Itakura_Saito(input_layers). Compute the IS distance between clean speech and noisy/enhanced speech vectors. 
+  - Joint cost: cost = F_jointCost(input_layer, curr_layer). Compute the joint cost between neighboring frames. This can be used to measure the smoothness of vector trajectories. 
+  - Linear discriminant analysis: not finished. 
+  - GMM log likelihood: curr_layer = F_ll_gmm(input, curr_layer). Compute the log likelihood of the input vectors on a given GMM model. 
+  - Logarithm: [output,validFrameMask] = F_log(input_layer, const). Apply logarithm to each element. Option to add a small constant for stable gradient. 
+  - Log determinant: output = F_logdet(input). Compute the log determinant of input matrix, usually a covariance matrix. 
+  - Logistic: [cost, acc] = F_logistic(input_layers, CostLayer). The logistic cost function for two class classification problems. 
+  - LSTM: [LSTM_layer] = F_LSTM(input_layer, LSTM_layer). A single layer unidirectional LSTM layer. 
+  - Max: output = F_max(input_layer, curr_layer). Elementwise max function. 
+  
