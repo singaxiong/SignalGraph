@@ -38,4 +38,14 @@ This folder contains all the forward (F_xxx) and backward (B_xxx) functions of t
   - Logistic: [cost, acc] = F_logistic(input_layers, CostLayer). The logistic cost function for two class classification problems. 
   - LSTM: [LSTM_layer] = F_LSTM(input_layer, LSTM_layer). A single layer unidirectional LSTM layer. 
   - Max: output = F_max(input_layer, curr_layer). Elementwise max function. 
+  - Mean: output = F_mean(input_layer, curr_layer). Elementwise mean pooling. 
+  - Mean square error: cost = F_mean_square_error(input_layers, useMahaDist, CostLayer). MSE cost function for regression. 
+  - Median: output = F_median(input_layer, curr_layer). Elementwise median pooling. 
+  - Min: output = F_min(input_layer, curr_layer). Elementwise min pooling. 
+  - Multi cross entropy: [cost,acc] = F_multi_cross_entropy(input_layers, CE_layer). Multiple cross entropy cost function. Useful for simultaneously predicting multiple classification targets. 
+  - Multi softmax: output = F_multi_softmax(input_layer, TaskVocabSizes). Useful for multiple classification tasks. 
+  - MVDR beamforming with spatial covariance matrices: curr_layer = F_MVDR_spatialCov(input_layer, curr_layer). Estimate MVDR beamforming parameters from noise and speech spatial covariance matrices (SCM). 
+  - Permute: output = F_permute(input_layer, curr_layer). Change the order of the data dimensions. 
+  - Power spectrum: [output] = F_power_spectrum(input_layer). Compute power spectrum from complex Fourier coefficients. 
+  - Power spectrum split: output = F_power_spectrum_split(input). Compute power spectrum from concatenated real and imaginary elements of Fourier coefficients. 
   
