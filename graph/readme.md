@@ -48,4 +48,25 @@ This folder contains all the forward (F_xxx) and backward (B_xxx) functions of t
   - Permute: output = F_permute(input_layer, curr_layer). Change the order of the data dimensions. 
   - Power spectrum: [output] = F_power_spectrum(input_layer). Compute power spectrum from complex Fourier coefficients. 
   - Power spectrum split: output = F_power_spectrum_split(input). Compute power spectrum from concatenated real and imaginary elements of Fourier coefficients. 
-  
+  - Real and imaginary parts to beamforming weights: [output,validFrameMask] = F_real_imag2BFweight(input_layer, freq_bin, online). Convert the real and imaginary parts (concatenated) to the corresponding complex numbers of beamforming filter. Obsolute, see realImag2complex. 
+  - Real and imaginary parts to complex number: [output] = F_realImag2complex(input_layer). Convert the real and imaginary parts (concatenated) to the corresponding complex numbers. 
+  - Repeat a matrix: [output] = F_repmat(input_layer, curr_layer). Similar to repmat of Matlab. 
+  - Reshape a matrix: [output] = F_reshape(input_layer, curr_layer). Similiar to reshape of Matlab. 
+  - Sigmoid: [output] = F_sigmoid(input_layer). Apply sigmoid activation elementwise. 
+  - Softmax: [output] = F_softmax(input_layer). Apply softmax activation. 
+  - Sparse linear transform: output = F_sparse_affine_transform(input, transform, bias, singlePrecision). Specially implemented for sparse input for speedup. Usually used for word embedding in NLP tasks. 
+  - Spatial covariance: output = F_SpatialCov(input_layer, curr_layer). Compute the spatial covariance of input. 
+  - Spatial covariance with mask: output = F_SpatialCovMask(prev_layers, curr_layer). Compute the spatial covariance matrices (SCM) of input with the help of a mask. Produce both noise and speech SCMs. 
+  - Spatial covariance with split mask: output = F_SpatialCovSplitMask(prev_layers, curr_layer). Same as SpatialCovMask, but now uses separate speech and noise masks. 
+  - Splice: [output,validFrameMask] = F_splice(input_layer, context). Concatenate neighbouring frames to incorporate context information. For example, splice feature vectors before DNN based acoustic model. 
+  - Short time Fourier transform: [fft_x, maskFFT] = F_stft(input_layer, curr_layer). Extract STFT from input signals. Forward only. Allow control over window type, frame length, frame shift, fft length, whether to use DC removal, etc. 
+  - Tanh: [output] = F_tanh(input_layer). Apply tanh activation. 
+  - Temporal convolution: [output,X2] = F_tconv(input, curr_layer). Apply temporal convolution. 
+  - TDOA to beamforming weight: output = F_tdoa2weight(input, freq_bin). Convert TDOA to beamforming weight. need to supply freq_bin which tells us which frequency bins to use. 
+  - Temporal max pooling: [output,idx,validFrameMask] = F_tmaxpool(input_layer, curr_layer). Apply temporal max pooling. Used together with temporal convolution. 
+  - Transpose: [output] = F_transpose(input_layer, curr_layer). Transpose input matrix. 
+  - Weight to activation: curr_layer = F_weight2activation(curr_layer). This is a specially designed node type. It's activation is the same as its weight. This node is used when we want to have the weights as inputs. 
+  - Weighted average: [output, weights] = F_weighted_average(prev_layers). Obtain weighted average of the input. One previous layer provide the weight and the other provide the input data. 
+  - Weighting: output = F_weighting(input, weight, bias). Not finished. 
+  - Within Covariance: output = F_Within_Cov(input_layers). Not finished. 
+  - Word to vector: output = F_word2vec(input, W, singlePrecision). Apply transform W on sparse input (one hot). 
