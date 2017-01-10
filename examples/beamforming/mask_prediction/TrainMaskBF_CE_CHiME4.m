@@ -13,21 +13,21 @@ addpath('../lib','local');
 para.IO.nStream = 2;        % two data streams, one is input signal, one is frame level triphone state label
 para.NET.sequential = 1;    % do not randomize at frame level, randomize at sentence level
 para.NET.variableLengthMinibatch = 1;   % a minibatch may contain multiple sentences of different lengths
-para.NET.nSequencePerMinibatch = 10;     % number of sentences per minibatch
+para.NET.nSequencePerMinibatch = 1;     % number of sentences per minibatch
 para.NET.maxNumSentInBlock = 100;       % maximum number of sentences in a block
-para.NET.learning_rate = 3e-3;
+para.NET.learning_rate = 1e-2;
 para.NET.learning_rate_decay_rate = 0.995;
 para.NET.start_learning_rate_reduction = 0;
 para.NET.momentum = [0.9];
 para.NET.L2weight = 0;
 para.NET.gradientClipThreshold = 1;
 para.NET.weight_clip = 10;
-para.useGPU     = 1;                  % whether to use GPU
+para.useGPU     = 0;                  % whether to use GPU
 para.minItr     = 10;
 para.displayGPUstatus = 1;
 para.skipInitialEval = 0;
 para.displayInterval = 3;
-para.saveModelEveryXhours = 5;     % if the training is slow, we want to save the model between two iterations
+%para.saveModelEveryXhours = 5;     % if the training is slow, we want to save the model between two iterations
 
 % define local settings for the experiment, such as the data path.
 chime_root = ChoosePath4OS({'F:/Data/CHiME4', '/home/xiaoxiong/CHiME4'});   % you can set two paths, first for windows OS and second for Linux OS. 
@@ -47,7 +47,7 @@ para.local.aliDir = '../Kaldi/exp/tri3b_tr05_multi_noisy_ali';
 
 % define network topology
 para.topology.useWav = 1;       % use waveforms as input, perform STFT etc in the network
-para.topology.useChannel = 6;   % use all 6 channels
+para.topology.useChannel = 4;   % use all 6 channels
 para.topology.nChMask = 1;          % the number of channels we want to use as input of LSTM for mask prediction, usually set to 1, i.e. predict mask for each channel independently without using cross-channel information 
 para.topology.MaskNetType = 'LSTM'; % define mask subnet type
 para.topology.BfNetType = 'MVDR';   % define beamforming subnet type
@@ -63,6 +63,7 @@ para.topology.hiddenLayerSizeAM = ones(1,7)*2048;   % size of acoustic model, se
 para.topology.splitMask = 1;        % set to 1 if we want to predict speech and noise masks independently. 
 para.topology.untieLSTM = 0;        % set to 1 if we don't want to share the LSTM between speech and noise mask prediction. 
 para.topology.poolingType= 'none';  % type of pooling of masks of channels. 
+% para.topology.scaleMaskGrad = 4;  % whether we want to scale the gradients of the masks. if 1, do not scale; if <1, new grad scale will be oldGradScale.^scaleMaskGrad. 
 
 % set a tag that will be displayed during training so we will know roughly
 % what is being trained. 
@@ -90,6 +91,14 @@ end
 [Data_tr, para] = LoadWavLabel_CHiME4(para, 1, 'tr05');
 [Data_cv, para] = LoadWavLabel_CHiME4(para, 5, 'dt05');     % we only use 1/5 of dev data as cv data for speed. 
 
+% if para.topology.scaleMaskGrad>=1
+%     para.displayTag = [para.displayTag '_scaleMaskGrad' FormatFloat4Name(para.topology.scaleMaskGrad)];
+%     para.output = [para.output '_scaleMaskGrad' FormatFloat4Name(para.topology.scaleMaskGrad)];
+%     para.NET.learning_rate = para.NET.learning_rate;    % reduce the learning rate as the gradient now is larger
+%     scm_idx = GetScmLayer(layer);
+%     layer{scm_idx}.scaleMaskGrad = para.topology.scaleMaskGrad;
+% end
+
 % generate the output directory name
 para.output = sprintf('%s_%s_%s_%s.U%d_%s_%s.%d', para.output, para.topology.MaskNetType, para.topology.BfNetType, para.topology.AmNetType, ...
     length(Data_tr(1).data), para.local.data, para.local.pair, 3*(para.topology.fft_len/2+1));
@@ -99,6 +108,7 @@ end
 para.output = sprintf('%s-AM%d-%d_%d', para.output, para.topology.updateAM, length(para.topology.hiddenLayerSizeAM), para.topology.hiddenLayerSizeAM(1));
 para.output = sprintf('%s-%d.L2_%s.LR_%s/nnet', para.output, para.topology.nSenone, FormatFloat4Name(para.NET.L2weight),FormatFloat4Name(para.NET.learning_rate));
 LOG = [];
+
 
 para
 trainGraph_SGD(layer, Data_tr, Data_cv, para, LOG);

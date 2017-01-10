@@ -1,10 +1,17 @@
-function [layer, para, expTag] = BuildGeneralMaskBF_CHiME4(modelDir, iteration, nCh, poolingType, poolingType2, nPass)
+function [layer, para, expTag] = BuildGeneralMaskBF_CHiME4(modelDir, iteration, nCh, poolingType, poolingType2, nPass, noiseCovL2, vadNoise)
 % modelDir =  'SplitMaskBF_LSTM_MVDR_DNN.U8634_mixed_randPair.771-1024-AM0-7_2048-1981.L2_0.LR_3E-2';
 % iteration = 4;
 % useChannel = 6;
 % poolingType = 'Median';
 
 expTag = [modelDir '_itr' num2str(iteration) '_' num2str(nCh) 'ch_' poolingType '_' poolingType2 '_pass' num2str(nPass)];
+if noiseCovL2>0
+    expTag = [expTag '_covL2_' FormatFloat4Name(noiseCovL2)];
+end
+if vadNoise
+    expTag = [expTag '_vadNoise' FormatFloat4Name(vadNoise)];
+end
+
 modelfile = dir(['nnet/' modelDir '/nnet.itr' num2str(iteration) '.*']);
 modelfile = ['nnet/' modelDir '/' modelfile.name];
 dnn = load(modelfile);
@@ -93,6 +100,39 @@ if nPass>1
     layer = layerCascaded;
 else
     layer = layer2;
+end
+
+if noiseCovL2>0
+    mvdr_idx = ReturnLayerIdxByName(layer, 'MVDR_spatialCov');
+    for i=1:length(mvdr_idx)
+        layer{mvdr_idx(i)}.noiseCovL2 = noiseCovL2;
+    end
+end
+
+if vadNoise
+    scm_idx = GetScmLayer(layer);
+    meanLayer.name = 'mean';
+    meanLayer.prev = -1;
+    meanLayer.pool_idx = 1;
+    meanLayer.dim = [1 257];
+    
+    largerLayer.name = 'largerThan';
+    largerLayer.prev = -1;
+    largerLayer.threshold = 0.5;
+    largerLayer.dim = [1 1];
+    
+    repLayer.name = 'repmat';
+    repLayer.prev = -1;
+    repLayer.sourceDims = 1;
+    repLayer.targetDims = [257 1];
+
+    productLayer.name = 'hadamard';
+    productLayer.prev = [-1 -4];
+    productLayer.dim = [1 1];
+
+    layer{scm_idx}.prev([1 3]) = layer{scm_idx}.prev([1 3]) -4;
+    layer = [layer(1:scm_idx-1) meanLayer largerLayer repLayer productLayer layer(scm_idx:end)];
+    [layer] = HandleSTFT(layer, STFT_layer_idx, nPass, para);
 end
 
 para.out_layer_idx = [STFT_layer_idx ReturnLayerIdxByName(layer, 'beamforming')];

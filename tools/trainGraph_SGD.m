@@ -61,7 +61,7 @@ for k=1:length(weight_update_order)
 end
 
 nFr_seen = 0;
-nFr_reduce_lr = 18e4;       % this equals to about 0.5 hours of speech features if frame rate is 100Hz
+nFr_reduce_lr = 18e4*para.IO.frame_rate(1)/100;       % this equals to about 0.5 hours of speech features if frame rate is 100Hz
 next_Milestone = nFr_reduce_lr*1;
 
 if isfield(para, 'saveModelEveryXhours')
@@ -108,7 +108,7 @@ for itr = startItr:para.maxItr
             end
         end
         if nFr_seen > next_Milestone
-            nHour = (nFr_seen/36e4);
+            nHour = (nFr_seen/3600/para.IO.frame_rate(1));
             learning_rate     = learning_rate * para.NET.learning_rate_decay_rate;   % Learning rate for biases of hidden units
             fprintf('Trained with %2.2f hours of data, reducing learning rate to %f\n', nHour, learning_rate);
             next_Milestone = next_Milestone + nFr_reduce_lr;

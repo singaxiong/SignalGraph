@@ -89,8 +89,11 @@ for i=1:nLayer
         case 'inner_product_normalized'
             layer{i}.a = F_inner_product_normalized(prev_layers);
         case 'relu'
-        	layer{i}.a = max(0,prev_layers{1}.a);
+        	layer{i}.a = F_relu(prev_layers{1}, layer{i});
         case 'maxout'
+            
+        case 'largerthan'
+            layer{i}.a = F_largerThan(prev_layers{1},layer{i});
             
         case 'mean'
             layer{i}.a = F_mean(prev_layers{1}, layer{i});
@@ -401,7 +404,7 @@ for i=nLayer:-1:1
             
         % other non-updatable layers
         case 'relu'
-        	layer{i}.grad = B_relu(future_layers, layer{i}.a);
+        	layer{i}.grad = B_relu(future_layers, layer{i});
         case 'maxout'
         case 'tanh'
             layer{i}.grad = B_tanh(future_layers, layer{i}.a);

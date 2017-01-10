@@ -46,7 +46,10 @@ for si = 1:length(wavlist)
     % the channel pairs. 
     if length(para.topology.useChannel)==1
         if para.topology.useChannel==6
-            ch_idx = 1:6;
+            ch_idx = randperm(6);
+        elseif para.topology.useChannel==5
+            ch_idx = randperm(6);
+            ch_idx(ch_idx==2) = [];     % we don't use channel 2
         elseif strcmpi(para.local.pair, 'randPair')
             ch_idx = randperm(nCh);
             ch_idx(ch_idx==2) = [];     % we don't use channel 2

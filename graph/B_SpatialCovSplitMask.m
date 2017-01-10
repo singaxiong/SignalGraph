@@ -32,6 +32,27 @@ if N>1
 else
     grad = GetGradUtt(data, maskSpeech, maskNoise, spatCov, future_grad);
 end
+
+% if isfield(curr_layer, 'scaleMaskGrad')    % scale the gradient. The gradient for each TF bin is very different, we take the square root of the magnitude of the gradient to make them similar. 
+% %     subplot(2,2,1); imagesc(grad{1}); colorbar
+%     if 0
+%         grad{1} = sign(grad{1}) .* abs(grad{1}).^curr_layer.scaleMaskGrad;
+%     else
+%         gstd1 = std(mat2vec(grad{1}));
+%         grad{1} = max(-gstd1*curr_layer.scaleMaskGrad, min( gstd1*curr_layer.scaleMaskGrad, grad{1} ) );
+%     end
+% %     subplot(2,2,2); imagesc(grad{1}); colorbar
+% 
+% %     subplot(2,2,3); imagesc(grad{2}); colorbar
+%     if 0
+%         grad{2} = sign(grad{2}) .* abs(grad{2}).^curr_layer.scaleMaskGrad;
+%     else
+%         gstd2 = std(mat2vec(grad{2}));
+%         grad{2} = max(-gstd2*curr_layer.scaleMaskGrad, min( gstd2*curr_layer.scaleMaskGrad, grad{2} ) );
+%     end
+% %     subplot(2,2,4); imagesc(grad{2}); colorbar
+% end
+
 end
 
 %%
