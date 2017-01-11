@@ -17,22 +17,26 @@ else
 %     modelDir = 'MaskBF6ch_split0_LSTM_MVDR_DNN.U8634_mixed_randPair.771-1024-AM0-7_2048-1981.L2_0.LR_3E-3';    % the directory in ./nnet to be used
 %     modelDir = 'MaskBF5ch_split0_LSTM_MVDR_DNN.U8634_mixed_randPair.771-1024-AM0-7_2048-1981.L2_0.LR_1E-3';
 %     modelDir = 'MaskBF2ch_split0_LSTM_MVDR_DNN.U8634_mixed_randPair.771-1024-AM0-7_2048-1981.L2_0.LR_3E-2';
-    modelDir = 'MaskBF3ch_split0_LSTM_MVDR_DNN.U8634_mixed_randPair.771-1024-AM0-7_2048-1981.L2_0.LR_1E-2';
+    modelDir = 'MaskBF2ch_split0_LSTM_MVDR_DNN.U8634_mixed_randPair.771-512-512-AM0-7_2048-1981.L2_0.LR_3E-3';
     
-    iteration = 2;      % the iteration number to be used
+    iteration = 1;      % the iteration number to be used
     nPass = 1;
     poolingType  = 'median';
     poolingType2 = 'none';
     noiseCovL2 = 0.0;
-    vadNoise = 0.3;
+    vadNoise = 0.0;
 end
 
-chime_root = ChoosePath4OS({'F:/Data/CHiME4', '/home/xiaoxiong/CHiME4'});   % you can set two paths, first for windows OS and second for Linux OS. 
+chime_root = ChoosePath4OS({'F:/Chime/data/', '/home/xiaoxiong/CHiME4'});   % you can set two paths, first for windows OS and second for Linux OS. 
 % build the network to apply beamforming on test data. This network may be
 % different from the network used during training. 
 [layer, para, expTag] = BuildGeneralMaskBF_CHiME4(modelDir, iteration, nCh, poolingType, poolingType2, nPass, noiseCovL2, vadNoise);
-para.local.wavroot_noisy = [chime_root '/audio/isolated'];
-para.local.fbankroot = [chime_root '/fbank/' expTag];
+para.local.wavroot_noisy = [chime_root '/audio/16kHz/isolated'];
+mvdr = 'spacialCov';%'eigenVector';
+
+expTag = ['LSTM_Mask_6ch_Medianpool_MVDR_' mvdr '_CE'];
+para.local.fbankroot = [ './fbank/' expTag];
+para.IO.inputFeature = [1 1];
 % my_mkdir(para.local.fbankroot);
 
 wavlist = LoadWavTest_CHiME4(para);
@@ -41,7 +45,14 @@ wavreader.array = 1;
 wavreader.multiArrayFiles = 1;
 [~,nUtt] = size(wavlist);
 
-for si = nUtt:-1:3281
+if strcmp(mvdr, 'eigenVector')
+    bf_layer_idx = ReturnLayerIdxByName(layer, 'Beamforming');
+    mvdr_layer_idx = bf_layer_idx - 1;
+    layer{mvdr_layer_idx}.name = 'MVDR_EigenVector';
+end
+
+for si = nUtt:-1:3281 
+%for si = 3280:-1:1
     [~,uttID] = fileparts(wavlist{1,si});
     PrintProgress(si, nUtt, 100, uttID);
 
@@ -83,7 +94,8 @@ for si = nUtt:-1:3281
     end
     
     words = ExtractWordsFromString_v2(dos2unix(wavlist{1,si}), '/');
-    fbank_file = [para.local.fbankroot '/' words{end-2} '/' words{end-1} '/' uttID(1:end-4) '.CH5.fbank'];     % use a fake channel 5
+    %fbank_file = [para.local.fbankroot '/' words{end-2} '/' words{end-1} '/' uttID(1:end-4) '.CH5.fbank'];     % use a fake channel 5
+    fbank_file = [para.local.fbankroot '/'  words{end-1} '/' uttID(1:end-4) '.CH5.fbank'];
     dirname = fileparts(fbank_file);
     my_mkdir(dirname);
     writeHTK(fbank_file, enhanced_fbank', 'MFCC_0', 1);

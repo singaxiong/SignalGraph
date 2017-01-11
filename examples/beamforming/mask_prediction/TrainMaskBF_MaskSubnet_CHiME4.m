@@ -22,7 +22,7 @@ para.NET.learning_rate_decay_rate = 0.999;
 para.NET.momentum = [0.9];
 para.NET.gradientClipThreshold = 1;
 para.NET.weight_clip = 10;
-para.useGPU     = 1;                  % don't use GPU for single sentence minibatch for LSTM. It's even slower than CPU. 
+para.useGPU     = 0;                  % don't use GPU for single sentence minibatch for LSTM. It's even slower than CPU. 
 para.minItr     = 10;
 para.displayGPUstatus = 1;
 para.displayInterval = 1;
@@ -30,12 +30,12 @@ para.skipInitialEval = 1;
 para.displayTag = 'LSTM-Mask';
 
 % define local settings for the experiment, such as the data path.
-chime_root = ChoosePath4OS({'F:/Data/CHiME4', '/home/xiaoxiong/CHiME4'});   % you can set two paths, first for windows OS and second for Linux OS. 
+chime_root = 'F:/Chime/data';
 % ChoosePath4OS allows us to define two paths for the data, one for
 % Windows system and one for Linux system. The function will select the
 % correct path, so we don't need to change code for different platforms.
-para.local.wavroot_noisy = [chime_root '/audio/isolated'];
-para.local.wavroot_clean = [chime_root '/audio/isolated/tr05_org'];
+para.local.wavroot_noisy = ChoosePath4OS({[chime_root '/audio/16kHz/isolated'], '/home/xiaoxiong/CHiME3/isolated'});
+para.local.wavroot_clean = ChoosePath4OS({[chime_root '/audio/16kHz/isolated/tr05_org'], '/home/xiaoxiong/CHiME3/isolated/tr05_org'});
 % if you have at least 30GB free system memory, you can simply load all
 % CHiME-4 waveforms (about 20GB) into memory. Otherwise, it is better to
 % load the file names instead. Better to use SSD for fast loading speed.
@@ -43,12 +43,12 @@ para.local.useFileName = 1;      % if set to 0, load all training data to memory
 
 % define network topology
 para.topology.useWav = 1;           % if set to 1, load waveforms and compute log spectrogram features in the network (save space); otherwise, load log spectrogram features directly.
-para.topology.useChannel = 1;       % choose which channel [1-6] to train the LSTM. 
+para.topology.useChannel = 6;       % choose which channel [1-6] to train the LSTM. 
 para.topology.nChMask = 1;          % the number of channels we want to use for mask prediction. 
 para.topology.MaskNetType = 'LSTM'; % define mask subnet type
 para.topology.BfNetType = 'MVDR';   % define beamforming subnet type
 para.topology.AmNetType = 'DNN';    % define acoustic model subnet type
-para.topology.initialMask = '';     % provide a file name for initial mask if any. 
+para.topology.initialMask = 'nnet/LSTM_Mask1chOfficial.U8395.771-512-512-257.L2_3E-4.LR_3E-2/nnet.itr8.LR2.4E-4.CV10.487.mat';     % provide a file name for initial mask if any. 
 para.topology.nSenone = 3968;       % number of senones in the acoustic model. Set this according to Kaldi's decision tree
 para.topology.hiddenLayerSizeMask = [1024 1024];     % size of hidden layers in mask subnet
 para.topology.hiddenLayerSizeBF = [];           % size of beamforming subnet if it's a neural networks. If it is MVDR, do not set it. 
@@ -58,11 +58,11 @@ para.topology.hiddenLayerSizeAM = [2048];       % size of acoustic model subnet.
 para = ConfigMaskBFnetCE(para);
 % generate the network
 [Data_small, para] = LoadWavMask_Simu_CHiME4(para, 400, 'train'); % load a small amount of data for initialization purpose
-[layer, para] = Build_MaskBFnet_CE(Data_small, para, 1);
+[layer, para] = Build_MaskBFnet_CE(Data_small, para, 2);
 
 % load the training and cv data
-[Data_tr] = LoadWavMask_Simu_CHiME4(para, 1, 'train');
-[Data_cv] = LoadWavMask_Simu_CHiME4(para, 100, 'dev');
+[Data_tr] = LoadWavMask_Simu_CHiME4(para, 400, 'train');
+[Data_cv] = LoadWavMask_Simu_CHiME4(para, 400, 'dev');
 
 % generate directory and file names to store the networks. 
 para.output = sprintf('nnet/%s_Mask%dchOfficial.U%d.%d', para.topology.MaskNetType, para.topology.nChMask, length(Data_tr(1).data),  para.topology.nChMask*3*(para.topology.fft_len/2+1));

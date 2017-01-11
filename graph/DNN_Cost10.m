@@ -146,7 +146,8 @@ for i=1:nLayer
             layer{i}.a = F_SpatialCovSplitMask(prev_layers, layer{i});       % do not support variable length yet
         case 'mvdr_spatialcov'
             layer{i} = F_MVDR_spatialCov(prev_layers{1}, layer{i});       % do not support variable length yet
-            
+        case 'mvdr_eigenvector'  % do eigen-decomposition fo speech PSD to obtain steering vector
+            layer{i} = F_MVDR_eigenVector(prev_layers{1}, layer{i});    
         case 'cov'
             layer{i}.a = F_cov(prev_layers{1}.a);       % do not support variable length yet
         case 'logdet'
