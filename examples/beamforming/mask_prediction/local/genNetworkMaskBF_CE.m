@@ -190,5 +190,31 @@ layerAM{end-1}.inputIdx = 2;    % if use raw waveform as input, the label will b
 
 layer = [layer layerAM(2:end)];
 
+% add optional speech enhancement cost function
+if para.MTL
+    bf_idx = ReturnLayerIdxByName(layer, 'beamforming');
+    layer{end+1}.name = 'Log';
+    layer{end}.const = 1e-2;
+    layer{end}.prev = bf_idx+1-length(layer);
+    layer{end}.dim = [1 1]*layer{bf_idx+1}.dim(1);
+    
+    layer{end+1}.name = 'CMN';
+    layer{end}.prev = -1;
+    layer{end}.dim = [1 1]*layer{end-1}.dim(1);
+    
+    cmn_idx = ReturnLayerIdxByName(layer, 'cmn');
+    reusable_layer = layer(1:cmn_idx(1));
+    reusable_layer{1}.inputIdx = 3;
+    reusable_layer{1}.dim(:) = 1;
+    reusable_layer{2}.dim(:) = reusable_layer{2}.dim(:)/para.nCh; 
+    reusable_layer{3}.dim(:) = reusable_layer{3}.dim(:)/para.nCh; 
+    reusable_layer(4) = [];
+    layer = [layer reusable_layer];
+    
+    layer{end+1}.name = 'mse';
+    layer{end}.prev = [-length(reusable_layer)-1 -1];
+    layer{end}.dim = [1 layer{end-1}.dim(1)];
+end
+
 layer = FinishLayer(layer);
 end

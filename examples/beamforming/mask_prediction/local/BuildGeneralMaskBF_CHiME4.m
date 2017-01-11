@@ -1,9 +1,4 @@
 function [layer, para, expTag] = BuildGeneralMaskBF_CHiME4(modelDir, iteration, nCh, poolingType, poolingType2, nPass, noiseCovL2, vadNoise)
-% modelDir =  'SplitMaskBF_LSTM_MVDR_DNN.U8634_mixed_randPair.771-1024-AM0-7_2048-1981.L2_0.LR_3E-2';
-% iteration = 4;
-% useChannel = 6;
-% poolingType = 'Median';
-
 expTag = [modelDir '_itr' num2str(iteration) '_' num2str(nCh) 'ch_' poolingType '_' poolingType2 '_pass' num2str(nPass)];
 if noiseCovL2>0
     expTag = [expTag '_covL2_' FormatFloat4Name(noiseCovL2)];

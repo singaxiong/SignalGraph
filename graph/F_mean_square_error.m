@@ -1,6 +1,11 @@
-function cost = F_mean_square_error(input_layers, useMahaDist, CostLayer)
+function cost = F_mean_square_error(input_layers, CostLayer)
 [nSeg, output, target, scale] = prepareCostEvaluation(input_layers, CostLayer);
 m = size(output,2);
+if isfield(CostLayer, 'useMahaDist')
+    useMahaDist = CostLayer.useMahaDist;
+else
+    useMahaDist = 0;
+end
 
 diff = output - target;
 if useMahaDist ==1  % in case 1, we use diagonal covariance matrix, which can be class-dependent

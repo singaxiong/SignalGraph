@@ -47,6 +47,6 @@ end
 [layer, scm_idx, split] = HandleSTFTReference(layer, STFT_layer_idx, 1, para);
 
 layer = FinishLayer(layer);
-para.cost_func.layer_idx = length(layer);
+para.cost_func.layer_idx = para.cost_func.layer_idx - max(para.cost_func.layer_idx) + length(layer);
 
 end

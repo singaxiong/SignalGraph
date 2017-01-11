@@ -162,7 +162,7 @@ for i=1:nLayer
         case 'realimag2complex'
             layer{i}.a = F_realImag2complex(prev_layers{1});
     	case 'mse'
-    		layer{i}.a = F_mean_square_error(prev_layers, layer{i}.useMahaDist, layer{i});
+    		layer{i}.a = F_mean_square_error(prev_layers, layer{i});
         case 'jointcost'
             layer{i}.a = F_jointCost(prev_layers{1}, layer{i});
     	case 'cross_entropy';
@@ -323,7 +323,7 @@ for i=nLayer:-1:1
         % cost layers
         
         case 'mse'
-    		layer{i}.grad = B_mean_square_error(prev_layers, layer{i}.useMahaDist, layer{i});
+    		layer{i}.grad = B_mean_square_error(prev_layers, layer{i});
             layer{i}.grad = SetCostWeightOnGrad(layer{i}.grad, para.cost_func, i);
         case 'jointcost'
     		layer{i}.grad = B_jointCost(prev_layers{1}, layer{i});

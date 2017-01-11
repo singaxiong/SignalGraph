@@ -17,14 +17,14 @@ else
 %     modelDir = 'MaskBF6ch_split0_LSTM_MVDR_DNN.U8634_mixed_randPair.771-1024-AM0-7_2048-1981.L2_0.LR_3E-3';    % the directory in ./nnet to be used
 %     modelDir = 'MaskBF5ch_split0_LSTM_MVDR_DNN.U8634_mixed_randPair.771-1024-AM0-7_2048-1981.L2_0.LR_1E-3';
 %     modelDir = 'MaskBF2ch_split0_LSTM_MVDR_DNN.U8634_mixed_randPair.771-1024-AM0-7_2048-1981.L2_0.LR_3E-2';
-    modelDir = 'MaskBF3ch_split0_LSTM_MVDR_DNN.U8634_mixed_randPair.771-1024-AM0-7_2048-1981.L2_0.LR_1E-2';
+    modelDir = 'MaskBF5ch_split0_covL2_1E-3_LSTM_MVDR_DNN.U8634_mixed_randPair.771-1024-AM0-7_2048-1981.L2_0.LR_1E-2';
     
-    iteration = 2;      % the iteration number to be used
+    iteration = 1;      % the iteration number to be used
     nPass = 1;
     poolingType  = 'median';
     poolingType2 = 'none';
     noiseCovL2 = 0.0;
-    vadNoise = 0.3;
+    vadNoise = 0.0;
 end
 
 chime_root = ChoosePath4OS({'F:/Data/CHiME4', '/home/xiaoxiong/CHiME4'});   % you can set two paths, first for windows OS and second for Linux OS. 

@@ -30,12 +30,13 @@ para.displayInterval = 3;
 %para.saveModelEveryXhours = 5;     % if the training is slow, we want to save the model between two iterations
 
 % define local settings for the experiment, such as the data path.
-chime_root = ChoosePath4OS({'F:/Data/CHiME4', '/home/xiaoxiong/CHiME4'});   % you can set two paths, first for windows OS and second for Linux OS. 
+chime_root = ChoosePath4OS({'D:/Data/CHiME4', '/home/xiaoxiong/CHiME4'});   % you can set two paths, first for windows OS and second for Linux OS. 
 % ChoosePath4OS allows us to define two paths for the data, one for
 % Windows system and one for Linux system. The function will select the
 % correct path, so we don't need to change code for different platforms.
 para.local.wavroot_noisy = [chime_root '/audio/isolated'];
 para.local.wavroot_clean = [chime_root '/audio/isolated/tr05_org'];
+para.local.wavroot_booth = [chime_root '/audio/isolated/tr05_org'];
 % if you have at least 30GB free system memory, you can simply load all
 % CHiME-4 waveforms (about 20GB) into memory. Otherwise, it is better to
 % load the file names instead. Better to use SSD for fast loading speed.
@@ -47,7 +48,7 @@ para.local.aliDir = '../Kaldi/exp/tri3b_tr05_multi_noisy_ali';
 
 % define network topology
 para.topology.useWav = 1;       % use waveforms as input, perform STFT etc in the network
-para.topology.useChannel = 4;   % use all 6 channels
+para.topology.useChannel = 5;   % use all 6 channels
 para.topology.nChMask = 1;          % the number of channels we want to use as input of LSTM for mask prediction, usually set to 1, i.e. predict mask for each channel independently without using cross-channel information 
 para.topology.MaskNetType = 'LSTM'; % define mask subnet type
 para.topology.BfNetType = 'MVDR';   % define beamforming subnet type
@@ -64,6 +65,8 @@ para.topology.splitMask = 1;        % set to 1 if we want to predict speech and 
 para.topology.untieLSTM = 0;        % set to 1 if we don't want to share the LSTM between speech and noise mask prediction. 
 para.topology.poolingType= 'none';  % type of pooling of masks of channels. 
 % para.topology.scaleMaskGrad = 4;  % whether we want to scale the gradients of the masks. if 1, do not scale; if <1, new grad scale will be oldGradScale.^scaleMaskGrad. 
+para.topology.noiseCovL2 = 1e-10;    % the scale of diagonal loading for noise covariance matrix. this may improve the stability of the MVDR filter. 
+para.topology.MTL = 0;              % the value specifies the weight of the speech enhancement cost, while the cross entropy cost weight is fixed to 1. 
 
 % set a tag that will be displayed during training so we will know roughly
 % what is being trained. 
@@ -72,7 +75,11 @@ para.displayTag = ['MaskBF_CE' num2str(para.topology.hiddenLayerSizeMask) '.upda
 % finish the rest of the configuration
 para = ConfigMaskBFnetCE(para);
 % generate the network
-[Data_small, para] = LoadWavLabel_CHiME4(para, 50, 'tr05');      % load a small amount of data for initialization purpose
+if para.topology.MTL
+    [Data_small, para] = LoadParallelWavLabel_CHiME4(para, 50, 'tr05');      % load a small amount of data for initialization purpose
+else
+    [Data_small, para] = LoadWavLabel_CHiME4(para, 50, 'tr05');      % load a small amount of data for initialization purpose
+end
 % Build the basic network type, which does not use split mask prediction
 % and pooling. 
 [layer, para] = Build_MaskBFnet_CE(Data_small, para, 3);
@@ -85,6 +92,17 @@ end
 if ~strcmpi(para.topology.poolingType, 'none')      % add pooling layers if required
     [layer, para] = ConvertMaskBF2pooling(layer, para);
     para.output = sprintf('%s_%s', para.output, para.topology.poolingType);
+end
+if para.topology.noiseCovL2>0
+    mvdr_idx = ReturnLayerIdxByName(layer, 'MVDR_spatialCov');
+    for i=1:length(mvdr_idx)
+        layer{mvdr_idx(i)}.noiseCovL2 = para.topology.noiseCovL2;
+    end
+    para.output = sprintf('%s_covL2_%s', para.output, FormatFloat4Name(para.topology.noiseCovL2));
+end
+if para.topology.MTL
+    para.IO.nStream = 3;
+    para.output = sprintf('%s_MTL%s', para.output, FormatFloat4Name(para.topology.MTL));
 end
 
 % load the training and dev data
