@@ -32,7 +32,7 @@ chime_root = ChoosePath4OS({'F:/Chime/data/', '/home/xiaoxiong/CHiME4'});   % yo
 % different from the network used during training. 
 [layer, para, expTag] = BuildGeneralMaskBF_CHiME4(modelDir, iteration, nCh, poolingType, poolingType2, nPass, noiseCovL2, vadNoise);
 para.local.wavroot_noisy = [chime_root '/audio/16kHz/isolated'];
-mvdr = 'eigenVector';
+mvdr = 'spacialCov';%'eigenVector';
 
 expTag = ['LSTM_Mask_6ch_Medianpool_MVDR_' mvdr '_CE'];
 para.local.fbankroot = [ './fbank/' expTag];
@@ -51,8 +51,8 @@ if strcmp(mvdr, 'eigenVector')
     layer{mvdr_layer_idx}.name = 'MVDR_EigenVector';
 end
 
-%for si = nUtt:-1:3281 
-for si = 3280:-1:1
+for si = nUtt:-1:3281 
+%for si = 3280:-1:1
     [~,uttID] = fileparts(wavlist{1,si});
     PrintProgress(si, nUtt, 100, uttID);
 
@@ -94,7 +94,8 @@ for si = 3280:-1:1
     end
     
     words = ExtractWordsFromString_v2(dos2unix(wavlist{1,si}), '/');
-    fbank_file = [para.local.fbankroot '/' words{end-2} '/' words{end-1} '/' uttID(1:end-4) '.CH5.fbank'];     % use a fake channel 5
+    %fbank_file = [para.local.fbankroot '/' words{end-2} '/' words{end-1} '/' uttID(1:end-4) '.CH5.fbank'];     % use a fake channel 5
+    fbank_file = [para.local.fbankroot '/'  words{end-1} '/' uttID(1:end-4) '.CH5.fbank'];
     dirname = fileparts(fbank_file);
     my_mkdir(dirname);
     writeHTK(fbank_file, enhanced_fbank', 'MFCC_0', 1);
