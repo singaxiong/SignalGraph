@@ -31,7 +31,7 @@ else                            % share LSTM between speech and noise mask predi
     layerSplit{bf_idx}.prev(2) = layerSplit{bf_idx}.prev(2)-2;
 end
 layerSplit = FinishLayer(layerSplit);
-para.cost_func.layer_idx = length(layerSplit);
+para.cost_func.layer_idx = para.cost_func.layer_idx - max(para.cost_func.layer_idx) + length(layerSplit);
 layer = layerSplit;
 
 end

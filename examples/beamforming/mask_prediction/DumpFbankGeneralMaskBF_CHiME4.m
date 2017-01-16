@@ -2,26 +2,35 @@ function DumpFbankGeneralMaskBF_CHiME4
 addpath('../lib');
 addpath('local');
 
-if 1
+if 0
     nCh = 6;
     modelDir = 'LSTM_Mask1chOfficial.U41972.771-1024-257.L2_3E-4.LR_3E-2';    % the directory in ./nnet to be used
     iteration = 7;      % the iteration number to be used
     nPass = 1;
-    poolingType  = 'none';
+    poolingType  = 'median';
     poolingType2 = 'none';
+    noiseCovL2 = 0.00000;
+    vadNoise = 0;
 else
     nCh = 6;
-    modelDir = 'MaskBF6ch_split0_mean_LSTM_MVDR_DNN.U8634_mixed_randPair.771-1024-AM0-7_2048-1981.L2_0.LR_3E-3';    % the directory in ./nnet to be used
+%     modelDir = 'SplitMaskBF_LSTM_MVDR_DNN.U8634_mixed_randPair.771-1024-AM0-7_2048-1981.L2_0.LR_3E-2';
+%     modelDir = 'MaskBF6ch_split0_LSTM_MVDR_DNN.U8634_mixed_randPair.771-1024-AM0-7_2048-1981.L2_0.LR_3E-3';    % the directory in ./nnet to be used
+%     modelDir = 'MaskBF5ch_split0_LSTM_MVDR_DNN.U8634_mixed_randPair.771-1024-AM0-7_2048-1981.L2_0.LR_1E-3';
+%     modelDir = 'MaskBF2ch_split0_LSTM_MVDR_DNN.U8634_mixed_randPair.771-1024-AM0-7_2048-1981.L2_0.LR_3E-2';
+    modelDir = 'MaskBF5ch_split0_covL2_1E-3_LSTM_MVDR_DNN.U8634_mixed_randPair.771-1024-AM0-7_2048-1981.L2_0.LR_1E-2';
+    
     iteration = 1;      % the iteration number to be used
     nPass = 1;
-    poolingType  = 'mean';
+    poolingType  = 'median';
     poolingType2 = 'none';
+    noiseCovL2 = 0.0;
+    vadNoise = 0.0;
 end
 
 chime_root = ChoosePath4OS({'F:/Data/CHiME4', '/home/xiaoxiong/CHiME4'});   % you can set two paths, first for windows OS and second for Linux OS. 
 % build the network to apply beamforming on test data. This network may be
 % different from the network used during training. 
-[layer, para, expTag] = BuildGeneralMaskBF_CHiME4(modelDir, iteration, nCh, poolingType, poolingType2, nPass);
+[layer, para, expTag] = BuildGeneralMaskBF_CHiME4(modelDir, iteration, nCh, poolingType, poolingType2, nPass, noiseCovL2, vadNoise);
 para.local.wavroot_noisy = [chime_root '/audio/isolated'];
 para.local.fbankroot = [chime_root '/fbank/' expTag];
 % my_mkdir(para.local.fbankroot);
@@ -32,7 +41,7 @@ wavreader.array = 1;
 wavreader.multiArrayFiles = 1;
 [~,nUtt] = size(wavlist);
 
-for si = 1:nUtt
+for si = nUtt:-1:3281
     [~,uttID] = fileparts(wavlist{1,si});
     PrintProgress(si, nUtt, 100, uttID);
 

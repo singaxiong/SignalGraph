@@ -9,10 +9,16 @@ function [layer, para] = Build_MaskBFnet_CE(Data_tr, para, stage)
 para.output = 'tmp';
 
 layer = genNetworkMaskBF_CE(para.topology);     % generate the network graph
-para.cost_func.layer_idx = length(layer);       % specify which layers are cost function layers
-para.cost_func.layer_weight = [1];              % set the weights of each cost function layer
 para.preprocessing{1} = {};                     % optional preprocessing for each data stream
 para.preprocessing{2} = {};
+if para.topology.MTL
+    para.cost_func.layer_idx = [ReturnLayerIdxByName(layer, 'cross_entropy') length(layer)];       % specify which layers are cost function layers
+    para.cost_func.layer_weight = [1 1];              % set the weights of each cost function layer
+    para.preprocessing{3} = {};
+else
+    para.cost_func.layer_idx = length(layer);       % specify which layers are cost function layers
+    para.cost_func.layer_weight = [1];              % set the weights of each cost function layer    
+end
 
 % generating the scaling factor for the input, as we will need to use a
 % small constant in the logarithm. We need to make sure that the power of

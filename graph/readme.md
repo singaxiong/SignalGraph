@@ -22,6 +22,7 @@ This folder contains all the forward (F_xxx) and backward (B_xxx) functions of t
   - Affine transform: [output, validFrameMask] = F_affine_transform(input_layer, transform, bias). The most common node type of neural networks. 
   - Sigmoid: [output] = F_sigmoid(input_layer). Apply sigmoid activation elementwise. 
   - Tanh: [output] = F_tanh(input_layer). Apply tanh activation. 
+  - Relu: output = F_relu(input_layer, curr_layer). Relu activation. May set a threshold. 
   - Temporal convolution: [output,X2] = F_tconv(input, curr_layer). Apply temporal convolution. 
   - Temporal max pooling: [output,idx,validFrameMask] = F_tmaxpool(input_layer, curr_layer). Apply temporal max pooling. Used together with temporal convolution. 
   - Word to vector: output = F_word2vec(input, W, singlePrecision). Apply transform W on sparse input (one hot). 

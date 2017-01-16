@@ -31,6 +31,7 @@ if windowSize == 0      % utterance mode, estimate two spatial covariance matrix
 else        % online mode, estiamte covariance matrices for a sliding window of frames. 
     % to be implemented.    
 end
+
 end
 
 %% 

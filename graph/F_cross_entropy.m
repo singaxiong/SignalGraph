@@ -1,10 +1,11 @@
-function [cost,acc] = F_cross_entropy(input_layers, CE_layer)
+function [cost,acc,output2, acc2] = F_cross_entropy(input_layers, CE_layer)
 [nSeg, output, target] = prepareCostEvaluation(input_layers, CE_layer);
 m = size(output,2);
 
 [~, recogClass] = max(output);
 trueClass = target;
-acc = sum(recogClass==trueClass)/m;
+acc2 = recogClass==trueClass;
+acc = sum(acc2)/m;
 
 if 0
     target2 = zeros(size(output));

@@ -9,7 +9,11 @@ freqBin = curr_layer.freqBin;
 nFreqBin = length(freqBin);
 
 [D,T,N] = size(input);
-noiseCovRegularization = 0.1;
+if isfield(curr_layer, 'noiseCovL2')
+    noiseCovL2 = curr_layer.noiseCovL2;
+else
+    noiseCovL2 = 0;  % add noiseCovRegularization*\lambda*I to noise covariance, where \lambda is the maximum eigenvalue
+end
 
 D = D/2;
 speechCov = input(1:D,:,:,:);
@@ -23,6 +27,19 @@ noiseCov = reshape(noiseCov, nCh, nCh, nFreqBin, T, N);
 
 speechCov_cell = num2cell(speechCov, [1 2]);       % convert to cell array and call cellfun for speed
 noiseCov_cell = num2cell(noiseCov, [1 2]); 
+
+% add regularization
+if noiseCovL2 > 0
+    eig_val = cellfun(@GetEigVal, noiseCov_cell, 'UniformOutput', 0);
+    eig_val = cell2mat(eig_val);
+    noise_floor = eig_val(end,:,:) * noiseCovL2;    
+    % because our noise floor depends on noise covariance and network
+    % parameters, it will not be able to pass through gradient check. This
+    % is because we didn't consider this dependancy in the backpropagation.
+    % But this should not have much effect on the training. 
+    noise_floor_cell = num2cell(noise_floor, 1);
+    noiseCov_cell = cellfun(@DiagLoading, noiseCov_cell, noise_floor_cell, 'UniformOutput', 0);
+end
 
 ninv_x = cellfun(@(x,n) (inv( n )*x), speechCov_cell, noiseCov_cell, 'UniformOutput', 0);
 lambda = cellfun(@(x) abs(trace(x)), ninv_x, 'UniformOutput', 0);
@@ -41,5 +58,18 @@ curr_layer.a = output;
 curr_layer.lambda = lambda;
 curr_layer.phi_s = speechCov_cell;
 curr_layer.phi_n = noiseCov_cell;
+if noiseCovL2>0
+    curr_layer.noise_floor = noise_floor_cell;
+end
+end
 
+%% 
+function ev = GetEigVal(A)
+[~,V] = eig(A);
+ev = diag(V);
+end
+
+function B = DiagLoading(A, alpha)
+D = size(A,1);
+B = A + alpha * eye(D);
 end
