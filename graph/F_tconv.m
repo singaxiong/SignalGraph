@@ -1,13 +1,20 @@
 
 % this function perform convolution on the temporal direction
-function [output,X2] = F_tconv(input, curr_layer)
+function [output,X2] = F_tconv(input_layers, curr_layer)
+if length(input_layers)==1
+    input = input_layers{1}.a;
+    W = curr_layer.W;
+    b = curr_layer.b;
+elseif length(input_layers)==2
+    W = input_layers{1}.a;
+    b = zeros(size(W,1),1);
+    input = input_layers{2}.a;
+end
 
 % the input contains N samples, each of DxT size
 [D,T,N] = size(input);
 % Each row of W is a DxP filter to be applied along the time axis. We have
 % totally H such filters.
-W = curr_layer.W;
-b = curr_layer.b;
 [H,DP] = size(W);
 P = DP/D;
 halfP = (P-1)/2;

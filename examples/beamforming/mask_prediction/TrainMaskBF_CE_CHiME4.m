@@ -15,11 +15,11 @@ para.NET.sequential = 1;    % do not randomize at frame level, randomize at sent
 para.NET.variableLengthMinibatch = 1;   % a minibatch may contain multiple sentences of different lengths
 para.NET.nSequencePerMinibatch = 1;     % number of sentences per minibatch
 para.NET.maxNumSentInBlock = 100;       % maximum number of sentences in a block
-para.NET.learning_rate = 1e-2;
+para.NET.learning_rate = 1e-3;
 para.NET.learning_rate_decay_rate = 0.995;
 para.NET.start_learning_rate_reduction = 0;
 para.NET.momentum = [0.9];
-para.NET.L2weight = 0;
+para.NET.L2weight = 0e-4;
 para.NET.gradientClipThreshold = 1;
 para.NET.weight_clip = 10;
 para.useGPU     = 0;                  % whether to use GPU
@@ -45,10 +45,11 @@ para.local.useFileName = 1;      % if set to 0, load all training data to memory
 para.local.data = 'mixed';  % choose the type of data for training: [mixed|simu|real]
 para.local.pair = 'randPair';    % how do we generate channel pairs: [randPair|allPair]
 para.local.aliDir = '../Kaldi/exp/tri3b_tr05_multi_noisy_ali';
+para.local.randomChannelOrder = 1;
 
 % define network topology
 para.topology.useWav = 1;       % use waveforms as input, perform STFT etc in the network
-para.topology.useChannel = 5;   % use all 6 channels
+para.topology.useChannel = 2;   % use all 6 channels
 para.topology.nChMask = 1;          % the number of channels we want to use as input of LSTM for mask prediction, usually set to 1, i.e. predict mask for each channel independently without using cross-channel information 
 para.topology.MaskNetType = 'LSTM'; % define mask subnet type
 para.topology.BfNetType = 'MVDR';   % define beamforming subnet type
@@ -65,8 +66,8 @@ para.topology.splitMask = 1;        % set to 1 if we want to predict speech and 
 para.topology.untieLSTM = 0;        % set to 1 if we don't want to share the LSTM between speech and noise mask prediction. 
 para.topology.poolingType= 'none';  % type of pooling of masks of channels. 
 % para.topology.scaleMaskGrad = 4;  % whether we want to scale the gradients of the masks. if 1, do not scale; if <1, new grad scale will be oldGradScale.^scaleMaskGrad. 
-para.topology.noiseCovL2 = 1e-10;    % the scale of diagonal loading for noise covariance matrix. this may improve the stability of the MVDR filter. 
-para.topology.MTL = 0;              % the value specifies the weight of the speech enhancement cost, while the cross entropy cost weight is fixed to 1. 
+para.topology.noiseCovL2 = 0;    % the scale of diagonal loading for noise covariance matrix. this may improve the stability of the MVDR filter. 
+para.topology.MTL = 1e-2;              % the value specifies the weight of the speech enhancement cost, while the cross entropy cost weight is fixed to 1. 
 
 % set a tag that will be displayed during training so we will know roughly
 % what is being trained. 
@@ -106,9 +107,13 @@ if para.topology.MTL
 end
 
 % load the training and dev data
-[Data_tr, para] = LoadWavLabel_CHiME4(para, 1, 'tr05');
-[Data_cv, para] = LoadWavLabel_CHiME4(para, 5, 'dt05');     % we only use 1/5 of dev data as cv data for speed. 
-
+if para.topology.MTL
+    [Data_tr] = LoadParallelWavLabel_CHiME4(para, 1, 'tr05');
+    [Data_cv] = LoadParallelWavLabel_CHiME4(para, 5, 'dt05');     % we only use 1/5 of dev data as cv data for speed.
+else
+    [Data_tr] = LoadWavLabel_CHiME4(para, 1, 'tr05');
+    [Data_cv] = LoadWavLabel_CHiME4(para, 5, 'dt05');     % we only use 1/5 of dev data as cv data for speed.
+end
 % if para.topology.scaleMaskGrad>=1
 %     para.displayTag = [para.displayTag '_scaleMaskGrad' FormatFloat4Name(para.topology.scaleMaskGrad)];
 %     para.output = [para.output '_scaleMaskGrad' FormatFloat4Name(para.topology.scaleMaskGrad)];

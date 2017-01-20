@@ -20,10 +20,10 @@ if length(CMN_idx)==1   % this is a MSE trained mask estimator
     scm_idx = GetScmLayer(layerCE);
     layer = [layer(1:end-2) layerCE(scm_idx:end)];
     CMN_idx = ReturnLayerIdxByName(layer, 'CMN');
-    layer = layer(1:CMN_idx(end));
+    layer = layer(1:CMN_idx(2));
     layer = InitMelLayer(layer, para);
 else
-    layer = layer(1:CMN_idx(end));
+    layer = layer(1:CMN_idx(2));
 end
 
 para.useGPU = 0;                            % do not use GPU at test time

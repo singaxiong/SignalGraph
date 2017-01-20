@@ -48,7 +48,7 @@ startItr = length(LOG.actual_LR)+1;
 theta = NetWeights_layer2vec(layer, 0, para.useGPU);
 
 [cost_func, layer] = DNN_Cost10(layer, batch_data, para, mode); 
-LOG.cost0 = cost_func.cost;
+LOG.cost0 = gather(cost_func.cost);
 for itr = startItr:para.maxItr
     old_theta = theta;
     
@@ -77,3 +77,4 @@ for itr = startItr:para.maxItr
         break;
     end
 end
+[cost_func, layer] = DNN_Cost10(layer, batch_data, para, mode); 

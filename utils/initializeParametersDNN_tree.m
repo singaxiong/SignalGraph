@@ -13,9 +13,10 @@ end
 r  = sqrt(6) / sqrt(nNode);   % we'll choose weights uniformly from the interval [-r, r]
 for i=1:length(layer)
     if strcmpi(layer{i}.name, 'affine') || strcmpi(layer{i}.name, 'tconv')
-        if layer{i}.update && para.NET.rmsprop_decay>0
+        if layer{i}.update && para.NET.rmsprop_decay>0 
             layer{i}.gradW_avg_square = 0;
         end
+        if length(layer{i}.prev)>1; continue; end   % if there are more than 1 input layer, one of them will provide parameters
         if isfield(layer{i}, 'W')==0 || sum(abs(size(layer{i}.W)-layer{i}.dim))>0
             if gauss
                 layer{i}.W = 3/sqrt(layer{i}.dim(2)) * randn(layer{i}.dim);

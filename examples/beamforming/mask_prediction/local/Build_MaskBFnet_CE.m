@@ -13,7 +13,7 @@ para.preprocessing{1} = {};                     % optional preprocessing for eac
 para.preprocessing{2} = {};
 if para.topology.MTL
     para.cost_func.layer_idx = [ReturnLayerIdxByName(layer, 'cross_entropy') length(layer)];       % specify which layers are cost function layers
-    para.cost_func.layer_weight = [1 1];              % set the weights of each cost function layer
+    para.cost_func.layer_weight = [1 para.topology.MTL];              % set the weights of each cost function layer
     para.preprocessing{3} = {};
 else
     para.cost_func.layer_idx = length(layer);       % specify which layers are cost function layers

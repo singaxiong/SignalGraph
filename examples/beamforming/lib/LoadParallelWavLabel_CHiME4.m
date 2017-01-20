@@ -3,7 +3,7 @@ function [Data, para, vocab] = LoadParallelWavLabel_CHiME4(para, step, dataset)
 switch lower(dataset)
     case {'dt05','et05'}
         wavlist = ['../Kaldi/data/' dataset '_multi_noisy/wav.scp'];
-        ali_file = [para.local.aliDir '_dt05/ali.txt'];
+        ali_file = [para.local.aliDir '_' dataset '/ali.txt'];
     case 'tr05'
         wavlist = ['../Kaldi/data/' dataset '_multi_noisy/wav.scp'];
         ali_file = [para.local.aliDir '/ali.txt'];
@@ -54,7 +54,11 @@ for si = 1:length(wavlist)
     wavfileRoot = [para.local.wavroot_noisy '/' words{end-1} '/' words{end}(1:end-5)];
     
     if strcmpi(type, 'simu')
-        wavfile_clean = clean_struct.(['U_' clean_uttID]);
+        if strcmpi(dataset, 'dt05') || strcmpi(dataset, 'et05')
+            wavfile_clean = [para.local.wavroot_noisy '/' dataset '_bth/' words{end}(1:end-11) 'BTH.CH0.wav'];
+        else
+            wavfile_clean = clean_struct.(['U_' clean_uttID]);
+        end
     elseif strcmpi(type, 'real')
         wavfile_clean = [wavfileRoot '0.wav'];
     end
@@ -64,9 +68,17 @@ for si = 1:length(wavlist)
     % the channel pairs. 
     if length(para.topology.useChannel)==1
         if para.topology.useChannel==6
-            ch_idx = randperm(6);
+            if isfield(para.local, 'randomChannelOrder') && para.local.randomChannelOrder
+                ch_idx = randperm(6);
+            else
+                ch_idx = 1:6;
+            end
         elseif para.topology.useChannel==5
-            ch_idx = randperm(6);
+            if isfield(para.local, 'randomChannelOrder') && para.local.randomChannelOrder
+                ch_idx = randperm(6);
+            else
+                ch_idx = 1:6;
+            end
             ch_idx(ch_idx==2) = [];     % we don't use channel 2
         elseif strcmpi(para.local.pair, 'randPair')
             ch_idx = randperm(nCh);
@@ -88,6 +100,9 @@ for si = 1:length(wavlist)
         wav = StoreWavInt16(wav);
         wav_c = audioread(wavfile_clean);
         wav_c = StoreWavInt16(wav_c)';
+        
+        % for real data, the CH0 may not be sample synchronized with other
+        % 6 channels. We need to synchronize them first. 
         
         % synchronize the length of label and wav
         nFr_feat = enframe_decide_frame_number(size(wav,2), frame_size, frame_shift);

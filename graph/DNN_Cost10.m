@@ -38,11 +38,12 @@ for i=1:nLayer
         case 'idx2vec'
             [layer{i}.a, layer{i}.validFrameMask] = F_idx2vec(prev_layers{1}, layer{i}, para.singlePrecision);       % do not support variable length yet
     	case 'affine'
-        	if strcmpi(prev_layers{1}.name, 'input') && para.IO.sparse(prev_layers{1}.inputIdx)
-        		[layer{i}.a, layer{i}.validFrameMask] = F_sparse_affine_transform(prev_layers{1}, layer{i}.W, layer{i}.b, para.singlePrecision);
+            input_layer_idx = length(prev_layers);
+            if strcmpi(prev_layers{input_layer_idx}.name, 'input') && para.IO.sparse(prev_layers{input_layer_idx}.inputIdx)
+                [layer{i}.a, layer{i}.validFrameMask] = F_sparse_affine_transform(prev_layers{1}, layer{i}.W, layer{i}.b, para.singlePrecision);
             else
-                if issparse(prev_layers{1}.a);  prev_layers{1}.a = full(prev_layers{1}.a); end
-        		[layer{i}.a, layer{i}.validFrameMask] = F_affine_transform(prev_layers{1}, layer{i}.W, layer{i}.b);
+                if issparse(prev_layers{input_layer_idx}.a);  prev_layers{input_layer_idx}.a = full(prev_layers{input_layer_idx}.a); end
+                [layer{i}.a, layer{i}.validFrameMask] = F_affine_transform(prev_layers, layer{i});
             end
         case 'add'
             layer{i}.a = F_add(prev_layers);
@@ -108,7 +109,7 @@ for i=1:nLayer
             layer{i} = F_weight2activation(layer{i});
             
         case 'tconv'
-            [layer{i}.a, layer{i}.X2] = F_tconv(prev_layers{1}.a, layer{i});
+            [layer{i}.a, layer{i}.X2] = F_tconv(prev_layers, layer{i});
         case 'tmaxpool'
             [layer{i}.a, layer{i}.idx, layer{i}.validFrameMask] = F_tmaxpool(prev_layers{1}, layer{i});
             
@@ -124,7 +125,7 @@ for i=1:nLayer
         case 'splice'
             [layer{i}.a, layer{i}.validFrameMask] = F_splice(prev_layers{1}, layer{i}.context);
         case 'mel'
-            [layer{i}.a, layer{i}.validFrameMask] = F_affine_transform(prev_layers{1}, layer{i}.W, layer{i}.b);
+            [layer{i}.a, layer{i}.validFrameMask] = F_affine_transform(prev_layers, layer{i});
     	case 'power_split'
     		layer{i}.a = F_power_spectrum_split(prev_layers{1}.a);
     	case 'beamforming'
@@ -308,7 +309,15 @@ for i=nLayer:-1:1
             layer{i}.grad = B_transpose(future_layers, layer{i});
         % updatable layers
         case {'affine', 'mel'}
-            [layer{i}.grad, layer{i}.grad_W, layer{i}.grad_b] = B_affine_transform(prev_layers, layer{i}, future_layers, i==2);
+            [grad, grad_W, grad_b] = B_affine_transform(prev_layers, layer{i}, future_layers, i==2);
+            if length(prev_layers)==2
+                layer{i}.grad{1} = grad_W;
+                layer{i}.grad{2} = grad;
+            else
+                layer{i}.grad = grad; 
+                layer{i}.grad_W = grad_W;
+                layer{i}.grad_b = grad_b;
+            end
         case 'hadamard'
             [layer{i}.grad] = B_hadamard(prev_layers, layer{i}, future_layers);
         case 'word2vec'
@@ -349,7 +358,7 @@ for i=nLayer:-1:1
     	case 'delta'
     		layer{i}.grad = B_dynamic_feat(layer{i}, future_layers);
         case 'splice'
-            layer{i}.grad = B_splice(future_layers, layer{i}.context);
+            layer{i}.grad = B_splice(future_layers, layer{i});
         case 'cmn'
             layer{i}.grad = B_cmn(future_layers);
             
