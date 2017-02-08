@@ -86,7 +86,9 @@ end
 % batch transform the input features for fast speed
 fakeLayer.a = input;
 fakeLayer.validFrameMask = mask;
-z_from_inputs = F_affine_transform(fakeLayer, Wx, b);
+transformLayer.W = Wx;
+transformLayer.b = b;
+z_from_inputs = F_affine_transform(fakeLayer, transformLayer);
 
 for i=1:nFr
     if i==1     % for the first frame, use default values for past state and hidden values.
