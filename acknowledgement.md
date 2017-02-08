@@ -1,5 +1,5 @@
 Acknowledgement: 
-For users' convenience, the following Matlab based toolkits are included in this directory without modification:
+For users' convenience, the following Matlab based toolkits are included in SignalGraph without modification:
 
 voicebox: http://www.ee.ic.ac.uk/hp/staff/dmb/voicebox/voicebox.html
 
