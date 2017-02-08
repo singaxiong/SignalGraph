@@ -1,5 +1,5 @@
 % Load far talk, close talk, and frame label. 
-function [Data, para, vocab] = LoadParallelWavLabel_CHiME4(para, step, dataset)
+function [Data, para, vocab, wavlist] = LoadParallelWavLabel_CHiME4(para, step, dataset)
 switch lower(dataset)
     case {'dt05','et05'}
         wavlist = ['../Kaldi/data/' dataset '_multi_noisy/wav.scp'];
@@ -103,6 +103,32 @@ for si = 1:length(wavlist)
         
         % for real data, the CH0 may not be sample synchronized with other
         % 6 channels. We need to synchronize them first. 
+        if strcmpi(type, 'real')
+            % we try to synchronize channel 0 to all channels, and then
+            % take the mean time delay. 
+            for ii = 1:6
+                input_layer.a = double([wav(ii,:); wav_c])/1e4;
+                curr_layer.frame_len = 3200;
+                curr_layer.frame_shift = 1600;
+                curr_layer.dim = 1*(curr_layer.frame_len-1);
+                [gcc, maskGCC] = F_comp_gcc(input_layer, curr_layer);
+                gcc_mean(:,ii) = mean(gcc,2);
+            end
+            [~,idx] = max(mean(gcc_mean,2)); 
+            delay = curr_layer.frame_len/2 - idx;   % a delay <0 means CH0 is ahead of other channels. 
+            
+            if delay>=0
+                wav_c2 = [zeros(1,delay) wav_c(1:end-delay)];
+            else
+                wav_c2 = [wav_c(-delay:end) zeros(1,delay-1)];
+            end
+            wav_c = wav_c2;
+%             plot(wav'); hold on;
+%             plot(wav_c,'r'); hold off;
+%             pause;
+
+            all_delay(si) = delay;
+        end
         
         % synchronize the length of label and wav
         nFr_feat = enframe_decide_frame_number(size(wav,2), frame_size, frame_shift);

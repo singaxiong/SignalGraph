@@ -186,7 +186,7 @@ for i=1:nLayer
     end
     
     if i<nLayer
-        if para.NET.L1weight>0
+        if para.NET.L1weight>0 || (isfield(layer{i}, 'L1weight') && layer{i}.L1weight>0)
             layer{i}.rho = mean(layer{i}.a,2);
         end
     end
@@ -252,15 +252,22 @@ if para.NET.L2weight>0
     end
 end
 
-if para.NET.L1weight>0    % If use sparsity constraint
+% if para.NET.L1weight>0    % If use sparsity constraint
     for i=2:nLayer-1
         if isfield(layer{i}, 'rho')
         	% note that we limit the denominator to be greater than a small number
-	        tmp = para.NET.L1*log(para.NET.L1./max(1e-3,layer{i}.rho)) + (1-para.NET.L1)*log((1-para.NET.L1)./max(1e-3,1-layer{i}.rho));  
-    	    cost_func.cost = cost_func.cost + para.NET.L1weight * sum(tmp);
+            if isfield(layer{i}, 'L1')
+                L1 = layer{i}.L1;
+                L1weight = layer{i}.L1weight;
+            else
+                L1 = para.NET.L1;
+                L1weight = para.NET.L1weight;
+            end
+	        tmp = L1*log(L1./max(1e-3,layer{i}.rho)) + (1-L1)*log((1-L1)./max(1e-3,1-layer{i}.rho));  
+    	    cost_func.cost = cost_func.cost + L1weight * sum(tmp);
     	end
     end
-end
+% end
 
 if para.DEBUG
     hasinf = sum(isinf(cost_func.subcost)) + isinf(cost_func.cost) ;
