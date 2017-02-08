@@ -44,36 +44,36 @@ function grad = GetGradUtt(X,Y,phi_s, phi_n, weight, lambda, future_grad, future
 [D,C,T,N] = size(X);
 u = zeros(C,1);
 u(1) = 1;
-future_grad2 = reshape(future_grad2, 257,5);
-grad_phi_s = zeros(C,C,D);
-grad_phi_n = zeros(C,C,D);
+future_grad2 = reshape(future_grad2, D,C);
+if IsInGPU(X(1))
+    grad_phi_s = gpuArray.zeros(C,C,D);
+    grad_phi_n = gpuArray.zeros(C,C,D);    
+else
+    grad_phi_s = zeros(C,C,D);
+    grad_phi_n = zeros(C,C,D);
+end
 
 for f=1:D
-    x = squeeze(X(f,:,:));
-    xx = x*x';
-    ww = weight(f,:).' * conj(weight(f,:));
+%     x = squeeze(X(f,:,:));
+%     xx = x*x';
+%     ww = weight(f,:).' * conj(weight(f,:));
     phi_n_inv = inv(phi_n{1,1,f});
-    yy = abs(Y(f,:).*conj(Y(f,:)));
-    dyyy = sum(future_grad(f,:).*yy);
-    dyxx = bsxfun(@times, x, future_grad(f,:)) * x';
+%     yy = abs(Y(f,:).*conj(Y(f,:)));
+%     dyyy = sum(future_grad(f,:).*yy);
+%     dyxx = bsxfun(@times, x, future_grad(f,:)) * x';
     
     if 1
 %         grad_phi_s(:,:,f) = 2 * phi_n_inv * dyxx * weight(f,:).' * u' / lambda{1,1,f} -2 * dyyy * phi_n_inv / lambda{1,1,f};
 %         grad_phi_n(:,:,f) = - 2* phi_n_inv * dyxx * ww + 2 * dyyy * phi_n_inv * phi_s{1,1,f} * phi_n_inv / lambda{1,1,f};
         
             for ii = 1:C
-                grad_phi_s(:,:,f) = grad_phi_s(:,:,f) + conj(future_grad2(f,ii)) *  phi_n_inv(ii,:)' * u' /lambda{1,1,f};
-            end
-        
-            for ii = 1:C
+                grad_phi_s(:,:,f) = grad_phi_s(:,:,f) + conj(future_grad2(f,ii)) *  phi_n_inv(ii,:)' * u' /lambda{1,1,f}...
+                    - conj(future_grad2(f,ii)) * conj(weight(f,ii)) * phi_n_inv'/lambda{1,1,f};
+                
                 tmp = zeros(C,C);
                 tmp(ii,:) = u'*phi_s{1,1,f}';
-                grad_phi_n(:,:,f) = grad_phi_n(:,:,f) - conj(future_grad2(f,ii)) *  phi_n_inv' * tmp * phi_n_inv' / lambda{1,1,f};
-            end
-
-            for ii = 1:C
-                grad_phi_s(:,:,f) = grad_phi_s(:,:,f) - conj(future_grad2(f,ii)) * conj(weight(f,ii)) * phi_n_inv'/lambda{1,1,f};
-                grad_phi_n(:,:,f) = grad_phi_n(:,:,f) + conj(future_grad2(f,ii)) * conj(weight(f,ii)) * (phi_n_inv * phi_s{1,1,f} * phi_n_inv)' / lambda{1,1,f};
+                grad_phi_n(:,:,f) = grad_phi_n(:,:,f) - conj(future_grad2(f,ii)) *  phi_n_inv' * tmp * phi_n_inv' / lambda{1,1,f}...
+                    + conj(future_grad2(f,ii)) * conj(weight(f,ii)) * (phi_n_inv * phi_s{1,1,f} * phi_n_inv)' / lambda{1,1,f};
             end
             
     elseif 0    % no lambda

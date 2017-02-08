@@ -1,6 +1,7 @@
-function grad = B_splice(future_layer, context)
-future_grad = GetFutureGrad(future_layer);
+function grad = B_splice(future_layer, curr_layer)
+future_grad = GetFutureGrad(future_layer, curr_layer);
 [dim,nFr,nSeg] = size(future_grad);
+context = curr_layer.context;
 dim = dim/context;
 half_ctx = (context-1)/2;
 

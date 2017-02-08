@@ -13,5 +13,8 @@ end
 
 grad_W = grad;
 
+if isfield(curr_layer, 'mask')
+    grad_W = grad_W .* curr_layer.mask;
+end
 
 end

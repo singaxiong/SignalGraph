@@ -8,9 +8,12 @@ else
     startIdx = 1;
 end
 
+field_list = fields(files(1));
+isdir_idx = find(strcmp(field_list, 'isdir')==1);
+
 files2 = struct2cell(files);
 files_cell = files2(1,startIdx:end);
-ISDIR = files2(4,startIdx:end);
+ISDIR = files2(isdir_idx,startIdx:end);
 ISDIR = cell2mat(ISDIR);
 
 

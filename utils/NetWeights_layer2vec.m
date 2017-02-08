@@ -25,12 +25,17 @@ offset = 0;
 for i=1:length(layer)
     for j=1:length(WeightNames)
         if isfield(layer{i}, WeightNames{j}) && layer{i}.update
-            currWeight = layer{i}.(WeightNames{j});
-            nPara = numel(currWeight);
-            if packGrad
-                vec(offset+1:offset+nPara) = layer{i}.(['grad_' WeightNames{j}])(:);
+            if isfield(layer{i}, 'mask') && strcmpi(WeightNames{j}, 'W')
+                para_idx = find(layer{i}.mask~=0);
             else
-                vec(offset+1:offset+nPara) = currWeight(:);
+                para_idx = 1:numel(layer{i}.(WeightNames{j}));
+            end
+            nPara = numel(para_idx);
+            
+            if packGrad
+                vec(offset+1:offset+nPara) = layer{i}.(['grad_' WeightNames{j}])(para_idx);
+            else
+                vec(offset+1:offset+nPara) = layer{i}.(WeightNames{j})(para_idx);
             end
             offset = offset + nPara;
         end

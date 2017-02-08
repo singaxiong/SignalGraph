@@ -2,7 +2,7 @@ function DumpFbankGeneralMaskBF_CHiME4
 addpath('../lib');
 addpath('local');
 
-if 0
+if 1
     nCh = 6;
     modelDir = 'LSTM_Mask1chOfficial.U41972.771-1024-257.L2_3E-4.LR_3E-2';    % the directory in ./nnet to be used
     iteration = 7;      % the iteration number to be used
@@ -13,13 +13,16 @@ if 0
     vadNoise = 0;
 else
     nCh = 6;
-%     modelDir = 'SplitMaskBF_LSTM_MVDR_DNN.U8634_mixed_randPair.771-1024-AM0-7_2048-1981.L2_0.LR_3E-2';
+    modelDir = 'SplitMaskBF_LSTM_MVDR_DNN.U8634_mixed_randPair.771-1024-AM0-7_2048-1981.L2_0.LR_3E-2';
 %     modelDir = 'MaskBF6ch_split0_LSTM_MVDR_DNN.U8634_mixed_randPair.771-1024-AM0-7_2048-1981.L2_0.LR_3E-3';    % the directory in ./nnet to be used
 %     modelDir = 'MaskBF5ch_split0_LSTM_MVDR_DNN.U8634_mixed_randPair.771-1024-AM0-7_2048-1981.L2_0.LR_1E-3';
 %     modelDir = 'MaskBF2ch_split0_LSTM_MVDR_DNN.U8634_mixed_randPair.771-1024-AM0-7_2048-1981.L2_0.LR_3E-2';
-    modelDir = 'MaskBF5ch_split0_covL2_1E-3_LSTM_MVDR_DNN.U8634_mixed_randPair.771-1024-AM0-7_2048-1981.L2_0.LR_1E-2';
+    modelDir = 'MaskBF5ch_split0_MTL1E-1_LSTM_MVDR_DNN.U8634_mixed_randPair.771-1024-AM0-7_2048-1981.L2_0.LR_3E-4';
+%     modelDir = 'MaskBF5ch_split0_MTL1E-2_LSTM_MVDR_DNN.U8634_mixed_randPair.771-1024-AM0-7_2048-1981.L2_0.LR_3E-3';
+%     modelDir = 'MaskBF5ch_split0_MTL1_LSTM_MVDR_DNN.U8634_mixed_randPair.771-1024-AM0-7_2048-1981.L2_0.LR_1E-5';
+%     modelDir = 'MaskBF2ch_split0_MTL1E-2_LSTM_MVDR_DNN.U8634_mixed_randPair.771-1024-AM0-7_2048-1981.L2_0.LR_1E-3';
     
-    iteration = 1;      % the iteration number to be used
+    iteration = 2;      % the iteration number to be used
     nPass = 1;
     poolingType  = 'median';
     poolingType2 = 'none';
@@ -27,7 +30,7 @@ else
     vadNoise = 0.0;
 end
 
-chime_root = ChoosePath4OS({'F:/Data/CHiME4', '/home/xiaoxiong/CHiME4'});   % you can set two paths, first for windows OS and second for Linux OS. 
+chime_root = ChoosePath4OS({'D:/Data/CHiME4', '/home/xiaoxiong/CHiME4'});   % you can set two paths, first for windows OS and second for Linux OS. 
 % build the network to apply beamforming on test data. This network may be
 % different from the network used during training. 
 [layer, para, expTag] = BuildGeneralMaskBF_CHiME4(modelDir, iteration, nCh, poolingType, poolingType2, nPass, noiseCovL2, vadNoise);

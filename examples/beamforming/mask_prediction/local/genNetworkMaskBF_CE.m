@@ -191,7 +191,7 @@ layerAM{end-1}.inputIdx = 2;    % if use raw waveform as input, the label will b
 layer = [layer layerAM(2:end)];
 
 % add optional speech enhancement cost function
-if para.MTL
+if isfield(para, 'MTL') && para.MTL
     bf_idx = ReturnLayerIdxByName(layer, 'beamforming');
     layer{end+1}.name = 'Log';
     layer{end}.const = 1e-2;
