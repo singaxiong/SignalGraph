@@ -2,12 +2,23 @@
 function [Data, para, vocab] = LoadParallelWavLabel_Reverb(para, step, dataset, datatype, distance)
 nCh = para.topology.useChannel;
 wavlist = []; wavlistClean = [];
-for roomID = 1:3
-    [tasklist, taskfile] = LoadTaskFile_Reverb([para.local.wavroot '/taskFiles'], dataset, datatype, distance, nCh, roomID);
-    wavlist = [wavlist Tasklist2wavlist(para.local.wavroot, tasklist, dataset, datatype)];
-
-    [tasklistClean, taskfileClean] = LoadTaskFile_Reverb([para.local.wavroot '/taskFiles'], dataset, datatype, 'cln', nCh, roomID);
-    wavlistClean = [wavlistClean Tasklist2wavlist(para.local.wavroot, tasklistClean, dataset, datatype)];
+% note that training data do not contain real recordings. 
+% real dev and eval data do not have clean version
+for type_i = 1:length(datatype)
+    for dist_i = 1:length(distance)
+        for roomID = 1:3
+            [tasklist, taskfile] = LoadTaskFile_Reverb([para.local.wavroot '/taskFiles'], dataset, datatype{type_i}, distance{dist_i}, nCh, roomID);
+            wavlist = [wavlist Tasklist2wavlist(para.local.wavroot, tasklist, dataset, datatype{type_i})];
+            
+            if strcmpi(dataset, 'train')
+                wavlistClean = findFiles([para.local.wsjcam0root '/data_wav/primary_microphone/si_tr'], 'wav');
+                break;
+            end
+            [tasklistClean, taskfileClean] = LoadTaskFile_Reverb([para.local.wavroot '/taskFiles'], dataset, datatype{type_i}, 'cln', nCh, roomID);
+            wavlistClean = [wavlistClean Tasklist2wavlist(para.local.wavroot, tasklistClean, dataset, datatype{type_i})];
+        end
+        if strcmpi(dataset, 'train'); break; end    % For training data, far and near distances are in one list, so we can stop here.
+    end
 end
 for i=1:length(wavlistClean)   % build an index of clean files so we can find them quickly by utterance ID
     [~,curr_uttID] = fileparts(wavlistClean{i});
@@ -48,20 +59,22 @@ for si = 1:nUtt
 
     [wav] = InputReader(wavlist(:,si), wavreader);
     wav = StoreWavInt16(wav);
-    [wav_c] = InputReader(wavlistClean(:,si), wavreader);
+    if strcmpi(dataset, 'train')
+        wavfileClean = clean_struct.(['U_' clean_uttID]);
+        wav_c = audioread(wavfileClean)';
+    else
+        [wav_c] = InputReader(wavlistClean(:,si), wavreader);
+    end
     wav_c = StoreWavInt16(wav_c);
     
     % synchronize the length of label and wav
     nFr_feat = enframe_decide_frame_number(size(wav,2), frame_size, frame_shift);
     nFr_feat = min(nFr_feat, enframe_decide_frame_number(size(wav_c,2), frame_size, frame_shift));
     nFr_label = 10000;
-%     nFr_label = length(curr_label);
     nFr = min([nFr_feat nFr_label]);
     requiredLen = DecideWavLen4XFrames(nFr, frame_size, frame_shift);
     wav(:,requiredLen+1:end) = [];
     wav_c(:,requiredLen+1:end) = [];
-    curr_label = zeros(1,nFr);
-%     curr_label = curr_label(1:nFr);
     
     if para.local.useFileName
         for i=1:nCh
@@ -73,24 +86,31 @@ for si = 1:nUtt
         wav_noisy{end+1} = wav;
         wav_clean{end+1} = wav_c;
     end
-    label{end+1} = curr_label;
+    if para.local.loadLabel
+        label{end+1} = [];
+    end
 end
 
 Data(1).data = wav_noisy;
-Data(2).data = label;
-Data(3).data = wav_clean;
+Data(2).data = wav_clean;
 
-para.IO.inputFeature = [1 1 1];
+para.IO.inputFeature = [1 1];
 para.IO.DataSyncSet{1} = [];
-para.IO.frame_rate = [16000 100 16000];
-para.IO.isTensor = [1 1 1];
+para.IO.frame_rate = [16000 16000];
+para.IO.isTensor = [1 1];
 if para.local.useFileName
-    para.IO.inputFeature([1 3]) = 0;
+    para.IO.inputFeature([1 2]) = 0;
     wavreader.precision = 'int16';
     para.IO.fileReader(1) = wavreader;
-    para.IO.fileReader(2).name = '';
-    para.IO.fileReader(3) = wavreader;
-    para.IO.fileReader(3).array = 0;
-    para.IO.fileReader(3).multiArrayFiles = 0;
+    para.IO.fileReader(2) = wavreader;
+    para.IO.fileReader(2).array = 0;
+    para.IO.fileReader(2).multiArrayFiles = 0;
+end
+if para.local.loadLabel
+    Data(3).data = label;
+    para.IO.inputFeature(3) = 1;
+    para.IO.frame_rate(3) = 100;
+    para.IO.isTensor(3) = 1;
+    para.IO.fileReader(3).name = '';
 end
 end
