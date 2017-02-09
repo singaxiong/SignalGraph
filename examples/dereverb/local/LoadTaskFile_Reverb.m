@@ -19,9 +19,13 @@ end
 chStr = {'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H'};
 
 if strcmp(distance, 'cln')
-    taskfile = [taskFileRoot '/' num2str(nCh) 'ch/' datatypeStr 'Data_' datasetStr '_for_' ...
-        distance '_room' num2str(roomID)];
-    tasklist = my_cat(taskfile)';
+    if strcmp(dataset, 'train')
+        tasklist = {};
+    else
+        taskfile = [taskFileRoot '/' num2str(nCh) 'ch/' datatypeStr 'Data_' datasetStr '_for_' ...
+            distance '_room' num2str(roomID)];
+        tasklist = my_cat(taskfile)';
+    end
 else
     for i=1:nCh
         if strcmp(dataset, 'train')
