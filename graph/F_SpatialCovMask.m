@@ -8,6 +8,7 @@ data = prev_layers{2}.a;
 
 if isfield(curr_layer, 'windowSize')
     windowSize = curr_layer.windowSize;
+    shift = fix(windowSize/2);
 else
     windowSize = 0;
 end
@@ -57,7 +58,15 @@ if windowSize == 0      % utterance mode, estimate two spatial covariance matrix
     scm_noise2 = reshape(scm_noise, nCh^2*D, 1, N);
     output = [scm_speech2; scm_noise2];    
 else        % online mode, estiamte covariance matrices for a sliding window of frames. 
-    % to be implemented.    
+    % to be implemented.
+    % frame number after moving window
+    nf = fix((T-windowSize+shift)/shift);
+    mask2 = permute(mask, [4 2 1 3]);
+    scm_speech = ComputeWinCovMask(data, mask2, windowSize, shift);
+    scm_noise = ComputeWinCovMask(data, 1-mask2, windowSize, shift);
+    scm_speech2 = reshape(scm_speech, nCh^2*D, nf, N);
+    scm_noise2 = reshape(scm_noise, nCh^2*D, nf, N);
+    output = [scm_speech2; scm_noise2];    
 end
 
 
