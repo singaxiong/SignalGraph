@@ -4,44 +4,47 @@
 % Xiong Xiao, Nanyang Technological University, Singapore
 % Last modified: 08 Feb 2016. 
 %
-clear
+%clear
+function TrainDereverbNet_Regression(modelType, hiddenLayerSize)
+
 addpath('local', '../beamforming/lib');     % remember to run addMyPath.m in SignalGraph root directory first. 
 % define SignalGraph settings. Type ParseOptions2() in command line to see the options. 
 para.IO.nStream = 2;        % two data streams, one is input signal, one is clean target log spectrogram
 para.NET.sequential = 1;    % do not randomize at frame level, randomize at sentence level
 para.NET.variableLengthMinibatch = 1;   % a minibatch may contain multiple sentences of different lengths
-para.NET.nSequencePerMinibatch = 20;    % number of sentences per minibatch
+para.NET.nSequencePerMinibatch = 5;    % number of sentences per minibatch
 para.NET.maxNumSentInBlock = 100;       % maximum number of sentences in a block
 para.NET.L2weight = 3e-4;
-para.NET.learning_rate = 3e-2;
+para.NET.learning_rate = 1e-2;
 para.NET.learning_rate_decay_rate = 0.999;
 para.NET.momentum = [0.9];
 para.NET.gradientClipThreshold = 1;
 para.NET.weight_clip = 10;
-para.useGPU     = 0;                  % don't use GPU for single sentence minibatch for LSTM. It's even slower than CPU. 
+para.useGPU     = 1;                  % don't use GPU for single sentence minibatch for LSTM. It's even slower than CPU. 
 para.minItr     = 10;
 para.displayGPUstatus = 1;
 para.displayInterval = 1;
 para.skipInitialEval = 1;
 para.displayTag = 'LSTM-Regression';
 
-reverb_root = ChoosePath4OS({'D:/Data/REVERB_Challenge', '/home/xiaoxiong/REVERB_Challenge'});   % you can set two paths, first for windows OS and second for Linux OS. 
+reverb_root = ChoosePath4OS({'D:/Data/REVERB_Challenge', '/media/xiaoxiong/OS/data1/G/REVERB_Challenge'});   % you can set two paths, first for windows OS and second for Linux OS. 
 para.local.wavroot = [reverb_root];
-para.local.wsjcam0root = ChoosePath4OS({'D:/Data/wsjcam0', '/home/xiaoxiong/REVERB_Challenge'});
+para.local.wsjcam0root = ChoosePath4OS({'D:/Data/wsjcam0', '/media/xiaoxiong/OS/data1/G/wsjcam0_wav'});
+para.local.wsjcam0ext = ChoosePath4OS({'wav', 'wv1'});
 para.local.useFileName = 1;      % if set to 0, load all training data to memory. otherwise, only load file names.
 para.local.loadLabel = 0;
 
 para.topology.useChannel = 1;
-para.topology.RegressionNetType = 'LSTM';
-para.topology.hiddenLayerSize = [1024];
+para.topology.RegressionNetType = modelType;
+para.topology.hiddenLayerSize = hiddenLayerSize;
 para = ConfigDereverbNet_Regression(para);
 
 [Data_small, para] = LoadParallelWavLabel_Reverb(para, 100, 'train', {'simu'}, {'far'});
 [layer, para] = Build_DereverbNet_Regression(Data_small, para);
 
 % load the training and cv data
-[Data_tr, para] = LoadParallelWavLabel_Reverb(para, 10, 'train', {'simu'}, {'far'});
-[Data_cv, para] = LoadParallelWavLabel_Reverb(para, 10, 'dev', {'simu'}, {'far', 'near'});
+[Data_tr, para] = LoadParallelWavLabel_Reverb(para, 1, 'train', {'simu'}, {'far'});
+[Data_cv, para] = LoadParallelWavLabel_Reverb(para, 1, 'dev', {'simu'}, {'far', 'near'});
 
 
 % generate directory and file names to store the networks. 

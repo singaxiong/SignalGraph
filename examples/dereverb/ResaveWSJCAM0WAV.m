@@ -6,7 +6,7 @@
 %
 function ResaveWSJCAM0WAV()
 
-wsjcam0root = 'D:/Data/wsjcam0';
+wsjcam0root = ChoosePath4OS({'D:/Data/wsjcam0', '/media/xiaoxiong/OS/data1/G/wsjcam0'});
 sph_root = [wsjcam0root '/data'];
 wav_root = [wsjcam0root '/data_wav'];
 

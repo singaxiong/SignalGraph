@@ -11,7 +11,7 @@ for type_i = 1:length(datatype)
             wavlist = [wavlist Tasklist2wavlist(para.local.wavroot, tasklist, dataset, datatype{type_i})];
             
             if strcmpi(dataset, 'train')
-                wavlistClean = findFiles([para.local.wsjcam0root '/data_wav/primary_microphone/si_tr'], 'wav');
+                wavlistClean = findFiles([para.local.wsjcam0root '/data_wav/primary_microphone/si_tr'], para.local.wsjcam0ext);
                 break;
             end
             [tasklistClean, taskfileClean] = LoadTaskFile_Reverb([para.local.wavroot '/taskFiles'], dataset, datatype{type_i}, 'cln', nCh, roomID);
@@ -81,7 +81,11 @@ for si = 1:nUtt
             wavfileArray{i} = sprintf('%s 0 %2.3f', wavlist{i,si}, size(wav,2)/fs);
         end
         wav_noisy{end+1} = wavfileArray;
-        wav_clean{end+1} = sprintf('%s 0 %2.3f', wavlistClean{1,si}, size(wav,2)/fs);
+        if strcmpi(dataset, 'train')
+            wav_clean{end+1} = sprintf('%s 0 %2.3f', clean_struct.(['U_' clean_uttID]), size(wav,2)/fs);
+        else
+            wav_clean{end+1} = sprintf('%s 0 %2.3f', wavlistClean{1,si}, size(wav,2)/fs);
+        end
     else
         wav_noisy{end+1} = wav;
         wav_clean{end+1} = wav_c;

@@ -27,7 +27,7 @@ para.topology.win_type = 'hamming';
 % define the regression network type
 para.topology = SetDefaultValue(para.topology, 'RegressionNetType', 'LSTM'); 
 switch para.topology.RegressionNetType
-    case 'RegressionNetType'
+    case 'DNN'
         para.topology = SetDefaultValue(para.topology, 'hiddenLayerSize', [1024]); 
         para.topology = SetDefaultValue(para.topology, 'contextSize', 11);  % for DNN, we use 11 frames of consecutive frames
     case 'LSTM'
