@@ -13,6 +13,12 @@ else
     windowSize = 0;
 end
 
+if isfield(curr_layer, 'speechOnly')
+    speechOnly = curr_layer.speechOnly;
+else
+    speechOnly = false;
+end
+
 [D,T,N] = size(mask);
 [D2,T,N] = size(data);
 nCh = D2/D;
@@ -51,22 +57,30 @@ if windowSize == 0      % utterance mode, estimate two spatial covariance matrix
         
         mask2 = permute(mask, [4 2 1 3]);
         scm_speech = ComputeCovMask(data, mask2);
-        scm_noise = ComputeCovMask(data, 1-mask2);
+        if ~speechOnly
+            scm_noise = ComputeCovMask(data, 1-mask2);
+        end
     end
     
     scm_speech2 = reshape(scm_speech, nCh^2*D, 1, N);
-    scm_noise2 = reshape(scm_noise, nCh^2*D, 1, N);
-    output = [scm_speech2; scm_noise2];    
+    if speechOnly
+        output = scm_speech2;
+    else
+        scm_noise2 = reshape(scm_noise, nCh^2*D, 1, N);
+        output = [scm_speech2; scm_noise2];
+    end
 else        % online mode, estiamte covariance matrices for a sliding window of frames. 
     % to be implemented.
     % frame number after moving window
     nf = fix((T-windowSize+shift)/shift);
     mask2 = permute(mask, [4 2 1 3]);
     scm_speech = ComputeWinCovMask(data, mask2, windowSize, shift);
-    scm_noise = ComputeWinCovMask(data, 1-mask2, windowSize, shift);
-    scm_speech2 = reshape(scm_speech, nCh^2*D, nf, N);
-    scm_noise2 = reshape(scm_noise, nCh^2*D, nf, N);
-    output = [scm_speech2; scm_noise2];    
+    if speechOnly
+        output = scm_speech;
+    else
+        scm_noise = ComputeWinCovMask(data, 1-mask2, windowSize, shift);
+        output = [scm_speech; scm_noise];
+    end
 end
 
 
