@@ -19,8 +19,8 @@ if N == 1
     normCovMat = reshape(permute(normCovMat, [3 4 1 2]), nCh^2*nBin, nf);
     
     % get the upper triangle off-diagonal elements which are complex-valued
-    %     selectMat = triu(ones(nCh, nCh),1); % 1. up-trialgle
-    selectMat = zeros(nCh, nCh); selectMat(1,2:end) = ones(1, nCh-1); % 2. first row
+    selectMat = triu(ones(nCh, nCh),1); % 1. up-trialgle
+    %     selectMat = zeros(nCh, nCh); selectMat(1,2:end) = ones(1, nCh-1); % 2. first row
     
     dimSelectMask2 = bsxfun(@times, selectMat, ones(nCh, nCh, nBin));
     dimSelectIdx2 = find(reshape(dimSelectMask2, numel(dimSelectMask2),1) == 1);
