@@ -13,14 +13,14 @@ if N == 1
     dimSelectIdx1 = find(reshape(dimSelectMask1, numel(dimSelectMask1),1) == 1); % diag elements index
     diag_mean = squeeze(mean(reshape(covMat(dimSelectIdx1,:), nCh, nBin, nf), 1));
     if nf ==1
-        diag_mean = reshape(diag_mean, size(diag_mean,1), 1, size(diag_mean, 2));
+        diag_mean = diag_mean.';
     end
     normCovMat = bsxfun(@times, permute(reshape(covMat, nCh, nCh, nBin, nf), [3 4 1 2]), 1./diag_mean);
     normCovMat = reshape(permute(normCovMat, [3 4 1 2]), nCh^2*nBin, nf);
     
     % get the upper triangle off-diagonal elements which are complex-valued
-    %     selectMat = triu(ones(nCh, nCh),1); % 1. up-trialgle
-    selectMat = zeros(nCh, nCh); selectMat(1,2:end) = ones(1, nCh-1); % 2. first row
+    selectMat = triu(ones(nCh, nCh),1); % 1. up-trialgle
+%     selectMat = zeros(nCh, nCh); selectMat(1,2:end) = ones(1, nCh-1); % 2. first row
     
     dimSelectMask2 = bsxfun(@times, selectMat, ones(nCh, nCh, nBin));
     dimSelectIdx2 = find(reshape(dimSelectMask2, numel(dimSelectMask2),1) == 1);

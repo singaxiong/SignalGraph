@@ -26,6 +26,10 @@ data = reshape(data, D, nCh, T, N);
 data = permute(data, [2 3 1 4]);
 % data = abs(data);
 
+if T <= windowSize
+    windowSize = 0;
+end
+
 if windowSize == 0      % utterance mode, estimate two spatial covariance matrixes for each utterance, one is speech and the other is noise.
     if 0    % for loop version
         if IsInGPU(data)
