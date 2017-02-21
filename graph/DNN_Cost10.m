@@ -47,6 +47,8 @@ for i=1:nLayer
             end
         case 'add'
             layer{i}.a = F_add(prev_layers);
+        case 'matrix_multiply'
+            [layer{i}.a, layer{i}.validFrameMask] = F_matrix_multiply(prev_layers);
         case 'hadamard'
             [layer{i}.a, layer{i}.validFrameMask] = F_hadamard(prev_layers);
         case 'word2vec'
@@ -67,14 +69,24 @@ for i=1:nLayer
             [layer{i}.a, layer{i}.validFrameMask] = F_frame_select(prev_layers{1}, layer{i});
         case 'frame_shift'
             [layer{i}.a, layer{i}.validFrameMask] = F_frame_shift(prev_layers{1}, layer{i});
+        case 'copyvec2mat'
+            [layer{i}.a] = F_copyVec2Mat(prev_layers{1}, layer{i});
         case 'weighting'
             layer{i}.a = F_weighting(prev_layers{1}.a, layer{i}.W, layer{i}.b);             % do not support variable length yet
         case 'cmn'
             [layer{i}.a, layer{i}.validFrameMask] = F_cmn(prev_layers{1});
+        case 'absmax_norm'
+            [layer{i}.a, layer{i}.validFrameMask] = F_absmax_norm(prev_layers{1}, layer{i});            
+        case 'minmax_norm'
+            [layer{i}.a, layer{i}.validFrameMask] = F_minmax_norm(prev_layers{1}, layer{i});
         case 'linear'
             layer{i}.a = prev_layers{1}.a;
         case {'sigmoid'}
             layer{i}.a = F_sigmoid(prev_layers{1});
+        case {'exp'}
+            layer{i}.a = F_exp(prev_layers{1});
+        case {'mu_law'}
+            layer{i}.a = F_mu_law(prev_layers{1}, layer{i});
         case {'tanh'}
             layer{i}.a = F_tanh(prev_layers{1});
         case 'softmax'
@@ -162,13 +174,15 @@ for i=1:nLayer
     		[layer{i}.a, layer{i}.validFrameMask] = F_real_imag2BFweight(prev_layers{1}, layer{i}.freqBin, layer{i}.online);
         case 'realimag2complex'
             layer{i}.a = F_realImag2complex(prev_layers{1});
+        case 'complex2realimag'
+            layer{i}.a = F_complex2realImag(prev_layers{1});
     	case 'mse'
     		layer{i}.a = F_mean_square_error(prev_layers, layer{i});
         case 'jointcost'
             layer{i}.a = F_jointCost(prev_layers{1}, layer{i});
-    	case 'cross_entropy';
+    	case 'cross_entropy'
     		[layer{i}.a, layer{i}.acc] = F_cross_entropy(prev_layers, layer{i});
-    	case 'multi_cross_entropy';
+    	case 'multi_cross_entropy'
     		[layer{i}.a, layer{i}.acc] = F_multi_cross_entropy(prev_layers, layer{i});
         case 'lstm'
             layer{i} = F_LSTM(prev_layers{1}, layer{i});
@@ -314,21 +328,19 @@ for i=nLayer:-1:1
             layer{i}.grad = B_repmat(future_layers, layer{i});
         case 'transpose'
             layer{i}.grad = B_transpose(future_layers, layer{i});
+        case 'permute'
+            layer{i}.grad = B_permute(future_layers, layer{i});
         % updatable layers
         case {'affine', 'mel'}
-            [grad, grad_W, grad_b] = B_affine_transform(prev_layers, layer{i}, future_layers, i==2);
-            if length(prev_layers)==2
-                layer{i}.grad{1} = grad_W;
-                layer{i}.grad{2} = grad;
-            else
-                layer{i}.grad = grad; 
-                layer{i}.grad_W = grad_W;
-                layer{i}.grad_b = grad_b;
-            end
+            [layer{i}.grad, layer{i}.grad_W, layer{i}.grad_b] = B_affine_transform(prev_layers, layer{i}, future_layers, i==2);
+        case 'matrix_multiply'
+            [layer{i}.grad] = B_matrix_multiply(prev_layers, layer{i}, future_layers);
         case 'hadamard'
             [layer{i}.grad] = B_hadamard(prev_layers, layer{i}, future_layers);
         case 'word2vec'
             [layer{i}.grad, layer{i}.grad_W] = B_word2vec(prev_layers, layer{i}, future_layers, para.singlePrecision);
+        case 'copyvec2mat'
+            [layer{i}.grad] = B_copyVec2Mat(prev_layers{1}, layer{i}, future_layers);
         case {'weighting'}
             [layer{i}.grad, layer{i}.grad_W, layer{i}.grad_b] = B_weighting(prev_layers, layer{i}, future_layers);
         case 'lstm'
@@ -422,10 +434,14 @@ for i=nLayer:-1:1
         case 'relu'
         	layer{i}.grad = B_relu(future_layers, layer{i});
         case 'maxout'
+        case 'mu_law'
+            layer{i}.grad = B_mu_law(future_layers, layer{i});
         case 'tanh'
             layer{i}.grad = B_tanh(future_layers, layer{i}.a);
         case {'sigmoid'}
         	layer{i}.grad = B_sigmoid(future_layers, layer{i});
+        case {'exp'}
+        	layer{i}.grad = B_exp(future_layers, layer{i});
         case 'softmax'
             future_layer = layer{i+layer{i}.next};      % we only allow one future layer connected to softmax
             if strcmpi(future_layer.name, 'cross_entropy')  % it is necessary to compute the gradient of 

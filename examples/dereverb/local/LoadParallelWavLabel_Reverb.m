@@ -5,17 +5,19 @@ wavlist = []; wavlistClean = [];
 % note that training data do not contain real recordings. 
 % real dev and eval data do not have clean version
 for type_i = 1:length(datatype)
+    if strcmpi(datatype, 'real') || strcmpi(dataset, 'train')
+        nRoom = 1;    else; nRoom = 3; end
     for dist_i = 1:length(distance)
-        for roomID = 1:3
+        for roomID = 1:nRoom
             [tasklist, taskfile] = LoadTaskFile_Reverb([para.local.wavroot '/taskFiles'], dataset, datatype{type_i}, distance{dist_i}, nCh, roomID);
             wavlist = [wavlist Tasklist2wavlist(para.local.wavroot, tasklist, dataset, datatype{type_i})];
             
             if strcmpi(dataset, 'train')
                 wavlistClean = findFiles([para.local.wsjcam0root '/data_wav/primary_microphone/si_tr'], para.local.wsjcam0ext);
-                break;
+            elseif ~strcmpi(datatype, 'real')
+                [tasklistClean, taskfileClean] = LoadTaskFile_Reverb([para.local.wavroot '/taskFiles'], dataset, datatype{type_i}, 'cln', nCh, roomID);
+                wavlistClean = [wavlistClean Tasklist2wavlist(para.local.wavroot, tasklistClean, dataset, datatype{type_i})];
             end
-            [tasklistClean, taskfileClean] = LoadTaskFile_Reverb([para.local.wavroot '/taskFiles'], dataset, datatype{type_i}, 'cln', nCh, roomID);
-            wavlistClean = [wavlistClean Tasklist2wavlist(para.local.wavroot, tasklistClean, dataset, datatype{type_i})];
         end
         if strcmpi(dataset, 'train'); break; end    % For training data, far and near distances are in one list, so we can stop here.
     end
@@ -45,6 +47,10 @@ wavreader.multiArrayFiles = 1;
 fs = 16000;   
 frame_size = fs*0.025;
 frame_shift = fs*0.01;
+if para.local.useFileName==0
+    seglen = para.local.seglen;
+    segshift = para.local.segshift;
+end
 
 % Load data file list
 wav_noisy = {};  label = {};  wav_clean = {};
@@ -59,7 +65,9 @@ for si = 1:nUtt
 
     [wav] = InputReader(wavlist(:,si), wavreader);
     wav = StoreWavInt16(wav);
-    if strcmpi(dataset, 'train')
+    if strcmpi(datatype, 'real')    
+        wav_c = wav; % note that for real data, we don't have clean version. so just use the noisy version. This line will only be run at test time. 
+    elseif strcmpi(dataset, 'train')
         wavfileClean = clean_struct.(['U_' clean_uttID]);
         wav_c = audioread(wavfileClean)';
     else
@@ -81,17 +89,28 @@ for si = 1:nUtt
             wavfileArray{i} = sprintf('%s 0 %2.3f', wavlist{i,si}, size(wav,2)/fs);
         end
         wav_noisy{end+1} = wavfileArray;
-        if strcmpi(dataset, 'train')
+        if strcmpi(datatype, 'real')    
+            wav_clean{end+1} = wavfileArray{1};
+        elseif strcmpi(dataset, 'train')
             wav_clean{end+1} = sprintf('%s 0 %2.3f', clean_struct.(['U_' clean_uttID]), size(wav,2)/fs);
         else
             wav_clean{end+1} = sprintf('%s 0 %2.3f', wavlistClean{1,si}, size(wav,2)/fs);
         end
-    else
-        wav_noisy{end+1} = wav;
-        wav_clean{end+1} = wav_c;
+    else    
+        if 1    % we use small segments rather than whole sentences as training examples
+            wav_c_seg = DivideSent2Segments(wav_c, (seglen-1)*frame_shift+frame_size, segshift*frame_shift, 1);
+            wav_seg = DivideSent2Segments(wav, (seglen-1)*frame_shift+frame_size, segshift*frame_shift, 1);
+            wav_noisy = [wav_noisy; wav_seg];
+            wav_clean = [wav_clean; wav_c_seg];
+        else
+            wav_noisy{end+1} = wav;
+            wav_clean{end+1} = wav_c;
+        end
     end
     if para.local.loadLabel
-        label{end+1} = [];
+        for j = length(label)+1:length(wav_noisy)
+            label{j} = [];
+        end
     end
 end
 
@@ -105,6 +124,9 @@ para.IO.isTensor = [1 1];
 if para.local.useFileName
     para.IO.inputFeature([1 2]) = 0;
     wavreader.precision = 'int16';
+    if isfield(para.IO, 'fileReader')
+        para.IO = rmfield(para.IO, 'fileReader');
+    end
     para.IO.fileReader(1) = wavreader;
     para.IO.fileReader(2) = wavreader;
     para.IO.fileReader(2).array = 0;

@@ -1,3 +1,5 @@
+% note that some layers may introduce randomness, such as stft. They cause
+% the gradient to fail. 
 function [layer_grad] = computeNumericalGradientLayer_tree2(layer, data, para, randomParaLoc)
 for si=1:length(data)
     data{si} = double(data{si});
@@ -9,7 +11,7 @@ end
 [cost_func,layer] = DNN_Cost10(layer, data, para, 1);
 
 EPSILON = 10^(-4);
-for i=1:length(layer)
+for i=length(layer):-1:1
     if isfield(layer{i},'W') && layer{i}.update
         [m,n] = size(layer{i}.W);
         layer_grad{i}.gradW_theo = zeros(m,n);

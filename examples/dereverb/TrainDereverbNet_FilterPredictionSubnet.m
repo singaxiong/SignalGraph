@@ -1,15 +1,14 @@
-% This script train an LSTM or DNN based clean speech log spectrogram 
-% predictor, using simulated data of Reverb challenge. 
+% This script train an LSTM or DNN to predict complex Fourier transform
+% domain temporal filters, which will be used to filter the noisy and
+% reverberant Fourier coefficients to produce enhanced speech. The script
+% is based on the simulated data of Reverb challenge. 
 % 
 % Xiong Xiao, Nanyang Technological University, Singapore
-% Last modified: 08 Feb 2016. 
+% Last modified: 10 Feb 2016. 
 %
 %clear
-function TrainDereverbNet_Regression(modelType, hiddenLayerSize, hiddenLayerSizeFF, DeltaGenerationType, learning_rate, ...
+function TrainDereverbNet_FilterPredictionSubnet(modelType, hiddenLayerSize, hiddenLayerSizeFF, DeltaGenerationType, learning_rate, ...
     step, nSequencePerMinibatch, useFileName, useGPU)
-if nargin<3,    hiddenLayerSizeFF = [];     end
-if nargin<4,    step = 1;   end
-% if nargin<5,    useGPU = 1;     end
 
 addpath('local', '../beamforming/lib');     % remember to run addMyPath.m in SignalGraph root directory first. 
 % define SignalGraph settings. Type ParseOptions2() in command line to see the options. 
@@ -18,18 +17,19 @@ para.NET.sequential = 1;    % do not randomize at frame level, randomize at sent
 para.NET.variableLengthMinibatch = 1;   % a minibatch may contain multiple sentences of different lengths
 para.NET.nSequencePerMinibatch = nSequencePerMinibatch;    % number of sentences per minibatch
 para.NET.maxNumSentInBlock = 100;       % maximum number of sentences in a block
+para.IO.blockSizeMultiplier = 100;
 para.NET.L2weight = 3e-4;
 para.NET.learning_rate = learning_rate;
-para.NET.momentum = [0.9];
 para.NET.learning_rate_decay_rate = 0.999;
-para.NET.reduceLearnRateSpeed = 0.7;
+para.NET.momentum = [0.9];
 para.NET.gradientClipThreshold = 1;
 para.NET.weight_clip = 10;
 para.useGPU     = useGPU;                  % don't use GPU for single sentence minibatch for LSTM. It's even slower than CPU. 
 para.minItr     = 10;
 para.displayGPUstatus = 1;
-para.displayInterval = ceil(para.NET.maxNumSentInBlock / para.NET.nSequencePerMinibatch / 10);
+para.displayInterval = 1;
 para.skipInitialEval = 1;
+para.displayTag = 'LSTM-Regression';
 
 reverb_root = ChoosePath4OS({'D:/Data/REVERB_Challenge', '/media/xiaoxiong/OS/data1/G/REVERB_Challenge'});   % you can set two paths, first for windows OS and second for Linux OS. 
 para.local.wavroot = [reverb_root];
@@ -42,31 +42,37 @@ para.local.segshift = 100;
 
 para.topology.useChannel = 1;
 para.topology.useWav = 1;
-para.topology.RegressionNetType = modelType;
+para.topology.useComplexFeature = 1;
+para.topology.FilterNetType = modelType;
+% There are 257 filters, one for each frequency bin. Each filter has a 2D
+% complex-valued weight matrix, with size TempContext x FreqContext. 
+para.topology.FilterTempContext = 21;   % this is the number of frames used for Fourier coefficient domain filtering. 
+para.topology.FilterFreqContext = 1;    % this is the number of frequency bins used for filter
 para.topology.useCMN = 0;
-para.topology.DeltaGenerationType = DeltaGenerationType;   % Choose 'DeltaByEqn' or 'DeltaByAffine'
+para.topology.mu_law_factor = 2047;
+para.topology.DeltaGenerationType = DeltaGenerationType;
 para.topology.MSECostWeightSDA = [1 4.5 10];
 para.topology.hiddenLayerSize = hiddenLayerSize;
 para.topology.hiddenLayerSizeFF = hiddenLayerSizeFF;
 para = ConfigDereverbNet_Regression(para);
 
-[Data_small, para] = LoadParallelWavLabel_Reverb(para, 100, 'train', {'simu'}, {'far'});
-[layer, para] = Build_DereverbNet_Regression(Data_small, para);
+[Data_small, para] = LoadWavFilter_Reverb(para, 100, 'train', {'simu'}, {'far'});
+[layer, para] = Build_DereverbNet_FilterPrediction(Data_small, para, 'Subnet');
 
 % load the training and cv data
-[Data_tr, para] = LoadParallelWavLabel_Reverb(para, step, 'train', {'simu'}, {'far'});
-[Data_cv, para] = LoadParallelWavLabel_Reverb(para, step, 'dev', {'simu'}, {'far', 'near'});
+[Data_tr, para] = LoadWavFilter_Reverb(para, step, 'train', {'simu'}, {'far'});
+[Data_cv, para] = LoadWavFilter_Reverb(para, step*20, 'train', {'simu'}, {'far'});
 
 
 % generate directory and file names to store the networks. 
-if para.topology.useCMN; para.output = 'nnet/Dereverb.CMN';
-else;     para.output = 'nnet/Dereverb.noCMN';    end
+if para.topology.useCMN; para.output = 'nnet/DereverbFilterSubnet.CMN';
+else;     para.output = 'nnet/DereverbFilterSubnet.noCMN';    end
 para.output = sprintf('%s.%s.MbSize%d.U%d.%d-%s', para.output, para.topology.DeltaGenerationType, ...
     para.NET.nSequencePerMinibatch, length(Data_tr(1).data),  3*(para.topology.fft_len/2+1), para.topology.RegressionNetType);
 for i=1:length(para.topology.hiddenLayerSize)
     para.output = sprintf('%s-%d', para.output, para.topology.hiddenLayerSize(i));
 end
-if ~isempty(para.topology.hiddenLayerSizeFF)
+if length(para.topology.hiddenLayerSizeFF)>0
     para.output = [para.output '-DNN'];
     for i=1:length(para.topology.hiddenLayerSizeFF)
         para.output = sprintf('%s-%d', para.output, para.topology.hiddenLayerSizeFF(i));
@@ -74,7 +80,6 @@ if ~isempty(para.topology.hiddenLayerSizeFF)
 end
 para.output = sprintf('%s-%d.L2_%s.LR_%s/nnet', para.output, 3*(para.topology.fft_len/2+1), FormatFloat4Name(para.NET.L2weight),FormatFloat4Name(para.NET.learning_rate));
 LOG = [];
-para.displayTag = para.output(1:min(80, length(para.output)));
 
 % show the configurations
 para

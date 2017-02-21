@@ -1,5 +1,11 @@
 function [files_cell,ISDIR] = my_dir(root)
 files = dir(root);
+if isempty(files)
+    files_cell = {};
+    ISDIR = [];
+    return;
+end
+
 idx = regexp(root, '*');
 
 if length(idx)==0

@@ -8,7 +8,7 @@ output = input .* input2;
 if N==1
     validFrameMask = [];
 else
-    validFrameMask = getValidFrameMask(input_layer);
+    validFrameMask = getValidFrameMask(input_layers{1});
 end
 
 end

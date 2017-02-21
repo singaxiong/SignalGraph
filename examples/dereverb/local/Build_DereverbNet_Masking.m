@@ -1,14 +1,10 @@
 % Build and initialize the computational graph for regression based speech
 % enhancement/dereverberation
 %
-function [layer, para] = Build_DereverbNet_Regression(Data_tr, para)
+function [layer, para] = Build_DereverbNet_Masking(Data_tr, para)
 para.output = 'tmp';
 
-if para.topology.useMasking
-    layer = genNetworkDereverb_Masking(para.topology);     % generate the network graph
-else
-    layer = genNetworkDereverb_Regression(para.topology); 
-end
+layer = genNetworkDereverb_Masking(para.topology);     % generate the network graph
 para.preprocessing{1} = {};                     % optional preprocessing for each data stream
 para.preprocessing{2} = {};
 para.cost_func.layer_idx = length(layer);       % specify which layers are cost function layers

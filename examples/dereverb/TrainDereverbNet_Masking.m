@@ -5,7 +5,7 @@
 % Last modified: 08 Feb 2016. 
 %
 %clear
-function TrainDereverbNet_Regression(modelType, hiddenLayerSize, hiddenLayerSizeFF, DeltaGenerationType, learning_rate, ...
+function TrainDereverbNet_Masking(modelType, hiddenLayerSize, hiddenLayerSizeFF, DeltaGenerationType, learning_rate,  ...
     step, nSequencePerMinibatch, useFileName, useGPU)
 if nargin<3,    hiddenLayerSizeFF = [];     end
 if nargin<4,    step = 1;   end
@@ -42,7 +42,7 @@ para.local.segshift = 100;
 
 para.topology.useChannel = 1;
 para.topology.useWav = 1;
-para.topology.RegressionNetType = modelType;
+para.topology.MaskNetType = modelType;
 para.topology.useCMN = 0;
 para.topology.DeltaGenerationType = DeltaGenerationType;   % Choose 'DeltaByEqn' or 'DeltaByAffine'
 para.topology.MSECostWeightSDA = [1 4.5 10];
@@ -51,7 +51,7 @@ para.topology.hiddenLayerSizeFF = hiddenLayerSizeFF;
 para = ConfigDereverbNet_Regression(para);
 
 [Data_small, para] = LoadParallelWavLabel_Reverb(para, 100, 'train', {'simu'}, {'far'});
-[layer, para] = Build_DereverbNet_Regression(Data_small, para);
+[layer, para] = Build_DereverbNet_Masking(Data_small, para);
 
 % load the training and cv data
 [Data_tr, para] = LoadParallelWavLabel_Reverb(para, step, 'train', {'simu'}, {'far'});
@@ -59,8 +59,8 @@ para = ConfigDereverbNet_Regression(para);
 
 
 % generate directory and file names to store the networks. 
-if para.topology.useCMN; para.output = 'nnet/Dereverb.CMN';
-else;     para.output = 'nnet/Dereverb.noCMN';    end
+if para.topology.useCMN; para.output = 'nnet/DereverbMask.CMN';
+else;     para.output = 'nnet/DereverbMask.noCMN';    end
 para.output = sprintf('%s.%s.MbSize%d.U%d.%d-%s', para.output, para.topology.DeltaGenerationType, ...
     para.NET.nSequencePerMinibatch, length(Data_tr(1).data),  3*(para.topology.fft_len/2+1), para.topology.RegressionNetType);
 for i=1:length(para.topology.hiddenLayerSize)

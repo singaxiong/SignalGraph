@@ -7,7 +7,7 @@
 % Last Modified: 29 Nov 2016
 %
 function para = ConfigDereverbNet_Regression(para)
-para.topology.fs = 16000;   % sampling rate
+para.topology = SetDefaultValue(para.topology, 'fs', 16000); 
 if isfield(para.topology, 'useChannel')
     para.topology.nCh = length(para.topology.useChannel);
 else
@@ -15,7 +15,7 @@ else
 end
 para.topology = SetDefaultValue(para.topology, 'useFileName', 0);   % by default load waveforms into memory. If data is too big, we can also use wave file names
 
-para.topology.fft_len = 512;
+para.topology = SetDefaultValue(para.topology, 'fft_len', 512); 
 para.topology.freqBin = (0:1/para.topology.fft_len:0.5)*2*pi;
 para.topology.nFreqBin = length(para.topology.freqBin);
 % define the parameters for extracting Fourier coefficients

@@ -11,7 +11,7 @@ selectionType = words{1};
 switch selectionType
     case 'last'
         if length(words)>1; nFrameSelect = str2num(words{2}); else nFrameSelect = 1; end
-        if N>1; [mask, variableLength] = GetValidFrameMask(input_layer); else variableLength = 0; end
+        if N>1; [mask, variableLength] = getValidFrameMask(input_layer); else variableLength = 0; end
         
         precision = class(gather(future_grad(1,1,1)));
         if strcmpi(class(future_grad), 'gpuArray')

@@ -1,31 +1,21 @@
 %
-% Perform the cepstral mean normalization (CMN)
-%       output = CMN(input,mean_d)
+% Perform minmax norm
 %
-% Input:
-%   input: a feature vector or matrix to be processed. If the input is a
-%          vector, it should be a column vector; if the input is a matrix,
-%          it should be MxN, where M is the number of frames and N is the
-%          feature index.
-%   mean_d: the desired mean of the output. If the mean_d is not provided,
-%           zero is used. If the input is a vector, mean_d should be a
-%           scalar; if the input is a matrix, mean_d can be either a scalar
-%           or a column vector.
-%
-% Output:
-%   output: the mean-normalized feature
-% Author: Xiao Xiong, School of Computer Engineering, Nanyang Tech. Univ.
-% Created: Jan, 2005
-% Last Modified: 19 Oct, 2007
-%
-function [output min_val max_val] = MinMaxNorm(input,min_val, max_val)
+function [output, input_min, input_max, scale] = MinMaxNorm(input,min_val, max_val)
 if nargin==1
-    mean_d=0;
-    min_val = min(input);
-    max_val = max(input);
+    min_val = -1;
+    max_val = 1;
 end
 
-[M,N] = size(input);
+input_min = min(input(:));
+input_max = max(input(:));
 
-output = input - repmat(min_val, M,1);
-output = output ./ repmat(max_val - min_val, M, 1);
+input_range = input_max-input_min;
+target_range = max_val - min_val;
+scale = target_range ./ input_range;
+
+output = bsxfun(@plus, input, -input_min);
+output = bsxfun(@times, output, scale);
+output = bsxfun(@plus, output, min_val);
+
+end

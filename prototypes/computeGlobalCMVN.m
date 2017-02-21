@@ -37,7 +37,10 @@ else
 end
 feat = cell2mat(feat);
 
-W = diag(1./std(feat'));
+std_dev = std(feat');
+idx = find(std_dev==0);
+std_dev(idx) = 1;
+W = diag(1./std_dev);
 logMel2 = W * feat;
 b = -mean(logMel2,2);
 

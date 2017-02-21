@@ -10,7 +10,7 @@ selectionType = words{1};
 switch selectionType
     case 'last'     % only select the last N frames
         if length(words)>1; nFrameSelect = str2num(words{2}); else nFrameSelect = 1; end
-        if N>1; [mask, variableLength] = GetValidFrameMask(input_layer); else variableLength = 0; end
+        if N>1; [mask, variableLength] = getValidFrameMask(input_layer); else variableLength = 0; end
         if variableLength
             last_idx = gather(GetLastValidFrameIndex(mask));    % index of last valid frame in all sentences
             if sum(last_idx<nFrameSelect); fprintf('Error: some sentences in the minibatch is shorter than the number of selected length\n'); return; end
