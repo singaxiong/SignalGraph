@@ -140,14 +140,16 @@ for i=1:nLayer
             [layer{i}.a, layer{i}.validFrameMask] = F_comp_gcc(prev_layers{1}, layer{i});
         case 'stft'
             [layer{i}.a, layer{i}.validFrameMask] = F_stft(prev_layers{1}, layer{i});
-            
+        case 'spatialcov'
+            [layer{i}.a, layer{i}.validFrameMask] = F_SpatialCov(prev_layers{1}, layer{i});       % do not support variable length yet
         case 'spatialcovmask'
             layer{i}.a = F_SpatialCovMask(prev_layers, layer{i});       % do not support variable length yet
         case 'spatialcovsplitmask'
             layer{i}.a = F_SpatialCovSplitMask(prev_layers, layer{i});       % do not support variable length yet
         case 'mvdr_spatialcov'
             layer{i} = F_MVDR_spatialCov(prev_layers{1}, layer{i});       % do not support variable length yet
-            
+        case 'extspatialcovfeat'
+            layer{i}.a = F_ExtSpatialCovFeat(prev_layers{1}, layer{i});   % extract up triangle real and imag parts, diagonal part from spatial cov
         case 'cov'
             layer{i}.a = F_cov(prev_layers{1}.a);       % do not support variable length yet
         case 'logdet'
