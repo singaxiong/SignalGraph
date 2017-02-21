@@ -5,6 +5,7 @@ prev_mask = prev_layer.validFrameMask;
 nCh = curr_layer.nCh;
 nBin = curr_layer.nBin;
 [~, nf, N] = size(covMat);
+scm_select = curr_layer.scm_select;
 
 if N == 1
     % normalize the cov matrix by their diagonal elements, remove the effect of
@@ -19,8 +20,13 @@ if N == 1
     normCovMat = reshape(permute(normCovMat, [3 4 1 2]), nCh^2*nBin, nf);
     
     % get the upper triangle off-diagonal elements which are complex-valued
-    selectMat = triu(ones(nCh, nCh),1); % 1. up-trialgle
-%     selectMat = zeros(nCh, nCh); selectMat(1,2:end) = ones(1, nCh-1); % 2. first row
+    if strcmpi(scm_select, 'uptriangle')
+        selectMat = triu(ones(nCh, nCh),1); % 1. up-trialgle
+    elseif strcmpi(scm_select, 'row')
+        selectMat = zeros(nCh, nCh); selectMat(1,2:end) = ones(1, nCh-1); % 2. first row
+    else
+        fprintf('Error: unknown scm feature select type: %s', lower(scm_select))
+    end
     
     dimSelectMask2 = bsxfun(@times, selectMat, ones(nCh, nCh, nBin));
     dimSelectIdx2 = find(reshape(dimSelectMask2, numel(dimSelectMask2),1) == 1);
@@ -50,8 +56,13 @@ else
     normCovMat = reshape(permute(normCovMat, [4 5 1 2 3]), nCh^2*nBin, nf, N);
     
     % get the upper triangle off-diagonal elements which are complex-valued
-    selectMat = triu(ones(nCh, nCh),1); % 1. up-trialgle
-%     selectMat = zeros(nCh, nCh); selectMat(1,2:end) = ones(1, nCh-1); % 2. first row
+    if strcmpi(scm_select, 'uptriangle')
+        selectMat = triu(ones(nCh, nCh),1); % 1. up-trialgle
+    elseif strcmpi(scm_select, 'row')
+        selectMat = zeros(nCh, nCh); selectMat(1,2:end) = ones(1, nCh-1); % 2. first row
+    else
+        fprintf('Error: unknown scm feature select type: %s', lower(scm_select))
+    end
     
     dimSelectMask2 = bsxfun(@times, selectMat, ones(nCh, nCh, nBin));
     dimSelectIdx2 = find(reshape(dimSelectMask2, numel(dimSelectMask2),1) == 1);
