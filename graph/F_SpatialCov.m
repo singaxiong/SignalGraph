@@ -24,7 +24,7 @@ if windowSize == 0
 else
     nf = fix((T-windowSize+windowShift)/windowShift);
 end
-mask = zeros(nf, N, 'like', real(input2));
+mask = zeros(nf, N, 'like', real(input2(1)));
 
 if N==1
 %     R = ComplexSpectrum2SpatialCov(input2, windowSize, windowShift);
@@ -59,7 +59,7 @@ else
 %         output = permute(reshape(output, nCh^2*nBin, N, size(output, 2)), [1 3 2]);
         
         prev_mask = input_layer.validFrameMask;
-        output = zeros(nCh^2*nBin, nf, N, 'like', XX2);
+        output = zeros(nCh^2*nBin, nf, N, 'like', XX2(1));
         for i=1:N
             idx = find(prev_mask(:,i) == 0, 1, 'last');
             idx2 = fix((idx-windowSize+windowShift)/windowShift);

@@ -143,7 +143,7 @@ for i=1:nLayer
         case 'spatialcov'
             [layer{i}.a, layer{i}.validFrameMask] = F_SpatialCov(prev_layers{1}, layer{i});       % do not support variable length yet
         case 'spatialcovmask'
-            layer{i}.a = F_SpatialCovMask(prev_layers, layer{i});       % do not support variable length yet
+            [layer{i}.a, layer{i}.validFrameMask] = F_SpatialCovMask(prev_layers, layer{i});       % do not support variable length yet
         case 'spatialcovsplitmask'
             layer{i}.a = F_SpatialCovSplitMask(prev_layers, layer{i});       % do not support variable length yet
         case 'mvdr_spatialcov'
