@@ -6,8 +6,12 @@ nCh = curr_layer.nCh;
 nBin = curr_layer.nBin;
 [~, nf, N] = size(covMat);
 scm_select = curr_layer.scm_select;
+scm_select_diag = curr_layer.scm_select_diag;
+scm_select_bin = curr_layer.scm_select_bin;
+scm_bin_shift = curr_layer.scm_bin_shift;
 
 if N == 1
+    
     % normalize the cov matrix by their diagonal elements, remove the effect of
     % spectral power and only retains the phase information
     dimSelectMask1 = bsxfun(@times, eye(nCh, nCh), ones(nCh, nCh, nBin));
@@ -40,8 +44,21 @@ if N == 1
     % get the diagonal elements which are real values
     % diag_part = covMat(dimSelectIdx1,:);
     % diag_part = log(max(eps,abs(diag_part)));
-    diag_part = real(normCovMat(dimSelectIdx1,:));
+    if scm_select_diag
+        diag_part = real(normCovMat(dimSelectIdx1,:));
+    end
 else
+    % select 1 bin by average every scm_bin_shift bins
+    if scm_select_bin
+        covMat1 = reshape(covMat, nCh^2, nBin, nf, N);
+        covMat2 = reshape(permute(covMat1, [1 3 4 2]), nCh^2*nf*N, nBin);
+        covMat3 = conv2(covMat2, ones(1,scm_bin_shift, 'like', covMat2(1))/scm_bin_shift, 'valid');
+        covMat4 = covMat3(:, 1:scm_bin_shift:end);
+        nBin = size(covMat4, 2);
+        covMat = reshape(permute(reshape(covMat4, nCh^2, nf, N, nBin), [1 4 2 3]), nCh^2*nBin, nf, N);
+        
+    end
+    
     % normalize the cov matrix by their diagonal elements, remove the effect of
     % spectral power and only retains the phase information
     dimSelectMask1 = bsxfun(@times, eye(nCh, nCh), ones(nCh, nCh, nBin));
@@ -54,6 +71,17 @@ else
     diag_mean1 = permute(bsxfun(@plus, permute(diag_mean, [2 3 1]), -1e10.*prev_mask), [3 1 2]);
     normCovMat = bsxfun(@times, permute(reshape(covMat, nCh, nCh, nBin, nf, N), [3 4 5 1 2]), 1./diag_mean1);
     normCovMat = reshape(permute(normCovMat, [4 5 1 2 3]), nCh^2*nBin, nf, N);
+    
+%     % select 1 bin by average every scm_bin_shift bins
+%     if scm_select_bin
+%         normCovMat1 = reshape(normCovMat, nCh^2, nBin, nf, N);
+%         normCovMat2 = reshape(permute(normCovMat1, [1 3 4 2]), nCh^2*nf*N, nBin);
+%         normCovMat3 = conv2(normCovMat2, ones(1,scm_bin_shift, 'like', normCovMat2(1))/scm_bin_shift, 'valid');
+%         normCovMat4 = normCovMat3(:, 1:scm_bin_shift:end);
+%         nBin = size(normCovMat4, 2);
+%         normCovMat = reshape(permute(reshape(normCovMat4, nCh^2, nf, N, nBin), [1 4 2 3]), nCh^2*nBin, nf, N);
+%         
+%     end
     
     % get the upper triangle off-diagonal elements which are complex-valued
     if strcmpi(scm_select, 'uptriangle')
@@ -69,16 +97,28 @@ else
     real_part = real(normCovMat(dimSelectIdx2,:,:));
     % imag_part = imag(normCovMat(dimSelectIdx2,:));
     % for freq bin 1 and 257, no imag part
-    dimSelectMask3 = bsxfun(@times, selectMat, cat(3,zeros(nCh, nCh, 1), ones(nCh, nCh, nBin-2), zeros(nCh, nCh, 1)));
+    if scm_select_bin
+        dimSelectMask3 = bsxfun(@times, selectMat, ones(nCh, nCh, nBin));
+    else
+        dimSelectMask3 = bsxfun(@times, selectMat, cat(3,zeros(nCh, nCh, 1), ones(nCh, nCh, nBin-2), zeros(nCh, nCh, 1)));
+    end
     dimSelectIdx3 = find(reshape(dimSelectMask3, numel(dimSelectMask3),1) == 1);
     imag_part = imag(normCovMat(dimSelectIdx3,:,:));
     
     % get the diagonal elements which are real values
-    diag_part = real(normCovMat(dimSelectIdx1,:,:));
+    if scm_select_diag
+        dimSelectMask1 = bsxfun(@times, eye(nCh, nCh), ones(nCh, nCh, nBin));
+        dimSelectIdx1 = find(reshape(dimSelectMask1, numel(dimSelectMask1),1) == 1);
+        diag_part = real(normCovMat(dimSelectIdx1,:,:));
+    end
 end
 
 % get the final feature vector
-feat = [real_part; imag_part; diag_part];
+if scm_select_diag
+    feat = [real_part; imag_part; diag_part];
+else
+    feat = [real_part; imag_part];
+end
 % real_part = reshape(real_part, 7, 257, nf, N);
 % imag_part = reshape(imag_part, 7, 255, nf, N);
 % real_part = real_part(:, 6:5:end,:,:);

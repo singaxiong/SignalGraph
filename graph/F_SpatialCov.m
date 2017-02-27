@@ -58,15 +58,30 @@ else
 %         output = SCM(:, 1:windowShift:end);
 %         output = permute(reshape(output, nCh^2*nBin, N, size(output, 2)), [1 3 2]);
         
+%         % Version 1
+%         prev_mask = input_layer.validFrameMask;
+%         output = zeros(nCh^2*nBin, nf, N, 'like', XX2);
+%         for i=1:N
+%             idx = find(prev_mask(:,i) == 0, 1, 'last');
+%             idx2 = fix((idx-windowSize+windowShift)/windowShift);
+%             XX3 = squeeze(XX2(:,1:idx,i));
+%             SCM = conv2(XX3, ones(1,windowSize, class(gather(input2)))/windowSize, 'valid');
+%             output(:, 1:idx2, i) = SCM(:, 1:windowShift:end);
+%             mask(idx2+1:end, i) = 1;
+%         end
+        
+        % Version 2, much fast
         prev_mask = input_layer.validFrameMask;
-        output = zeros(nCh^2*nBin, nf, N, 'like', XX2(1));
-        for i=1:N
-            idx = find(prev_mask(:,i) == 0, 1, 'last');
-            idx2 = fix((idx-windowSize+windowShift)/windowShift);
-            XX3 = squeeze(XX2(:,1:idx,i));
-            SCM = conv2(XX3, ones(1,windowSize, class(gather(input2)))/windowSize, 'valid');
-            output(:, 1:idx2, i) = SCM(:, 1:windowShift:end);
-            mask(idx2+1:end, i) = 1;
+        idx = arrayfun(@(x) find(gather(prev_mask(:,x)) == 0, 1, 'last'), 1:size(prev_mask,2));
+        idx2 = arrayfun(@(x) fix((idx(x)-windowSize+windowShift)/windowShift), 1:length(idx));
+        XX31 = reshape(permute(XX2, [1 3 2]), nCh^2*nBin*N, T);
+        SCM1 = conv2(XX31, ones(1,windowSize, class(gather(input2)))/windowSize, 'valid');
+        output1 = SCM1(:, 1:windowShift:end);
+        output2 = permute(reshape(output1, nCh^2*nBin, N, size(output1, 2)), [1 3 2]);
+        output = zeros(nCh^2*nBin, nf, N, 'like', XX2);
+        for i = 1:N
+            output(:, 1:idx2(i), i) = output2(:, 1:idx2(i), i);
+            mask(idx2(i)+1:end, i) = 1;
         end
         
     end
