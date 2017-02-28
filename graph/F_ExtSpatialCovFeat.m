@@ -5,10 +5,23 @@ prev_mask = prev_layer.validFrameMask;
 nCh = curr_layer.nCh;
 nBin = curr_layer.nBin;
 [~, nf, N] = size(covMat);
-scm_select = curr_layer.scm_select;
-scm_select_diag = curr_layer.scm_select_diag;
-scm_select_bin = curr_layer.scm_select_bin;
-scm_bin_shift = curr_layer.scm_bin_shift;
+
+if isfield(curr_layer, 'scm_select')
+    scm_select = curr_layer.scm_select;
+else
+    scm_select = 'uptriangle';
+end
+if isfield(curr_layer, 'scm_select_diag')
+    scm_select_diag = curr_layer.scm_select_diag;
+else
+    scm_select_diag = 1;
+end
+if isfield(curr_layer, 'scm_select_bin')
+    scm_select_bin = curr_layer.scm_select_bin;
+    scm_bin_shift = curr_layer.scm_bin_shift;
+else
+    scm_select_bin = 0;
+end
 
 if N == 1
     
