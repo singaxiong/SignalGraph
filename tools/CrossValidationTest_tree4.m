@@ -7,6 +7,9 @@
 function [cost,cost_pure,subcost,subacc] = CrossValidationTest_tree4(layer, data, para)
 para.NET.sentenceMinibatch = 1;
 [sentIdxInBlock] = shuffle_data(layer, para, data, 1);  nBlock = length(sentIdxInBlock);
+if isfield(para.NET, 'nSequencePerMinibatchCV')
+    para.NET.nSequencePerMinibatch = para.NET.nSequencePerMinibatchCV;
+end
 
 cost_cv = [];
 if para.useGPU; 	cost_cv= gpuArray(cost_cv);        end

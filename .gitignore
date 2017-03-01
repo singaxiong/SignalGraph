@@ -8,3 +8,5 @@ examples/beamforming/mask_prediction/debug/*
 examples/beamforming/Kaldi/exp-fbank/tri4a_dnn_tr05_multi_ch5/
 examples/dereverb/debug/*
 examples/dereverb/nnet/*
+examples/enhancement/debug/*
+examples/enhancement/nnet/*
