@@ -10,6 +10,7 @@ winMask = zeros(nf, N, 'like', real(covMat(1)));
 
 if N == 1
     covMat1 = reshape(permute(covMat, [1 2 4 3]), nCh^2*nBin, nf_stft);
+%     covMat1 = repmat(mean(covMat1,2), 1, size(covMat1, 2));
     % % Version 1: fast, but consume memory when windowSize is large
 %     nf = fix((nf_stft-windowSize+windowShift)/windowShift);
 %     covMat2 = ExpandContext_v2(covMat1, 0:windowSize-1);

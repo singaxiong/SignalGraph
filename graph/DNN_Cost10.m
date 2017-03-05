@@ -150,6 +150,10 @@ for i=1:nLayer
             layer{i} = F_MVDR_spatialCov(prev_layers{1}, layer{i});       % do not support variable length yet
         case 'extspatialcovfeat'
             layer{i}.a = F_ExtSpatialCovFeat(prev_layers{1}, layer{i});   % extract up triangle real and imag parts, diagonal part from spatial cov
+        case 'spatialnorm'
+            layer{i}.a = F_SpatialNorm(prev_layers{1}, layer{i});
+        case 'concatrealimag'
+            layer{i}.a = F_ConcatRealImag(prev_layers{1}); 
         case 'cov'
             layer{i}.a = F_cov(prev_layers{1}.a);       % do not support variable length yet
         case 'logdet'

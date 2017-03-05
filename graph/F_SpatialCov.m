@@ -40,7 +40,8 @@ if N==1
         output = squeeze(mean(XX2, 2));
     else
 %         idx = [ones(1,half_ctx) 1:T ones(1,half_ctx)*T];
-        SCM = conv2(XX2, ones(1,windowSize, class(gather(input2)))/windowSize, 'valid');
+%         SCM = conv2(XX2, ones(1,windowSize, class(gather(input2)))/windowSize, 'valid');
+        SCM = conv2(XX2, ones(1,windowSize, class(gather(input2))), 'valid');
         output = SCM(:, 1:windowShift:end);
     end
     
