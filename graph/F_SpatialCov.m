@@ -40,7 +40,8 @@ if N==1
         output = squeeze(mean(XX2, 2));
     else
 %         idx = [ones(1,half_ctx) 1:T ones(1,half_ctx)*T];
-        SCM = conv2(XX2, ones(1,windowSize, class(gather(input2)))/windowSize, 'valid');
+%         SCM = conv2(XX2, ones(1,windowSize, class(gather(input2)))/windowSize, 'valid');
+        SCM = conv2(XX2, ones(1,windowSize, class(gather(input2))), 'valid');
         output = SCM(:, 1:windowShift:end);
     end
     
@@ -75,7 +76,8 @@ else
         idx = arrayfun(@(x) find(gather(prev_mask(:,x)) == 0, 1, 'last'), 1:size(prev_mask,2));
         idx2 = arrayfun(@(x) fix((idx(x)-windowSize+windowShift)/windowShift), 1:length(idx));
         XX31 = reshape(permute(XX2, [1 3 2]), nCh^2*nBin*N, T);
-        SCM1 = conv2(XX31, ones(1,windowSize, class(gather(input2)))/windowSize, 'valid');
+%         SCM1 = conv2(XX31, ones(1,windowSize, class(gather(input2)))/windowSize, 'valid');
+        SCM1 = conv2(XX31, ones(1,windowSize, class(gather(input2))), 'valid');
         output1 = SCM1(:, 1:windowShift:end);
         output2 = permute(reshape(output1, nCh^2*nBin, N, size(output1, 2)), [1 3 2]);
         output = zeros(nCh^2*nBin, nf, N, 'like', XX2);
