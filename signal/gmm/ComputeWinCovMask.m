@@ -19,7 +19,8 @@ if N == 1
 %     winCovMat = squeeze(mean(covMat3, 2));
 %     
     % Version 2: less fast than version 1
-    SCM1 = conv2(covMat1, ones(1,windowSize, class(gather(covMat)))/windowSize, 'valid');
+%     SCM1 = conv2(covMat1, ones(1,windowSize, class(gather(covMat)))/windowSize, 'valid');
+    SCM1 = conv2(covMat1, ones(1,windowSize, class(gather(covMat))), 'valid');
     winCovMat = SCM1(:, 1:windowShift:end);
 %     
 %     % Version 3: slowest in repmat and not support multiple sentences
@@ -52,7 +53,8 @@ else
     covMat2 = reshape(permute(covMat, [1 2 4 5 3]), nCh^2*nBin*N, nf_stft);
     idx = arrayfun(@(x) find(gather(prev_mask(:,x)) == 0, 1, 'last'), 1:size(prev_mask,2));
     idx2 = arrayfun(@(x) fix((idx(x)-windowSize+windowShift)/windowShift), 1:length(idx));
-    covMat3 = conv2(covMat2, ones(1,windowSize, 'like', covMat2(1))/windowSize, 'valid');
+%     covMat3 = conv2(covMat2, ones(1,windowSize, 'like', covMat2(1))/windowSize, 'valid');
+    covMat3 = conv2(covMat2, ones(1,windowSize, 'like', covMat2(1)), 'valid');
     winCovMat1 = covMat3(:, 1:windowShift:end);
     winCovMat2 = permute(reshape(winCovMat1, nCh^2*nBin, N, size(winCovMat1, 2)), [1 3 2]);
     winCovMat = zeros(nCh^2*nBin, nf, N, 'like', winCovMat2(1));
