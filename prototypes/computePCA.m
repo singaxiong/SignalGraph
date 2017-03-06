@@ -35,11 +35,23 @@ feat = cell2mat(feat);
 
 % [coeff, scores, latent] = princomp(feat','econ');
 % tmp=cumsum(latent)./sum(latent);
-coeff = princomp(feat','econ');
-% coeff = princomp(feat');
+% coeff = princomp(feat','econ');
+% W = coeff(:,1:para.topology.pcaDim)';
+% b = -W*mean(feat,2);
+% 
+% [coeff1, scores1, latent1] = pca(feat');
+% cov1 = cov(feat');
+% [V1,D1] = eig(cov1);
+% D2 = diag(D1);
+
+fprintf('Load %d utts feats, begin pca ...', nUttUsed);
+[coeff, ~, latent] = pca(feat');
+tmp=cumsum(latent)./sum(latent);
+idx = find(tmp == 0.95);
+fprintf('End of PCA, select %d can cover 99.9 percent', idx);
 W = coeff(:,1:para.topology.pcaDim)';
 b = -W*mean(feat,2);
-% plot(b)
-% std(b)
+
+save(['PCA_U' num2str(nUttUsed) '_W_B.mat'], 'W', 'b');
 
 end
