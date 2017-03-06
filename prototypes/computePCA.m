@@ -49,9 +49,10 @@ fprintf('Load %d utts feats, begin pca ...', nUttUsed);
 tmp=cumsum(latent)./sum(latent);
 idx = find(tmp == 0.95);
 fprintf('End of PCA, select %d can cover 99.9 percent', idx);
-W = coeff(:,1:para.topology.pcaDim)';
+% W = coeff(:,1:para.topology.pcaDim)';
+W = coeff(:,1:1000)';
 b = -W*mean(feat,2);
 
-save(['PCA_U' num2str(nUttUsed) '_W_B.mat'], 'W', 'b');
+save(['PCA_U' num2str(nUttUsed) '_W_B.mat'], 'W', 'b', 'latent');
 
 end

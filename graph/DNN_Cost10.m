@@ -459,6 +459,8 @@ for i=nLayer:-1:1
             layer{i}.grad = B_inner_product_normalized(prev_layers, future_layers);
         case 'concatenate'
             layer{i}.grad = B_concatenate(prev_layers, layer{i}, future_layers);
+        case 'concatrealimag'
+            layer{i}.grad = B_ConcatRealImag(prev_layers, layer{i}, future_layers);
 
         otherwise
             fprintf('Error: unknown output node type %s!\n', layer{i}.name);
