@@ -253,7 +253,7 @@ if para.NET.L2weight>0
             if isfield(layer{i}, 'mask')        % the mask defines what values can be tuned and what cannot be tuned. 
                 tmp = tmp .* layer{i}.mask;
             end
-			cost_func.cost = cost_func.cost + 0.5* L2weight * sum(sum(tmp.*tmp));
+			cost_func.cost = cost_func.cost + 0.5* L2weight * sum(sum(real(tmp.*conj(tmp))));
 		end
     end
 end

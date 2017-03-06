@@ -30,7 +30,7 @@ for i=1:length(WeightUpdateOrder)
         end
     end
     
-    if para.NET.gradientClipThreshold > 0
+    if para.NET.gradientClipThreshold > 0 && isreal(grad_W)
         grad_W = max(-para.NET.gradientClipThreshold, grad_W);
         grad_W = min(para.NET.gradientClipThreshold, grad_W);
     end
@@ -65,7 +65,7 @@ for i=1:length(WeightUpdateOrder)
         layer{Lidx(1)}.W = layer{Lidx(1)}.W - update{i}.W;
     end
     
-    if para.NET.weight_clip
+    if para.NET.weight_clip && isreal(layer{Lidx(1)}.W)
         % sometimes the weight will explode, so we need to add a limit to the value of the weights, e.g. +-10
         layer{Lidx(1)}.W = max(-para.NET.weight_clip,layer{Lidx(1)}.W);
         layer{Lidx(1)}.W = min(para.NET.weight_clip,layer{Lidx(1)}.W);
