@@ -10,3 +10,6 @@ examples/dereverb/debug/*
 examples/dereverb/nnet/*
 examples/enhancement/debug/*
 examples/enhancement/nnet/*
+examples/separation/debug/*
+examples/separation/nnet/*
+examples/generative/*

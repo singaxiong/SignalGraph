@@ -6,8 +6,12 @@ wavreader.array = 0;
 wavreader.precision = 'int16';
 
 % load clean speech list
-clean_list = findFiles(para.local.clean_wav_root, para.local.clean_wav_ext);
-clean_list = clean_list(step:step:end);
+if isfield(para.local, 'clean_wav_files')
+    clean_list = para.local.clean_wav_files;
+else
+    clean_list = findFiles(para.local.clean_wav_root, para.local.clean_wav_ext);
+    clean_list = clean_list(step:step:end);
+end
 wav_clean = {}; 
 for si = 1:length(clean_list)
     [~,curr_uttID] = fileparts(clean_list{si});
@@ -20,9 +24,13 @@ for si = 1:length(clean_list)
 end
 
 % load rir wav list
-rir_list = findFiles(para.local.rir_wav_root, para.local.rir_wav_ext);
-rir_list = rir_list(step:step:end);
-wav_rir = {}; 
+if isfield(para.local, 'rir_wav_files')
+    rir_list = para.local.rir_wav_files;
+else
+    rir_list = findFiles(para.local.rir_wav_root, para.local.rir_wav_ext);
+    rir_list = rir_list(step:step:end);
+end
+wav_rir = {};
 for si = 1:length(rir_list)
     [~,curr_uttID] = fileparts(rir_list{si});
     PrintProgress(si, length(rir_list), 100, curr_uttID);
@@ -34,8 +42,12 @@ for si = 1:length(rir_list)
 end
 
 % load noise wav list
-noise_list = findFiles(para.local.noise_wav_root, para.local.noise_wav_ext);
-noise_list = noise_list(step:step:end);
+if isfield(para.local, 'noise_wav_files')
+    noise_list = para.local.noise_wav_files;
+else
+    noise_list = findFiles(para.local.noise_wav_root, para.local.noise_wav_ext);
+    noise_list = noise_list(step:step:end);
+end
 wav_noise = {}; 
 for si = 1:length(noise_list)
     [~,curr_uttID] = fileparts(noise_list{si});

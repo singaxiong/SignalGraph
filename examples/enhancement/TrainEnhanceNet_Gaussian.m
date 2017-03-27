@@ -5,10 +5,13 @@
 % Last modified: 08 Feb 2016. 
 %
 %clear
-function TrainEnhanceNet_Masking(modelType, hiddenLayerSize, hiddenLayerSizeFF, learning_rate,  ...
-    learning_rate_decay_rate, learningScheme, L2weight, nSequencePerMinibatch, useGPU)
-% nSequencePerMinibatch=40;
-nUtt4Iteration = 10000;
+function TrainEnhanceNet_Gaussian(modelType, hiddenLayerSizeShared, hiddenLayerSizeMu, hiddenLayerSizeVar, learning_rate,  ...
+    stage, initModel, nUtt4Iteration, useGPU)
+learning_rate_decay_rate=0.999;
+L2weight=0;
+learningScheme = 'expDecay';
+nSequencePerMinibatch=40;
+% nUtt4Iteration = 10000;
 useFileName = 1;
 DeltaGenerationType = 'DeltaByEqn';
 
@@ -48,12 +51,15 @@ para.local.segshift = 100;
 
 para.topology.useChannel = 1;
 para.topology.useWav = 1;
-para.topology.MaskNetType = modelType;
+para.topology.NetType = modelType;
 para.topology.useCMN = 0;
-para.topology.DeltaGenerationType = DeltaGenerationType;   % Choose 'DeltaByEqn' or 'DeltaByAffine'
+para.topology.initModel = initModel;
 para.topology.MSECostWeightSDA = [1 4.5 10];
-para.topology.hiddenLayerSize = hiddenLayerSize;
-para.topology.hiddenLayerSizeFF = hiddenLayerSizeFF;
+%'nnet/EnhanceRegression.noCMN.DeltaByEqn.MbSize20.U28539.771-LSTM-2048-771.L2_3E-4.LR_1E-4/nnet.itr62.LR4.97E-8.CV2439.245.mat';
+para.topology.DeltaGenerationType = DeltaGenerationType;   % Choose 'DeltaByEqn' or 'DeltaByAffine'
+para.topology.hiddenLayerSizeShared = hiddenLayerSizeShared;
+para.topology.hiddenLayerSizeMu = hiddenLayerSizeMu;
+para.topology.hiddenLayerSizeVar = hiddenLayerSizeVar;
 para = ConfigDereverbNet_Regression(para);
 
 para.IO.DynamicDistortion.fs = para.topology.fs;
@@ -69,7 +75,7 @@ para.IO.DynamicDistortion.frame_shift = para.topology.frame_shift;
 
 [Data_tr, para] = LoadWavRIRNoise_Libri(para, 1);
 
-[layer, para] = Build_EnhanceNet_Masking(Data_tr, para);
+[layer, para] = Build_EnhanceNet_Gaussian(Data_tr, para, stage);
 
 % load the cv data
 para.local.cv_wav_root = ChoosePath4OS({'D:\Data\NoiseData\Libri\LibriSpeech\dev-parallel', '/media/xiaoxiong/DATA1/data1/Libri/LibriSpeech/dev-parallel'}); 
@@ -77,18 +83,20 @@ para.local.useFileName = 0;
 [Data_cv, para] = LoadParallelWav_Libri(para, 2);
 
 % generate directory and file names to store the networks. 
-if para.topology.useCMN; para.output = 'nnet/EnhanceMask.CMN';
-else;     para.output = 'nnet/EnhanceMask.noCMN';    end
-para.output = sprintf('%s.%s.Decay%s.%s.MbSize%d.U%d.%d-%s', para.output, learningScheme, num2str(learning_rate_decay_rate),...
-    para.topology.DeltaGenerationType,para.NET.nSequencePerMinibatch, length(Data_tr(1).data),  3*(para.topology.fft_len/2+1), para.topology.RegressionNetType);
-for i=1:length(para.topology.hiddenLayerSize)
-    para.output = sprintf('%s-%d', para.output, para.topology.hiddenLayerSize(i));
+if para.topology.useCMN; para.output = 'nnet/EnhanceGaussian.CMN';
+else;     para.output = 'nnet/EnhanceGaussian.noCMN';    end
+para.output = sprintf('%s.stage%2.1f.init%d.%s.%s.%s_Equal.Mb%d.U%d.%d-L', para.output, stage, ~isempty(initModel), learningScheme, num2str(learning_rate_decay_rate),...
+    para.topology.DeltaGenerationType,para.NET.nSequencePerMinibatch, length(Data_tr(1).data),  3*(para.topology.fft_len/2+1));
+for i=1:length(para.topology.hiddenLayerSizeShared)
+    para.output = sprintf('%s-%d', para.output, para.topology.hiddenLayerSizeShared(i));
 end
-if ~isempty(para.topology.hiddenLayerSizeFF)
-    para.output = [para.output '-DNN'];
-    for i=1:length(para.topology.hiddenLayerSizeFF)
-        para.output = sprintf('%s-%d', para.output, para.topology.hiddenLayerSizeFF(i));
-    end
+para.output = [para.output '-M'];
+for i=1:length(para.topology.hiddenLayerSizeMu)
+    para.output = sprintf('%s-%d', para.output, para.topology.hiddenLayerSizeMu(i));
+end
+para.output = [para.output '-V'];
+for i=1:length(para.topology.hiddenLayerSizeVar)
+    para.output = sprintf('%s-%d', para.output, para.topology.hiddenLayerSizeVar(i));
 end
 para.output = sprintf('%s-%d.L2_%s.LR_%s/nnet', para.output, 3*(para.topology.fft_len/2+1), FormatFloat4Name(para.NET.L2weight),FormatFloat4Name(para.NET.learning_rate));
 LOG = [];

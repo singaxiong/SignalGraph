@@ -87,7 +87,10 @@ for itr = startItr:para.maxItr
             data = GenDynamicPairs(base_data, para);
         case 'dynamicDistortion'
             if ~exist('base_data', 'var'); base_data = data; end  % in the first time, we store data into base_data;
-            [data, para] = GenDynamicDistortion(base_data, para);
+            [data, para] = GenDynamicDistortion(base_data, para);        
+        case 'dynamicMixture'
+            if ~exist('base_data', 'var'); base_data = data; end  % in the first time, we store data into base_data;
+            [data, para] = GenDynamicMixture(base_data, para);
     end
     [sentIdxInBlock] = shuffle_data(layer, para, data);   nBlock = length(sentIdxInBlock);
     
