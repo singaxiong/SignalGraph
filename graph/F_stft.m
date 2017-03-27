@@ -8,11 +8,12 @@ frame_shift = curr_layer.frame_shift;
 
 win_type = ReturnFieldWithDefaultValue(curr_layer, 'win_type', 'hamming');
 removeDC = ReturnFieldWithDefaultValue(curr_layer, 'removeDC', 1);
+doDithering = ReturnFieldWithDefaultValue(curr_layer, 'doDithering', 1);
 precision = class(gather(input(1)));
 useGPU = IsInGPU(input);
 
 if N==1
-    fft_x = sfft_multi(input',frame_len,frame_shift,fft_len, win_type,removeDC, IsInGPU(input));
+    fft_x = sfft_multi(input',frame_len,frame_shift,fft_len, win_type,removeDC, IsInGPU(input), doDithering);
     fft_x = fft_x(1:fft_len/2+1,:,:);
     [d1,d2,d3] = size(fft_x);
     fft_x = reshape(fft_x, d1*d2, d3);
@@ -22,7 +23,7 @@ else
     input2 = PadShortTrajectory(input, mask, 0);
     input2 = reshape(permute(input2, [2 1 3]), T, nCh*N);
     
-    fft_x = sfft_multi(input2,frame_len,frame_shift,fft_len, win_type,removeDC, IsInGPU(input));
+    fft_x = sfft_multi(input2,frame_len,frame_shift,fft_len, win_type,removeDC, IsInGPU(input), doDithering);
     fft_x = fft_x(1:fft_len/2+1,:,:);
     fft_x = permute(fft_x, [1 3 2]);
     [nBin,nFr,d3] = size(fft_x);

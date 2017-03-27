@@ -11,9 +11,14 @@ clean_data = base_data(1).data;
 rir_data = base_data(2).data;
 noise_data = base_data(3).data;
 
-[clean_data_loaded, clean_idx] = LoadOriginalWave(clean_data, paraDD, 1);
-[rir_data_loaded, rir_idx] = LoadOriginalWave(rir_data, paraDD, 2);
-[noise_data_loaded, noise_idx] = LoadOriginalWave(noise_data, paraDD, 3);
+if isfield(para.IO.DynamicDistortion, 'randomizeFileOrder')
+    randomizeFileOrder = para.IO.DynamicDistortion.randomizeFileOrder;
+else
+    randomizeFileOrder = 1;
+end
+[clean_data_loaded, clean_idx] = LoadOriginalWave(clean_data, paraDD, randomizeFileOrder,1);
+[rir_data_loaded, rir_idx] = LoadOriginalWave(rir_data, paraDD, randomizeFileOrder,2);
+[noise_data_loaded, noise_idx] = LoadOriginalWave(noise_data, paraDD, randomizeFileOrder,3);
 
 switch lower(paraDD.SNR_PDF)
     case 'uniform'
@@ -35,10 +40,18 @@ end
 
 distorted = {}; clean_data_aligned = {};
 for i=1:length(clean_idx)
-    curr_clean_wav = double(clean_data_loaded{clean_idx(i)})';
-    curr_rir = double(rir_data_loaded{rir_idx(i)})';
-    curr_noise = double(noise_data_loaded{noise_idx(i)})';
-    curr_distorted = ApplyConstRirNoise(curr_clean_wav, paraDD.fs, curr_rir, curr_noise, SNR(i))';
+    if para.singlePrecision
+        curr_clean_wav = single(clean_data_loaded{clean_idx(i)})';
+        curr_rir = single(rir_data_loaded{rir_idx(i)})';
+        curr_noise = single(noise_data_loaded{noise_idx(i)})';
+    else
+        curr_clean_wav = double(clean_data_loaded{clean_idx(i)})';
+        curr_rir = double(rir_data_loaded{rir_idx(i)})';
+        curr_noise = double(noise_data_loaded{noise_idx(i)})';
+    end
+    
+    curr_distorted = ApplyConstRirNoise(curr_clean_wav, paraDD.fs, curr_rir, curr_noise, SNR(i), para.useGPU)';
+    curr_distorted = gather(curr_distorted);
     
     switch class(gather(clean_data_loaded{clean_idx(i)}(1)))
         case 'int16'
@@ -69,11 +82,15 @@ data(2).data = clean_data_aligned;
 end
 
 
-function [data, idx] = LoadOriginalWave(wavlist, paraDD, streamIdx)
+function [data, idx] = LoadOriginalWave(wavlist, paraDD, randomizeFileOrder, streamIdx)
 if isempty(wavlist)
     return;
 end
-idx = randperm(length(wavlist));
+if randomizeFileOrder
+    idx = randperm(length(wavlist));
+else
+    idx = 1:length(wavlist);
+end
 nRepeat = ceil(paraDD.nUtt4Iteration/length(idx));
 idx = repmat(idx, 1, nRepeat);
 idx(paraDD.nUtt4Iteration+1:end) = [];

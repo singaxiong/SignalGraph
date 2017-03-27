@@ -5,7 +5,8 @@
 % Created: 18 Jul, 2005
 % Last Modified: 28 Jul, 2005
 % Inputs: 
-%       x   1-D time domain signal
+%       x   MxN time domain signal, M is the number of samples, and N is
+%       the number of channels. 
 % Outputs: 
 
 % the fine version of wav2abs have half of the normal frame_shift, i.e.,

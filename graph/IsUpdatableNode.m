@@ -1,6 +1,6 @@
 function isUpdatable = IsUpdatableNode(node)
 
-updatable = {'Affine', 'weighting', 'LSTM', 'word2vec', 'tconv'};
+updatable = {'Affine', 'weighting', 'LSTM', 'word2vec', 'tconv', 'weight2activation'};
 
 isUpdatable = 0;
 for i=1:length(updatable)

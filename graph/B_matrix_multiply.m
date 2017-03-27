@@ -6,27 +6,23 @@ Y = input_layers{2}.a;
 
 % input1 and input2
 
-[Dx,Tx,N] = size(X);
-[Dy,Ty,N] = size(Y);
+[Dx,Tx,Nx] = size(X);
+[Dy,Ty,Ny] = size(Y);
 if Tx ~=Dy
     fprintf('Error: matrix size not match each other\n');
 end
 
 future_grad = GetFutureGrad(future_layers, curr_layer);
-[n1,n2,n3] = size(future_grad);
-if n3>1     % reshape the matrix to 2D
-    [validFrameMask, variableLength] = getValidFrameMask(input_layers{length(input_layers)});
-    if variableLength
-        future_grad = PadShortTrajectory(future_grad, validFrameMask, 0); 
-    end
-%     future_grad = reshape(future_grad, n1,n2*n3);
-%     Y = reshape(Y, size(Y,1), n2*n3);
-end
 
-if N==1
+if Nx==1 && Ny==1
     gradX = conj(future_grad * Y');
     gradY = X' * future_grad;
 else
+    [validFrameMask, variableLength] = getValidFrameMask(curr_layer);
+    if variableLength
+        future_grad = PadShortTrajectory(future_grad, validFrameMask, 0);
+    end
+    
     if IsInGPU(X(1))
         gradX = gpuArray.zeros(size(X));
         gradY = gpuArray.zeros(size(Y));
@@ -34,9 +30,27 @@ else
         gradX = zeros(size(X));
         gradY = zeros(size(Y));
     end
-    for i = 1:N
-        gradX(:,:,i) = conj(future_grad(:,:,i) * Y(:,:,i)');
-        gradY(:,:,i) = X(:,:,i)' * future_grad(:,:,i);
+    
+    if Nx==1 && Ny>1    %use the same X matrix for all Y matrices
+        Y = PadShortTrajectory(Y, validFrameMask, 0);
+        for i = 1:Ny
+            gradX = gradX + conj(future_grad(:,:,i) * Y(:,:,i)');
+            gradY(:,:,i) = X' * future_grad(:,:,i);
+        end
+    elseif Nx>1 && Ny==1    %use the same Y matrix for all X matrices
+        X = PadShortTrajectory(X, validFrameMask, 0);
+        for i = 1:Nx
+            gradX(:,:,i) = conj(future_grad(:,:,i) * Y');
+            gradY = gradY + X(:,:,i)' * future_grad(:,:,i);
+        end
+    elseif Nx>1 && Ny>1
+        Y = PadShortTrajectory(Y, validFrameMask, 0);
+        X = PadShortTrajectory(X, validFrameMask, 0);
+        
+        for i = 1:N
+            gradX(:,:,i) = conj(future_grad(:,:,i) * Y(:,:,i)');
+            gradY(:,:,i) = X(:,:,i)' * future_grad(:,:,i);
+        end
     end
 end
 grad{1} = gradX;

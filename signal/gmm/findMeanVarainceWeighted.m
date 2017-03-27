@@ -27,6 +27,14 @@ if nargin <3
 end
 
 [nFr, dim] = size(X);
+
+if 1    % do pruning
+    idx = find(weight>1e-3);
+    weightOld = weight;
+    weight = weight(idx);
+    X = X(idx,:);
+end
+
 weight = weight(:);
 weightSum = sum(weight);
 
@@ -39,14 +47,18 @@ if weightSum == nFr   % i.e., the weight = 1 for all frames, reduced to normal M
     end
 else
     % find mean
-    m = sum( X .* repmat(weight, 1, dim) )' / weightSum;
+    m = weight' * X / weightSum;
+    m = m';
 
     % find variance
-    tmp = X - repmat(m', nFr, 1);
-    tmp = tmp .* repmat(sqrt(weight),1,dim);
-    if fullCov==1
-        v = tmp' * tmp / weightSum;
-    else
-        v = sum(tmp.*tmp)' / weightSum;
+    X_norm = bsxfun(@minus, X, m');
+    X_norm_weighted = bsxfun(@times, X_norm, sqrt(weight));
+    
+    v = X_norm_weighted' * X_norm_weighted / weightSum;
+%         v = sum(X_norm_weighted.*X_norm_weighted)' / weightSum;
+    if fullCov==0
+        v = diag(v);
     end
+end
+    
 end

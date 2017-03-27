@@ -14,6 +14,6 @@ xi = ifft(x_phase');
 xi = real(xi);
 wav = my_ola(xi, len, len1);
 
-A = [1 -0.97]; 
-wav = filter(1, A, wav);
+% A = [1 -0.97]; 
+% wav = filter(1, A, wav);
 end

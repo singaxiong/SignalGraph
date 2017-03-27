@@ -13,8 +13,16 @@ y = x(:,1:dimS);
 D = genDeltaTransform(nFr, delta_order(1));
 A = D*D;
 
-ScaleD = eye(nFr)*scale(2);
-ScaleA = eye(nFr)*scale(3);
+scaleDim = size(scale, 1);
+if scaleDim == 1
+    ScaleD = eye(nFr)*scale(2);
+    ScaleA = eye(nFr)*scale(3);
+elseif scaleDim == nFr
+    ScaleD = diag(scale(:,2));
+    ScaleA = diag(scale(:,3));
+else
+    fprintf('Scale is neigher scalar or have the same dim as number of frame!\n', );
+end
 
 R = eye(nFr) + D'*ScaleD*D + A'*ScaleA*A;
 p = y + D' * ScaleD * x(:,dimS+1:dimS*2) + A' * ScaleA * x(:,dimS*2+1:dimS*3);

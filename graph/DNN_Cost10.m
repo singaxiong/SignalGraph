@@ -48,7 +48,7 @@ for i=1:nLayer
         case 'add'
             layer{i}.a = F_add(prev_layers);
         case 'matrix_multiply'
-            [layer{i}.a, layer{i}.validFrameMask] = F_matrix_multiply(prev_layers);
+            [layer{i}.a, layer{i}.validFrameMask] = F_matrix_multiply(prev_layers, layer{i});
         case 'hadamard'
             [layer{i}.a, layer{i}.validFrameMask] = F_hadamard(prev_layers);
         case 'word2vec'
@@ -134,6 +134,8 @@ for i=1:nLayer
     		[layer{i}.a, layer{i}.validFrameMask] = F_log(prev_layers{1}, layer{i}.const);
     	case 'power'
     		layer{i}.a = F_power_spectrum(prev_layers{1});
+        case 'sqrt'
+            layer{i}.a = sqrt(prev_layers{1}.a);
         case 'splice'
             [layer{i}.a, layer{i}.validFrameMask] = F_splice(prev_layers{1}, layer{i}.context);
         case 'mel'
@@ -151,6 +153,7 @@ for i=1:nLayer
         case 'comp_gcc'
             [layer{i}.a, layer{i}.validFrameMask] = F_comp_gcc(prev_layers{1}, layer{i});
         case 'stft'
+            if para.checkGradient; layer{i}.doDithering=0; end
             [layer{i}.a, layer{i}.validFrameMask] = F_stft(prev_layers{1}, layer{i});
             
         case 'spatialcovmask'
@@ -166,6 +169,8 @@ for i=1:nLayer
             layer{i}.a = F_logdet(prev_layers{1}.a);    % do not support variable length yet
         case 'll_gmm'
             layer{i} = F_ll_gmm(prev_layers{1}.a, layer{i});    % do not support variable length yet
+        case 'll_gaussian'
+            layer{i}.a = F_ll_gaussian(prev_layers, layer{i});    % do not support variable length yet
             
     	case 'tdoa2weight'
     		layer{i}.a = F_tdoa2weight(prev_layers{1}.a, layer{i}.freqBin);
@@ -178,6 +183,8 @@ for i=1:nLayer
             layer{i}.a = F_complex2realImag(prev_layers{1});
     	case 'mse'
     		layer{i}.a = F_mean_square_error(prev_layers, layer{i});
+    	case 'mixture_mse'
+    		layer{i} = F_mixture_mse(prev_layers, layer{i});
         case 'jointcost'
             layer{i}.a = F_jointCost(prev_layers{1}, layer{i});
     	case 'cross_entropy'
@@ -353,6 +360,9 @@ for i=nLayer:-1:1
         case 'mse'
     		layer{i}.grad = B_mean_square_error(prev_layers, layer{i});
             layer{i}.grad = SetCostWeightOnGrad(layer{i}.grad, para.cost_func, i);
+        case 'mixture_mse'
+    		layer{i}.grad = B_mixture_mse(prev_layers, layer{i});
+            layer{i}.grad = SetCostWeightOnGrad(layer{i}.grad, para.cost_func, i);            
         case 'jointcost'
     		layer{i}.grad = B_jointCost(prev_layers{1}, layer{i});
             layer{i}.grad = SetCostWeightOnGrad(layer{i}.grad, para.cost_func, i);
@@ -437,7 +447,7 @@ for i=nLayer:-1:1
         case 'mu_law'
             layer{i}.grad = B_mu_law(future_layers, layer{i});
         case 'tanh'
-            layer{i}.grad = B_tanh(future_layers, layer{i}.a);
+            layer{i}.grad = B_tanh(future_layers, layer{i});
         case {'sigmoid'}
         	layer{i}.grad = B_sigmoid(future_layers, layer{i});
         case {'exp'}
@@ -448,7 +458,7 @@ for i=nLayer:-1:1
                 layer{i}.grad = B_softmax_cross_entropy(layer(i+layer{i}.next+future_layer.prev), future_layer);  % softmax and cross-entropy together to avoid numerical instability problem
                 layer{i}.grad = SetCostWeightOnGrad(layer{i}.grad, para.cost_func, i+layer{i}.next);
             else
-                layer{i}.grad = B_softmax(future_layer.grad);
+                layer{i}.grad = B_softmax(layer(i+layer{i}.next), layer{i});
             end
         case 'multi_softmax'
             layer{i}.grad = B_multi_softmax_multi_cross_entropy(layer(i+layer{i}.next+future_layers{1}.prev), future_layers{1}); 
@@ -465,11 +475,17 @@ for i=nLayer:-1:1
             layer{i}.grad = B_ll_gmm(layer{i+layer{i}.prev}.a, layer{i});
             layer{i}.grad = SetCostWeightOnGrad(layer{i}.grad, para.cost_func, i);
             
+        case 'll_gaussian'
+            layer{i}.grad = B_ll_gaussian(prev_layers, layer{i});
+            layer{i}.grad = SetCostWeightOnGrad(layer{i}.grad, para.cost_func, i);
+
         case 'inner_product_normalized'
             layer{i}.grad = B_inner_product_normalized(prev_layers, future_layers);
         case 'concatenate'
             layer{i}.grad = B_concatenate(prev_layers, layer{i}, future_layers);
-
+        case 'extractdims'
+            layer{i}.grad = B_ExtractDims(prev_layers, layer{i}, future_layers);
+            
         otherwise
             fprintf('Error: unknown output node type %s!\n', layer{i}.name);
     end

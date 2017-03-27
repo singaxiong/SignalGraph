@@ -24,6 +24,15 @@ for i=1:length(para.hiddenLayerSizeLSTM)
     layer{end}.usePastState = para.usePastState(i);
     layer{end}.dim = [para.hiddenLayerSizeLSTM(i) layer{end-1}.dim(1)];
     layer{end}.update = 1;
+    
+    if isfield(para, 'useAffineBtwLSTM') && para.useAffineBtwLSTM && i<length(para.hiddenLayerSizeLSTM)
+        layer{end+1}.name = 'Affine';
+        layer{end}.prev = -1;
+        layer{end}.W = [];
+        layer{end}.b = [];
+        layer{end}.dim = [1 1] * layer{end-1}.dim(1);
+        layer{end}.update = 1;
+    end
 end
 
 layer2 = genNetworkFeedForward_v2(layer{end}.dim(1), para.hiddenLayerSizeFF, para.outputDim, para.costFn, para.LastActivation4MSE);

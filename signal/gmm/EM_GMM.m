@@ -48,16 +48,30 @@ end
 fprintf('Refine model parameters using EM\n');
 for itr = 1:10
     % E-step, find the posterior probabiities of the Gaussians given the data
-    for i=1:N_class
-        if fullCov
-            likelihood(:,i) = prior(i) * mvnpdf(X, mu(:,i)', cvr(:,:,i));
-        else
-            likelihood(:,i) = prior(i) * my_mvnpdf(X, mu(:,i)', cvr(:,i)',1);
+    if 0
+        for i=1:N_class
+            if fullCov
+                likelihood(:,i) = prior(i) * mvnpdf(X, mu(:,i)', cvr(:,:,i));
+            else
+                likelihood(:,i) = prior(i) * my_mvnpdf(X, mu(:,i)', cvr(:,i)',1);
+            end
         end
+        evidence = sum(likelihood');
+        posterior = likelihood ./ repmat(evidence', 1,N_class);
+        hist_ll(itr)= sum(log(evidence))/nSample;
+    else
+        if fullCov
+            for i=1:N_class
+                invcvr(:,:,i) = inv(cvr(:,:,i));
+            end
+        else
+            invcvr = 1./cvr;
+        end
+        
+        [~, posterior, hist_ll(itr)] = compLikelihoodGMMFast(X', [], prior, mu, invcvr, fullCov==0);
+        posterior = posterior';
     end
-    evidence = sum(likelihood');
-    posterior = likelihood ./ repmat(evidence', 1,N_class);
-    hist_ll(itr)= sum(log(evidence))/nSample;
+
     fprintf('Iteration %d, average log likelihood per frame = %f - %s\n', itr, hist_ll(itr), datestr(now));
     
     % M-step
