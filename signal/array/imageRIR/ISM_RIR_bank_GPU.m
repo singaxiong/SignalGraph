@@ -1,4 +1,4 @@
-function [RIR_cell] = ISM_RIR_bank(setupstruc,RIRFileName,varargin)
+function [RIR_cell] = ISM_RIR_bank_GPU(setupstruc,RIRFileName,varargin)
 %ISM_RIR_bank  Bank of RIRs using Lehmann & Johansson's image-source method
 %
 % [RIR_CELL] = ISM_RIR_bank(SETUP_STRUC,RIR_FILE_NAME)
