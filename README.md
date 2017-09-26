@@ -1,24 +1,16 @@
 # SignalGraph
 
 
-Updates
+## Updates
 
-Add data simulation example that uses the imaging method to generate room impulse response (RIR) and simulate reverberant and noisy speech signals for microphone array. 
+* Add data simulation example that uses the imaging method to generate room impulse response (RIR) and simulate reverberant and noisy speech signals for microphone array. (Sep 26 2017)
 
-Author: Xiong Xiao, Nanyang Technological University, Singapore
+* Added examples of LSTM based classification task (acoustic modeling on TIMIT) (03 Aug 2016)
 
-Date created: 16 Jun 2016
-
-Email: xiao.xiong.1981@gmail.com / xiaoxiong@ntu.edu.sg
-
-Lastest update
-
-Added examples of LSTM based classification task (acoustic modeling on TIMIT) (03 Aug 2016)
-
-Added examples for DNN based regression and classification tasks (16 Jun 2016)
+* Added examples for DNN based regression and classification tasks (16 Jun 2016)
 
 
-Introduction
+## Introduction
 
 SignalGraph is a Matlab-based tool for building arbitrary directed acyclic graphs (DAG) for signal processing. The original purpose is to make it easy to apply deep learning techniques on speech signals on the Matlab platform. It should also be applied to other tasks, especially involving temporal trajectory data. 
 
@@ -68,3 +60,10 @@ Steven Du, Xiong Xiao, Eng Siong Chng, "DNN feature compensation for noise robus
 [11] Chenglin Xu, Lei Xie, Guangpu Huang, Xiong Xiao, Eng Siong Chng, Haizhou Li, "A Deep Neural Network Approach for Sentence Boundary Detection in Broadcast News", in proceedings of Interspeech 2014.
 
 [12] Xiong Xiao, Shengkui Zhao, Duc Hoang Ha Nguyen, Xionghu Zhong, Douglas L. Jones, Eng Siong Chng, Haizhou Li, "The NTU-ADSC systems for Reverberation Challenge 2014", in Reverberation Challenge Workshop 2014.
+
+
+Author: Xiong Xiao
+
+Date created: 16 Jun 2016
+
+Email: xiao.xiong.1981@gmail.com
