@@ -15,7 +15,9 @@ if batch_mode == 0
 end
 
 switch lower(reader.name)
-    case 'wavfile'
+    case 'binary'
+        [feat] = Reader_binary(files, reader);
+    case {'wavfile','wav', 'raw'}
         [feat] = Reader_waveform(files, reader);
     case 'htk'
         if isfield(reader, 'big_endian')

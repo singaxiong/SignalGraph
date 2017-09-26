@@ -1,5 +1,8 @@
 % Load far talk, close talk, and frame label. 
-function [Data, para, vocab] = LoadParallelWav_Libri(para, step)
+function [Data, para, vocab] = LoadParallelWav_Libri(para, step, precision)
+if nargin<3
+    precision = 'int16';
+end
 if isfield(para.local, 'cv_wav_root_clean')
     wavlistClean = findFiles(para.local.cv_wav_root_clean, para.local.cv_wav_clean_ext);
     wavlist = findFiles([para.local.cv_wav_root], 'wav');
@@ -11,7 +14,7 @@ wavlist = wavlist(:,step:step:end);
 
 wavreader.name = 'wavfile';
 wavreader.array = 0;
-wavreader.precision = 'int16';
+wavreader.precision = precision;
 frame_size = 400;
 frame_shift = 160;
 fs=para.topology.fs;

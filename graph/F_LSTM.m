@@ -65,22 +65,24 @@ if useGPU==0
     Ct0 = ones(nCell,nSeg, precision);   % initial cell states
     ht0 = ones(nCell,nSeg, precision);   % initial hidden layer output
     % allocate memory for gates and states
-    ft = zeros(nCell, nSeg, nFr, precision);     % forget gates
-    it = zeros(nCell, nSeg, nFr, precision);     % input gates
-    ot = zeros(nCell, nSeg, nFr, precision);     % output gates
-    Ct_raw = zeros(nCell, nSeg, nFr, precision); % candidate cell states
-    Ct = zeros(nCell, nSeg, nFr, precision);     % cell states
-    ht = zeros(nCell, nSeg, nFr, precision);     % hidde layer output, i.e. the output of the LSTM layer
+%     ft = zeros(nCell, nSeg, nFr, precision);     % forget gates
+%     it = zeros(nCell, nSeg, nFr, precision);     % input gates
+%     ot = zeros(nCell, nSeg, nFr, precision);     % output gates
+%     Ct_raw = zeros(nCell, nSeg, nFr, precision); % candidate cell states
+%     Ct = zeros(nCell, nSeg, nFr, precision);     % cell states
+%     ht = zeros(nCell, nSeg, nFr, precision);     % hidde layer output, i.e. the output of the LSTM layer
+    Gates = gpuArray.zeros(nCell*7, nSeg, nFr, precision);
 else
     Ct0 = gpuArray.ones(nCell,nSeg, precision);   % initial cell states
     ht0 = gpuArray.ones(nCell,nSeg, precision);   % initial hidden layer output
     % allocate memory for gates and states
-    ft = gpuArray.zeros(nCell, nSeg, nFr, precision);     % forget gates
-    it = gpuArray.zeros(nCell, nSeg, nFr, precision);     % input gates
-    ot = gpuArray.zeros(nCell, nSeg, nFr, precision);     % output gates
-    Ct_raw = gpuArray.zeros(nCell, nSeg, nFr, precision); % candidate cell states
-    Ct = gpuArray.zeros(nCell, nSeg, nFr, precision);     % cell states
-    ht = gpuArray.zeros(nCell, nSeg, nFr, precision);     % hidde layer output, i.e. the output of the LSTM layer
+%     ft = gpuArray.zeros(nCell, nSeg, nFr, precision);     % forget gates
+%     it = gpuArray.zeros(nCell, nSeg, nFr, precision);     % input gates
+%     ot = gpuArray.zeros(nCell, nSeg, nFr, precision);     % output gates
+%     Ct_raw = gpuArray.zeros(nCell, nSeg, nFr, precision); % candidate cell states
+%     Ct = gpuArray.zeros(nCell, nSeg, nFr, precision);     % cell states
+%     ht = gpuArray.zeros(nCell, nSeg, nFr, precision);     % hidde layer output, i.e. the output of the LSTM layer
+    Gates = gpuArray.zeros(nCell*7, nSeg, nFr, precision);
 end
     
 % batch transform the input features for fast speed
@@ -90,13 +92,17 @@ transformLayer.W = Wx;
 transformLayer.b = b;
 z_from_inputs = F_affine_transform({fakeLayer}, transformLayer);
 
+zt_curr_idx = zeros(nCell*4,1);
+zt_curr_idx(nCell*1+1:nCell*2,:) = 1;
+zt_curr_idx = logical(zt_curr_idx);
+
 for i=1:nFr
     if i==1     % for the first frame, use default values for past state and hidden values.
         Ct_past = Ct0;
         ht_past = ht0;
     else
-        Ct_past = Ct(:,:, i-1);
-        ht_past = ht(:,:, i-1);
+        Ct_past = Ct_curr;
+        ht_past = ht_curr;
     end
 
     zt = z_from_inputs(:,:, i);
@@ -108,25 +114,43 @@ for i=1:nFr
     end
 
     % extract the elements of zt to compute the gates
-    zt_sig = sigmoid(zt);
-    ft(:,:,i) = zt_sig(1:nCell,:);
-    Ct_raw(:,:,i)    = tanh(     zt(nCell+1:nCell*2,:)   );
-    it(:,:,i) = zt_sig(nCell*2+1:nCell*3,:);
-    ot(:,:,i) = zt_sig(nCell*3+1:nCell*4,:);
+    zt_sig = sigmoid(zt);    
+    % Ct_raw_curr    = tanh(     zt(nCell+1:nCell*2,:)   );
+    Ct_raw_curr    = tanh(     zt(zt_curr_idx,:)   );   % slightly faster
+    
+    if 0
+        ft_curr = zt_sig(1:nCell,:);
+        it_curr = zt_sig(nCell*2+1:nCell*3,:);
+        ot_curr = zt_sig(nCell*3+1:nCell*4,:);
+    else    % 5% faster
+        zt_sig2 = permute(reshape(zt_sig, nCell, 4, nSeg), [1 3 2]);
+        ft_curr = zt_sig2(:,:,1);
+        it_curr = zt_sig2(:,:,3);
+        ot_curr = zt_sig2(:,:,4);
+    end
     
     % compute the states of the cells, which is a weighted sum of the
     % current state and past state. 
     if usePastState
-        Ct(:,:,i) = Ct_raw(:,:,i) .* it(:,:,i) + Ct_past .* ft(:,:,i);
+        Ct_curr = Ct_raw_curr .* it_curr + Ct_past .* ft_curr;
     else
-        Ct(:,:,i) = Ct_raw(:,:,i) .* it(:,:,i);
+        Ct_curr = Ct_raw_curr .* it_curr;
     end
     
     % compute the output
-    ht(:,:,i) = tanh(Ct(:,:,i)) .* ot(:,:,i);
+    ht_curr = tanh(Ct_curr) .* ot_curr;
+    
+    Gates(:,:,i) = [zt_sig; Ct_raw_curr; Ct_curr; ht_curr];
 end
 
-if nSeg>1 && variableLength; 
+ft = Gates(1:nCell,:,:);
+it = Gates(nCell*2+1:nCell*3,:,:);
+ot = Gates(nCell*3+1:nCell*4,:,:);
+Ct_raw = Gates(nCell*4+1:nCell*5,:,:);
+Ct = Gates(nCell*5+1:nCell*6,:,:);
+ht = Gates(nCell*6+1:nCell*7,:,:);
+
+if nSeg>1 && variableLength
     ht = permute(PadShortTrajectory(permute(ht,[1 3 2]), mask, -1e10), [1 3 2]);
     ft = permute(PadShortTrajectory(permute(ft,[1 3 2]), mask, 0), [1 3 2]);
     it = permute(PadShortTrajectory(permute(it,[1 3 2]), mask, 0), [1 3 2]);

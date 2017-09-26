@@ -15,30 +15,10 @@
 %   Author: Xiong Xiao, Nanyang Technological University, Singapore
 %   Last modified: 27 Jul 2016
 %
-function [all_wav, fs] = Reader_waveform(files, reader)
+function [all_wav] = Reader_binary(files, reader)
 
 for i=1:length(files)
-    if isfield(reader, 'array') && reader.array
-        % read in multichannel waveforms
-        if isfield(reader, 'multiArrayFiles') && reader.multiArrayFiles     % when the different channels are stored in different files
-            for j=1:length(files{i})
-                [tmp_wav, fs] = Reader_waveform_core(files{i}{j}, reader.fs);
-                if j==1
-                    wav = zeros(length(files{i}), length(tmp_wav));
-                end
-                wav(j,:) = tmp_wav;
-            end
-        else                                                                % when the different channels are stored in the same file
-            [wav, fs] = Reader_waveform_core(files{i}, reader.fs);
-        end
-        % optional selection of channels
-        if isfield(reader, 'useChannel')
-            wav = wav(reader.useChannel, :);
-        end
-    else
-        % read in single channel waveform
-        [wav, fs] = Reader_waveform_core(files{i}, reader);
-    end
+    [wav] = Reader_binary_core(files{i}, reader);
     if isfield(reader, 'precision')
         switch lower(reader.precision)
             case 'int16'
@@ -54,7 +34,7 @@ end
 end
 
 %%
-function [wav, fs] = Reader_waveform_core(file, reader)
+function [data] = Reader_binary_core(file, reader)
 
 words = ExtractWordsFromString_v2(file);
 
@@ -72,24 +52,21 @@ if length(words)>=3
     selectTime = 1;
 end
 
-fs = ReturnFieldWithDefaultValue(reader, 'fs', -1);     
 big_endian = ReturnFieldWithDefaultValue(reader, 'big_endian', 0);
 
 switch lower(reader.name)
     case 'raw'
-        [wav] = read08(filename, big_endian);   % you have to set fs correctly in the reader.
+        [data] = read08(filename, big_endian);   % you have to set fs correctly in the reader.
     otherwise
         if selectTime
-            [wav, fs] = ReadAudioSeg(filename, time1, time2, fs);
+            [data] = reader.reader.read(filename, [time1 time2]);
         else
-            [wav, fs] = audioread(filename);
+            [data] = reader.reader.read(filename);
         end
 end
 
 if selectChannel
-    wav = wav(:,channelID);
+    data = data(channelID,:);
 end
-
-wav = wav';
 
 end

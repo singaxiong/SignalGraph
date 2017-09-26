@@ -14,6 +14,7 @@ for j=1:length(para.IO.inputFeature)
     else
         tmpFrameInSent{j} = cellfun('size', data(j).data,2);
     end
+    tmpFrameInSent{j} = tmpFrameInSent{j} / para.IO.frame_rate(j)*100;
     frameInSent = max(tmpFrameInSent{j}, frameInSent);
 end
 

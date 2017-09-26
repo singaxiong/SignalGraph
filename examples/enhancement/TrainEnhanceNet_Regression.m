@@ -32,11 +32,11 @@ para.displayGPUstatus = 1;
 para.displayInterval = ceil(para.NET.maxNumSentInBlock / para.NET.nSequencePerMinibatch / 10);
 para.skipInitialEval = 1;
 
-para.local.clean_wav_root = ChoosePath4OS({'D:\Data\NoiseData\Libri\LibriSpeech\train-clean-100', '/media/xiaoxiong/OS/data1/G/Libri/LibriSpeech/train-clean-100'}); 
+para.local.clean_wav_root = ChoosePath4OS({'E:\Data\LibriSpeech\train-clean-100', '/media/xiaoxiong/OS/data1/G/Libri/LibriSpeech/train-clean-100'}); 
 para.local.clean_wav_ext = 'flac';
-para.local.rir_wav_root = ChoosePath4OS({'D:\Data\NoiseData\ReverbEstimation\RIR_T60_1ch', '/media/xiaoxiong/DATA1/data1/ReverbEstimation/RIR_T60_1ch'}); 
+para.local.rir_wav_root = ChoosePath4OS({'E:\Data\ReverbEstimation\RIR_T60_1ch', '/media/xiaoxiong/DATA1/data1/ReverbEstimation/RIR_T60_1ch'}); 
 para.local.rir_wav_ext = 'wav';
-para.local.noise_wav_root = ChoosePath4OS({'D:\Data\NoiseData\musan\noise', '/media/xiaoxiong/DATA1/data1/musan/noise'}); 
+para.local.noise_wav_root = ChoosePath4OS({'E:\Data\musan\noise', '/media/xiaoxiong/DATA1/data1/musan/noise'}); 
 para.local.noise_wav_ext = 'wav';
 para.local.useFileName = useFileName;      % if set to 0, load all training data to memory. otherwise, only load file names.
 para.local.seglen = 100;

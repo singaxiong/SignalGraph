@@ -5,10 +5,10 @@
 % Last modified: 08 Feb 2016. 
 %
 %clear
-function TrainSeparationNet_Masking(hiddenLayerSize, hiddenLayerSizeFF, learning_rate, nUtt4Iteration, useCMN, useGPU)
+function TrainSeparationNet_Masking(hiddenLayerSize, hiddenLayerSizeFF, learning_rate, nUtt4Iteration, useCMN, SPR, useGPU)
 modelType = 'LSTM';
 learning_rate_decay_rate=0.999;
-L2weight=0;
+L2weight=1e-5;
 learningScheme = 'expDecay';
 nSequencePerMinibatch=40;
 % nUtt4Iteration = 10000;
@@ -63,7 +63,7 @@ para.IO.DynamicMixture.fs = para.topology.fs;
 para.IO.DynamicMixture.nUtt4Iteration = nUtt4Iteration;   % dynamically generate 10000 distorted sentences for each training iteration
 para.IO.DynamicMixture.SPR_PDF = 'uniform';      % distribution of the power ratio between the two sources, defined as 10log10(P1/P2), 
                                                  % where P1>P2 are the power of the two mixture signals
-para.IO.DynamicMixture.SPR_para = [-10 10];        % parameters of SPR PDF. If use uniform, it is the lowest and highest SPR allowed. 
+para.IO.DynamicMixture.SPR_para = [-1 1]*SPR;        % parameters of SPR PDF. If use uniform, it is the lowest and highest SPR allowed. 
                                                  % if use normal, it is the mean and variance of SPR. 
 para.IO.DynamicMixture.addReverb = 0;            % whether to add reverberation to the mixed signal
 para.IO.DynamicMixture.addNoise = 0;             % whether to add noise to the mixed signal
@@ -88,10 +88,10 @@ para.local.useFileName = 0;
 [Data_cv, para] = LoadSeparationWav_Libri(para, 2);
 
 % generate directory and file names to store the networks. 
-if para.topology.useCMN; para.output = 'nnet/SeparationMasking.CMN';
-else;     para.output = 'nnet/SeparationMasking.noCMN';    end
-para.output = sprintf('%s.%s.MbSize%d.U%d.%d-%s', para.output, para.topology.DeltaGenerationType, ...
-    para.NET.nSequencePerMinibatch, length(Data_tr(1).data),  3*(para.topology.fft_len/2+1), para.topology.RegressionNetType);
+if para.topology.useCMN; para.output = 'nnet/SepMask.CMN';
+else;     para.output = 'nnet/SepMask.noCMN';    end
+para.output = sprintf('%s.%s.MbSize%d.SPR%d.U%d.%d-%s', para.output, para.topology.DeltaGenerationType, ...
+    para.NET.nSequencePerMinibatch, SPR, length(Data_tr(1).data),  3*(para.topology.fft_len/2+1), para.topology.RegressionNetType);
 for i=1:length(para.topology.hiddenLayerSize)
     para.output = sprintf('%s-%d', para.output, para.topology.hiddenLayerSize(i));
 end
@@ -103,7 +103,7 @@ if ~isempty(para.topology.hiddenLayerSizeFF)
 end
 para.output = sprintf('%s-%d.L2_%s.LR_%s/nnet', para.output, 3*(para.topology.fft_len/2+1), FormatFloat4Name(para.NET.L2weight),FormatFloat4Name(para.NET.learning_rate));
 LOG = [];
-para.displayTag = para.output(6:min(120, length(para.output)));
+para.displayTag = para.output(1:min(90, length(para.output)));
 
 % show the configurations
 para

@@ -17,8 +17,8 @@ configGeneral = {'useGPU',     0, 	'whether to use GPU for computation. The othe
     'storeDataInCell',  0, 'if true, store data in cell array, and copy data to GPU in minibatch. If false, store data in matrix and copy data to GPU in block.';
     'DEBUG',            0, 'whether to display network debug information.';
     'singlePrecision',  1,  'whether to use single precision computation. For gradient check, need to use double precision.';
-    'maxItr',           100, 'the maximum number of iterations for DNN training.';
-    'minItr',           10,  'the minimum number of iterations for DNN training.';
+    'maxItr',           1000, 'the maximum number of iterations for DNN training.';
+    'minItr',           50,  'the minimum number of iterations for DNN training.';
     'displayInterval',  100, 'display the training process for every X number of minibatches.';
     'skipInitialEval',  0,  'whether to skip the evaluation on cross validation data before network training.';
     'displayGPUstatus', 0, 'whether to display GPU status after every block of training samples.';
@@ -82,6 +82,7 @@ configIO = {'mode', 'normal', 'input modes: 1) normal; 2) dynamicPair; 3) dynami
     'ClassLabel4EvenBlock_refill', 0, 'whether to refill a minority class after its samples are used up.';
     'shuffleByDurationStreamIdx', 0, 'set to positive stream index if we want to shuffle the data based on duration. Useful for variable length multi-sentence minibatch.\n';
     'blockSizeMultiplier', 1, 'multiply the block size by a number.';
+    'asyncFileRead', 0, 'whether to read block data in background by another worker';
     };
 
 if DisplayHelpInfoOnly

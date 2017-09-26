@@ -7,8 +7,14 @@ if vadNoise
     expTag = [expTag '_vadNoise' FormatFloat4Name(vadNoise)];
 end
 
-modelfile = dir(['nnet/' modelDir '/nnet.itr' num2str(iteration) '.*']);
-modelfile = ['nnet/' modelDir '/' modelfile.name];
+if isempty(regexp(dos2unix(modelDir), '/'))
+    modelfile = dir(['nnet/' modelDir '/nnet.itr' num2str(iteration) '.*']);
+    modelfile = ['nnet/' modelDir '/' modelfile.name];
+else
+    modelfile = dir([modelDir '/nnet.itr' num2str(iteration) '.*']);
+    modelfile = [modelDir '/' modelfile.name];
+end
+
 dnn = load(modelfile);
 para = dnn.para;
 layer = dnn.layer;

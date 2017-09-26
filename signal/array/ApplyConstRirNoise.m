@@ -1,7 +1,7 @@
 % This function apply RIR to the clean speech signal, and also optionally
 % add additive noise at a specified SNR.
 %%%%
-function [y]=ApplyConstRirNoise(x,fs,RIR,NOISE,SNRdB, useGPU)
+function [y, rev_y, direct_signal2]=ApplyConstRirNoise(x,fs,RIR,NOISE,SNRdB, useGPU)
 if nargin<6
     useGPU = 0;
 end
@@ -11,16 +11,30 @@ if useGPU
     x = gpuArray(x);
     RIR = gpuArray(RIR);
 end
-[~,delay]=max(RIR(:,1));
-delay = gather(delay);
-before_impulse=floor(fs*0.001);
-after_impulse=floor(fs*0.05);
-RIR_direct=RIR(max(1,delay-before_impulse): min(size(RIR,1),delay+after_impulse),1);
-direct_signal=freq_conv(x,RIR_direct);
 
-% obtain reverberant speech
-for ch=1:size(RIR,2)
-    rev_y(:,ch)=freq_conv(x,RIR(:,ch));
+if ~isempty(RIR)
+    [~,delay]=max(RIR(:,1));
+    delay = gather(delay);
+    before_impulse=floor(fs*0.001);
+    after_impulse=floor(fs*0.05);
+    
+    start_idx= max(1,delay-before_impulse);
+    end_idx = min(size(RIR,1),delay+after_impulse);
+    
+    RIR_direct=RIR(start_idx : end_idx,1);
+    direct_signal=freq_conv(x,RIR_direct);
+    %direct_signal2 = freq_conv(x,RIR(delay:end_idx,1)); % we will use this signal as the clean signal for computing TF mask
+    direct_signal2 = freq_conv(x,RIR(1:end_idx,1));
+    direct_signal2 = direct_signal2(delay:end,:);
+    % obtain reverberant speech
+    for ch=1:size(RIR,2)
+        rev_y(:,ch)=freq_conv(x,RIR(:,ch));
+    end
+else
+    delay = 1;
+    direct_signal = x;
+    direct_signal2 = x;
+    rev_y = x;
 end
 
 % normalize noise data according to the prefixed SNR value
@@ -47,5 +61,6 @@ else
 end
 
 y = y(delay:end,:);     % remove the delay due to RIR so the reverberant and clean speech are aligned.
+rev_y = rev_y(delay:end,:);
 
 end

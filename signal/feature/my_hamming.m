@@ -12,7 +12,7 @@ function w = hamming(varargin)
 %   $Revision: 1.14.4.3 $  $Date: 2011/05/13 18:07:55 $
 
 % Check number of inputs
-error(nargchk(1,2,nargin,'struct'));
+narginchk(1,2);
 
 [w,msg,msgobj] = my_gencoswin('hamming',varargin{:});
 if ~isempty(msg), error(msgobj); end

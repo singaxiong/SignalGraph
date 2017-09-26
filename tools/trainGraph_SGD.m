@@ -40,6 +40,14 @@ layer = initializeParametersDNN_tree(layer, para);    % Use random initializatio
 layer = setDNNParameterPrecision(layer, para.singlePrecision, para.useGPU);
 LOG = initializeLog(LOG);
 para.NET.WeightUpdateOrder = genWeightUpdateOrder(layer, para.NET.WeightTyingSet);
+layer = DetermineGradientPass(layer);
+
+if para.IO.asyncFileRead
+    WorkerPool = gcp('nocreate');   % create a background worker if it does not exist
+    if isempty(WorkerPool)
+        WorkerPool = parpool(1);
+    end
+end
 
 [filepath] = fileparts(para.output);    mkdir(filepath);
 
@@ -87,7 +95,8 @@ for itr = startItr:para.maxItr
             data = GenDynamicPairs(base_data, para);
         case 'dynamicDistortion'
             if ~exist('base_data', 'var'); base_data = data; end  % in the first time, we store data into base_data;
-            [data, para] = GenDynamicDistortion(base_data, para);        
+            para.IO.DynamicDistortion.single = para.single;
+            [data, para] = GenDynamicDistortion(base_data, para.IO.DynamicDistortion);
         case 'dynamicMixture'
             if ~exist('base_data', 'var'); base_data = data; end  % in the first time, we store data into base_data;
             [data, para] = GenDynamicMixture(base_data, para);
@@ -107,8 +116,10 @@ for itr = startItr:para.maxItr
         if isfield(para, 'saveModelEveryXhours') && para.saveModelEveryXhours > 0
             nHour = (nFr_seen/3600/para.IO.frame_rate(1));
             if nHour >=next_Milestong_save
-                modelfile = [para.output sprintf('.hours%d.LR%s.mat', round(nHour), FormatFloat4Name(learning_rate))];
-                SaveDNN(layer, para, LOG, modelfile);
+                [~, cost_pure_cv] = CrossValidationTest_tree4(layer, data_t, para);
+                modelfile = [para.output sprintf('.hours%d.LR%s', round(nHour), FormatFloat4Name(learning_rate))];
+                modelfile = sprintf('%s.CV%2.3f.mat', modelfile, cost_pure_cv(end));
+                SaveDNN(layer, para, LOG, modelfile);                
                 next_Milestong_save = next_Milestong_save + para.saveModelEveryXhours;
             end
         end
@@ -129,7 +140,14 @@ for itr = startItr:para.maxItr
         % get the data for current block
         [block_data] = BlockDataGeneration(data, para, sentIdxInBlock{blk_i});
         % prepare minibatches
-        [minibatch] = MinibatchPackaging_tree4(block_data, para);
+        if itr == startItr && blk_i == 1
+            [minibatch] = MinibatchPackaging_tree4(block_data, para);
+        else
+            minibatch = fetchOutputs(MinibatchJob);     % collect the data from the work. It will block the main thread if the worker hasn't finished. 
+        end
+        if para.IO.asyncFileRead    % call a worker to load the data in background
+            MinibatchJob = parfeval(WorkerPool,@MinibatchPackaging_tree4,1, block_data,para);
+        end
         
         % ----------- train the network on current block ------------- %
         

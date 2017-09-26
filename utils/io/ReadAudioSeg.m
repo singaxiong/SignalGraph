@@ -1,5 +1,5 @@
 function [wav, fs] = ReadAudioSeg(filename, time1, time2, fs)
-if nargin<4
+if fs<=0    % not a valid fs
     info = audioinfo(filename);
     fs = info.SampleRate;
     TotalSamples = info.TotalSamples;
