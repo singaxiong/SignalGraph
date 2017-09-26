@@ -1,5 +1,10 @@
 # SignalGraph
 
+
+Updates
+
+Add data simulation example that uses the imaging method to generate room impulse response (RIR) and simulate reverberant and noisy speech signals for microphone array. 
+
 Author: Xiong Xiao, Nanyang Technological University, Singapore
 
 Date created: 16 Jun 2016
