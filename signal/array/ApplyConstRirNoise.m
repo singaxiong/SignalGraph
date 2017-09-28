@@ -55,7 +55,7 @@ if ~isempty(NOISE)
     Px = diag(mean(direct_signal.^2,1));
     Msnr = sqrt(10^(-SNRdB/10)*iPn*Px);
     scaled_NOISE = NOISE*Msnr;
-    y = rev_y + scaled_NOISE;
+    y = bsxfun(@plus, rev_y, scaled_NOISE);
 else
     y = rev_y;
 end
