@@ -17,6 +17,9 @@ end
 for i=1:length(list)
     tmp = [rootdir '/' list{i}];
     if ISDIR(i)==1
+        if strcmpi(list{i}, '.') || strcmpi(list{i}, '..')  % skip these two special folders
+            continue; 
+        end
         subfiles = findFiles(tmp, extension, 0);
         files = [files subfiles];
     else
