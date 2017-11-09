@@ -21,15 +21,28 @@ classdef BinaryReader
             fwrite(FILE, data(:), obj.precision, GetEndianStr(obj));
             fclose(FILE);
         end
+        % you can specify the range of reading. First option is to provide
+        % vecRange=[a,b], so only vectors from a and b will be read. Second
+        % option is to put the vecRange info in the file name, E.g.
+        % xyz.ext\tsample=a,b. Here '\t' stands for tab. 
         function [data] = read(obj, file_name, vecRange)
-            if nargin<3 || isempty(vecRange)
-                readPartial = 0;
-            else
+            if nargin==3 && ~isempty(vecRange)
                 readPartial = 1;
                 offset = (vecRange(1)-1) * obj.vecSize * GetSampleSize(obj);
                 readSize = (vecRange(2)-vecRange(1)+1) * obj.vecSize;
-            end
-            
+            elseif ~isempty(regexp(file_name, '\t', 'once'))
+                readPartial = 1;
+                words = strsplit(file_name, '\t');
+                file_name = words{1};
+                terms = strsplit(words{2}, '=');
+                sampleRange = strsplit(terms{2}, ',');
+                vecRange(1) = str2num(sampleRange{1});
+                vecRange(2) = str2num(sampleRange{2});
+                offset = (vecRange(1)-1) * obj.vecSize * GetSampleSize(obj);
+                readSize = (vecRange(2)-vecRange(1)+1) * obj.vecSize;
+            else
+                readPartial = 0;
+            end            
             FILE = fopen( file_name );
             if FILE < 0
                 fprintf('File open error: %s\n', file_name);

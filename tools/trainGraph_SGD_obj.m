@@ -34,8 +34,8 @@
 % Updates in Version 9: 1) support multi task learning that use the same
 % inputs. 2) Support gated connection weighted_average; 
 %
-function trainGraph_SGD(layer, data, data_t, para, LOG)
-para = ParseOptions2(para);
+function trainGraph_SGD_obj(layer, data, data_t, para, LOG)
+para = ParseOptions_obj(para);
 layer = initializeParametersDNN_tree(layer, para);    % Use random initialization if a weight matrix is not defined.
 layer = setDNNParameterPrecision(layer, para.singlePrecision, para.useGPU);
 LOG = initializeLog(LOG);
@@ -47,6 +47,8 @@ if para.IO.asyncFileRead
     if isempty(WorkerPool)
         WorkerPool = parpool(1);
     end
+else
+    WorkerPool = [];
 end
 
 [filepath] = fileparts(para.output);    mkdir(filepath);
@@ -54,7 +56,7 @@ end
 % --------------- Test on crossvalidation data before training -------- %
 if para.skipInitialEval==0
     fprintf('Evaluating on cross-validation data - %s\n', datestr(now));
-    [LOG.cost_cv0, cost_pure_cv, LOG.subcost_cv0, LOG.subacc_cv0] = CrossValidationTest_tree4(layer, data_t, para);
+    [LOG.cost_cv0, cost_pure_cv, LOG.subcost_cv0, LOG.subacc_cv0] = CrossValidationTest_obj(layer, data_t, para, WorkerPool);
 end
 
 % --------------- START THE TRAINING --------------- %
@@ -68,9 +70,9 @@ for k=1:length(weight_update_order)
     update{k}.b = 0;
 end
 
-nFr_seen = 0;
-nFr_reduce_lr = 18e4*para.IO.frame_rate(1)/100;       % this equals to about 0.5 hours of speech features if frame rate is 100Hz
-next_Milestone = nFr_reduce_lr*1;
+nHourSeen = 0;
+nHourSeen_reduce_lr = 0.5;       % this equals to about 0.5 hours of speech features if frame rate is 100Hz
+next_Milestone = nHourSeen_reduce_lr*1;
 
 if isfield(para, 'saveModelEveryXhours')
     next_Milestong_save = para.saveModelEveryXhours;
@@ -88,20 +90,23 @@ for itr = startItr:para.maxItr
     pause(1);
 
     % reshuffle data in every iteration
-    switch para.IO.mode
-        case 'normal'
-        case 'dynamicPair'
-            if ~exist('base_data', 'var'); base_data = data; end  % in the first time, we store data into base_data;
-            data = GenDynamicPairs(base_data, para);
-        case 'dynamicDistortion'
-            if ~exist('base_data', 'var'); base_data = data; end  % in the first time, we store data into base_data;
-            para.IO.DynamicDistortion.single = para.single;
-            [data, para] = GenDynamicDistortion(base_data, para.IO.DynamicDistortion);
-        case 'dynamicMixture'
-            if ~exist('base_data', 'var'); base_data = data; end  % in the first time, we store data into base_data;
-            [data, para] = GenDynamicMixture(base_data, para);
-    end
-    [sentIdxInBlock] = shuffle_data(layer, para, data);   nBlock = length(sentIdxInBlock);
+%     switch para.IO.mode
+%         case 'normal'
+%         case 'dynamicPair'
+%             if ~exist('base_data', 'var'); base_data = data; end  % in the first time, we store data into base_data;
+%             data = GenDynamicPairs(base_data, para);
+%         case 'dynamicDistortion'
+%             if ~exist('base_data', 'var'); base_data = data; end  % in the first time, we store data into base_data;
+%             para.IO.DynamicDistortion.single = para.single;
+%             [data, para] = GenDynamicDistortion(base_data, para.IO.DynamicDistortion);
+%         case 'dynamicMixture'
+%             if ~exist('base_data', 'var'); base_data = data; end  % in the first time, we store data into base_data;
+%             [data, para] = GenDynamicMixture(base_data, para);
+%     end
+    
+    % shuffle the training data, separate them into data blocks. One block
+    % will be read into the memory. 
+    data = data.ShuffleData(para);
     
     LOG.actual_LR(end+1) = learning_rate;
     layer_old = layer;  % store the old model
@@ -110,24 +115,22 @@ for itr = startItr:para.maxItr
     if para.useGPU; 	cost_train= gpuArray(cost_train);        end
     cost_train_pure = cost_train; subcost = cost_train;    subacc = cost_train;
     
-    for blk_i = 1:nBlock
+    for blk_i = 1:data.nBlock
         pause(.1);
         
         if isfield(para, 'saveModelEveryXhours') && para.saveModelEveryXhours > 0
-            nHour = (nFr_seen/3600/para.IO.frame_rate(1));
-            if nHour >=next_Milestong_save
-                [~, cost_pure_cv] = CrossValidationTest_tree4(layer, data_t, para);
-                modelfile = [para.output sprintf('.hours%d.LR%s', round(nHour), FormatFloat4Name(learning_rate))];
+            if nHourSeen >=next_Milestong_save
+                [~, cost_pure_cv] = CrossValidationTest_obj(layer, data_t, para, WorkerPool);
+                modelfile = [para.output sprintf('.hours%d.LR%s', round(nHourSeen), FormatFloat4Name(learning_rate))];
                 modelfile = sprintf('%s.CV%2.3f.mat', modelfile, cost_pure_cv(end));
                 SaveDNN(layer, para, LOG, modelfile);                
                 next_Milestong_save = next_Milestong_save + para.saveModelEveryXhours;
             end
         end
-        if nFr_seen > next_Milestone
-            nHour = (nFr_seen/3600/para.IO.frame_rate(1));
+        if nHourSeen > next_Milestone
             learning_rate     = learning_rate * para.NET.learning_rate_decay_rate;   % Learning rate for biases of hidden units
-            fprintf('Trained with %2.2f hours of data, reducing learning rate to %f\n', nHour, learning_rate);
-            next_Milestone = next_Milestone + nFr_reduce_lr;
+            fprintf('Trained with %2.2f hours of data, reducing learning rate to %f\n', nHourSeen, learning_rate);
+            next_Milestone = next_Milestone + nHourSeen_reduce_lr;
         end
         
         if para.useGPU && para.displayGPUstatus==1
@@ -137,23 +140,22 @@ for itr = startItr:para.maxItr
         
         % ------------- prepare data for current block ------------- %
         
-        % get the data for current block
-        [block_data] = BlockDataGeneration(data, para, sentIdxInBlock{blk_i});
         % prepare minibatches
-        if (itr == startItr && blk_i == 1) || ~para.IO.asyncFileRead
-            [minibatch] = MinibatchPackaging_tree4(block_data, para);
+        if blk_i == 1 || ~para.IO.asyncFileRead
+            minibatch = data.PrepareMinibatch(para.precision, para.NET.sequential, para.NET.batchSize, blk_i);
         else
             minibatch = fetchOutputs(MinibatchJob);     % collect the data from the work. It will block the main thread if the worker hasn't finished. 
         end
-        if para.IO.asyncFileRead    % call a worker to load the data in background
-            MinibatchJob = parfeval(WorkerPool,@MinibatchPackaging_tree4,1, block_data,para);
+        if para.IO.asyncFileRead && blk_i<data.nBlock   % call a worker to load the next block of data in background
+            MinibatchJob = parfeval(WorkerPool,@data.PrepareMinibatch,1, para.precision, para.NET.sequential, para.NET.batchSize, blk_i+1);
         end
         
         % ----------- train the network on current block ------------- %
         
-        cost_func = InitCostFunc(minibatch.nBatch, para);
-        for batch_i=1:minibatch.nBatch
-            batch_data = GetMinibatch2(minibatch, para, batch_i);
+        nMiniBatch = size(minibatch,2);
+        cost_func = InitCostFunc(nMiniBatch, para);
+        for batch_i=1:nMiniBatch
+            batch_data = GetMinibatch(minibatch, batch_i, para.useGPU);
             
             % --------------- optional gradient check -------------------- %
             % ------------- Check whether the gradient is correct ------------- %
@@ -162,7 +164,7 @@ for itr = startItr:para.maxItr
                 para.checkGradient = 0; % do it only once
             end
                         
-            nFr_seen = nFr_seen + size(batch_data{1},2)*size(batch_data{1},3);
+            nHourSeen = nHourSeen + size(batch_data{1},2)*size(batch_data{1},3) / data.streams(1).frameRate / 3600;
             % Evaluate the cost function and gradient on current batch
             % fprintf('Minibatch size = %d\n', size(batch_data{2},2))
             [cost_func_tmp,layer] = DNN_Cost10(layer, batch_data, para, 1);
@@ -173,9 +175,9 @@ for itr = startItr:para.maxItr
             
             [layer, update, total_weight_norm] = DNN_update(layer, para, update, itr, learning_rate);
             
-            if mod(batch_i,para.displayInterval)==0 || (batch_i==minibatch.nBatch && para.displayInterval>batch_i)
+            if mod(batch_i,para.displayInterval)==0 || (batch_i==nMiniBatch && para.displayInterval>batch_i)
                 fprintf('Cost at itr %i, blk %d/%d, MB %d/%d = %.4g / %.4g, W norm=%.4g', ...
-                    itr, blk_i, nBlock, batch_i, minibatch.nBatch, ...
+                    itr, blk_i, data.nBlock, batch_i, nMiniBatch, ...
                     mean(cost_func.cost(max(1,batch_i-para.displayInterval+1) : batch_i)), ...
                     mean(cost_func.cost_pure(max(1,batch_i-para.displayInterval+1) : batch_i)), total_weight_norm);
                 nCostFunc = length(para.cost_func.layer_idx);
@@ -211,7 +213,7 @@ for itr = startItr:para.maxItr
     % ----------- Evaluate on crossvalidation data ------------- %
     
     fprintf('Evaluating on cross-validation data - %s\n', datestr(now));
-    [LOG.cost_cv(itr), cost_pure_cv, LOG.subcost_cv(:,itr), LOG.subacc_cv(:,itr)] = CrossValidationTest_tree4(layer, data_t, para);
+    [LOG.cost_cv(itr), cost_pure_cv, LOG.subcost_cv(:,itr), LOG.subacc_cv(:,itr)] = CrossValidationTest_obj(layer, data_t, para, WorkerPool);
     
     % ------------------ save current network ----------------------- %
     

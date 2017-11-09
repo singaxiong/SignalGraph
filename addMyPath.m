@@ -10,6 +10,7 @@ path(path,lib_dir);
 
 path(path,genpath([lib_dir '/utils']));
 path(path,genpath([lib_dir '/graph']));
+path(path,genpath([lib_dir '/graph_obj']));
 path(path,genpath([lib_dir '/signal']));
 path(path,genpath([lib_dir '/prototypes']));
 path(path,genpath([lib_dir '/tools']));

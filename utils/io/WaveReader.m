@@ -60,9 +60,9 @@ classdef WaveReader
                     channelID = str2num(terms{end});
                 elseif strcmpi(terms{1}, 'sample')
                     selectSample = 1;
-                    terms2 = strsplit(words{i}, ',');
-                    sampleIdx(1) = str2num(terms2{1});
-                    sampleIdx(2) = str2num(terms2{2});
+                    sampleRange = strsplit(terms{2}, ',');
+                    sampleIdx(1) = str2num(sampleRange{1});
+                    sampleIdx(2) = str2num(sampleRange{2});
                 end
             end
             
