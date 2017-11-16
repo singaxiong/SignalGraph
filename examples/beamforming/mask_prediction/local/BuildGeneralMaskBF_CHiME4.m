@@ -7,7 +7,10 @@ if vadNoise
     expTag = [expTag '_vadNoise' FormatFloat4Name(vadNoise)];
 end
 
-if isempty(regexp(dos2unix(modelDir), '/'))
+
+if strcmpi(modelDir(end-2:end), 'mat')
+    modelfile = modelDir;
+elseif isempty(regexp(dos2unix(modelDir), '/'))
     modelfile = dir(['nnet/' modelDir '/nnet.itr' num2str(iteration) '.*']);
     modelfile = ['nnet/' modelDir '/' modelfile.name];
 else

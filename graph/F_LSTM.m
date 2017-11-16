@@ -71,7 +71,7 @@ if useGPU==0
 %     Ct_raw = zeros(nCell, nSeg, nFr, precision); % candidate cell states
 %     Ct = zeros(nCell, nSeg, nFr, precision);     % cell states
 %     ht = zeros(nCell, nSeg, nFr, precision);     % hidde layer output, i.e. the output of the LSTM layer
-    Gates = gpuArray.zeros(nCell*7, nSeg, nFr, precision);
+    Gates = zeros(nCell*7, nSeg, nFr, precision);
 else
     Ct0 = gpuArray.ones(nCell,nSeg, precision);   % initial cell states
     ht0 = gpuArray.ones(nCell,nSeg, precision);   % initial hidden layer output

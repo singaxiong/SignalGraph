@@ -12,7 +12,10 @@
 % Author: Xiong Xiao, Nanyang Technological University, Singapore
 % Last Modified: 22 Feb 2016.
 %
-function R = ComplexSpectrum2SpatialCov(X, context_size, shift)
+function R = ComplexSpectrum2SpatialCov(X, context_size, shift, useGPU)
+if nargin<4
+    useGPU = 1;
+end
 
 half_ctx = (context_size-1)/2;
 [D, N, T] = size(X);    % D is number of freq bin, N is number of channel
@@ -41,7 +44,9 @@ else    % get windowed spatial covariance
 %         XX = cell2mat(XXcell);
         XX2 = reshape(XX, N^2*D, T);
         if 1
-            XX2 = gpuArray(XX2);
+            if useGPU
+                XX2 = gpuArray(XX2);
+            end
             idx = [ones(1,half_ctx) 1:T ones(1,half_ctx)*T];
             SCM = conv2(XX2(:,idx), ones(1,context_size, class(gather(X)))/context_size, 'valid');
 %             SCM = SCM(:,half_ctx+1:end-half_ctx);
