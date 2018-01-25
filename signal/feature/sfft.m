@@ -23,7 +23,7 @@ if exist('window_type')==0 || length(window_type)==0
 else
     switch window_type
         case 'hamming'
-            window = hamming(frame_size);
+            window = my_hamming(frame_size);
         case 'hanning'
             window = hanning(frame_size);
         case 'rectangular'
@@ -63,7 +63,14 @@ N_block = floor((length(x)-frame_size)/frame_shift)+1;
 % Method 2: user buffer function and then call fft just once
 needed_size = (N_block-1)*frame_shift + frame_size;
 overlap = frame_size - frame_shift;
-x_store = buffer(x(overlap+1:needed_size),frame_size,overlap);
+
+if license('test', 'Signal_Toolbox')
+    x_store = buffer(x(overlap+1:needed_size),frame_size,overlap);
+else
+    x_store = enframe(x(1:needed_size), frame_size, frame_shift)';
+end
+
+
 x_store(:,1) = x(1:frame_size);
 x_store(:,2) = x(frame_shift+1:frame_shift+frame_size);
 

@@ -9,6 +9,6 @@ xi = ifft(complex_x');
 xi = real(xi);
 wav = my_ola(xi, framelen, overlap);
 
-A = [1 -0.97]; 
-wav = filter(1, A, wav);
+%A = [1 -0.97]; 
+%wav = filter(1, A, wav);
 end

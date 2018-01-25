@@ -9,7 +9,7 @@ x2 = [repmat(x(1,:), hs,1); x; repmat(x(end,:),hs,1)];
 if 1
     y=x;
     for i=1:nf
-        y(i,:) = mean(x2(i:i+2*hs,:));
+        y(i,:) = sum(x2(i:i+2*hs,:));
     end
 else
     overlap = filter_len-1;

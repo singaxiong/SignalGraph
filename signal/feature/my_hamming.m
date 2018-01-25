@@ -1,4 +1,4 @@
-function w = hamming(varargin)
+function w = my_hamming(varargin)
 %HAMMING   Hamming window.
 %   HAMMING(N) returns the N-point symmetric Hamming window in a column vector.
 % 

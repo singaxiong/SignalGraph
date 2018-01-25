@@ -1,4 +1,4 @@
-function [w,msg,msgobj] = gencoswin(varargin)
+function [w,msg,msgobj] = my_gencoswin(varargin)
 %GENCOSWIN   Returns one of the generalized cosine windows.
 %   GENCOSWIN returns the generalized cosine window specified by the 
 %   first string argument. Its inputs can be

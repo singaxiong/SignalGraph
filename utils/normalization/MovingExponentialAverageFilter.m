@@ -1,6 +1,6 @@
 % Median filter
 
-function y = MovingAverageFilter(x,filter_len)
+function y = MovingAverageFilter(x,filter_len, scale)
 
 [nf,N_ch] = size(x);
 hs = (filter_len-1)/2; % half side of the filter
@@ -9,7 +9,9 @@ x2 = [repmat(x(1,:), hs,1); x; repmat(x(end,:),hs,1)];
 if 1
     y=x;
     for i=1:nf
-        y(i,:) = mean(x2(i:i+2*hs,:));
+        tmpX = x2(i:i+2*hs,:);
+        tmpX = sign(tmpX) .* abs(tmpX).^scale;
+        y(i,:) = mean(tmpX);
     end
 else
     overlap = filter_len-1;

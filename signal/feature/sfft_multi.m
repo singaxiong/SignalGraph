@@ -27,7 +27,7 @@ if exist('window_type')==0 || length(window_type)==0
 else
     switch window_type
         case 'hamming'
-            window = hamming(frame_size);
+            window = my_hamming(frame_size);
         case 'hanning'
             window = hanning(frame_size);
         case 'rectangular'
@@ -55,7 +55,25 @@ end
 if useGPU && ~IsInGPU(x)
     x = gpuArray(x);
 end
-x_store = my_enframe(x, frame_size, frame_shift);
+
+
+if license('test', 'Signal_Toolbox')
+    x_store = my_enframe(x, frame_size, frame_shift);
+else
+    for i=1:size(x,2)
+        tmp = enframe(x(:,i), frame_size, frame_shift)';
+        if i==1
+            if useGPU
+                x_store = gpuArray.zeros(size(tmp,1), size(tmp,2), size(x,2), class(gather(x)));
+            else
+                x_store = zeros(size(tmp,1), size(tmp,2), size(x,2), class(x));
+            end
+        end
+        x_store(:,:,i) = tmp;
+    end
+    x_store = permute(x_store, [1 3 2]);
+end
+
 x_store = bsxfun(@times, x_store, window);
 
 fft_x = fft(x_store,FFT_length);

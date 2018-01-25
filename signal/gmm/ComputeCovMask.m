@@ -13,4 +13,5 @@ tmp = cellfun(@(x) gather(x*x'), data_cell, 'UniformOutput', 0);
 covMat = cell2mat(tmp);
 % covMat = cell2mat_gpu(tmp);
 
+covMat(:,:,squeeze(sum(mask)==0)) = 0;
 end
