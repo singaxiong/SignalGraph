@@ -1,6 +1,6 @@
-function output = F_SpatialCov(input_layer, curr_layer)
+function output = F_SpatialCov(input_layers, curr_layer)
 
-input = input_layer.a;
+input = input_layers{1}.a;
 [D,T,N] = size(input);
 
 curr_layer = SetDefaultValue(curr_layer, 'winSize', 0);
@@ -15,7 +15,12 @@ if N==1
     output = permute(R, [3 1 2 4]);
     output = reshape(output, nBin*nCh^2, size(output,4),N);
 else
-    % to be implemented
+    for i=1:N
+        input2 = reshape(input(:,:,i), nBin, nCh, T);
+        R = ComplexSpectrum2SpatialCov(input2, curr_layer.winSize, curr_layer.winShift);
+        outputTmp = permute(R, [3 1 2 4]);
+        output(:,:,i) = reshape(outputTmp, nBin*nCh^2, size(outputTmp,4));
+    end
 end
 
 end

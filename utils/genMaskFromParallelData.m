@@ -1,8 +1,11 @@
-function [mask, SNR, power_sig, power_noisy, power_noise] = genMaskFromParallelData(clean, early_reverbed, distorted, vad, fs, useSoftMask, threshold)
+function [mask, SNR, power_sig, power_noisy, power_noise] = genMaskFromParallelData(clean, early_reverbed, distorted, vad, fs, useSoftMask, threshold, DEBUG)
 if nargin<5
     threshold = 0;
 end
-DEBUG = 0;
+if nargin<6
+    DEBUG = 0;
+end
+
 cleanMaskType = 'count';    % how to estimate clean mask. [none|snr|floor|count]
 PowerPercentageThreshold = 0.997;   % when estiamting clean mask, we require the speech TF bins to contains at least this much of percentange of the signal. 
 
@@ -35,6 +38,7 @@ end
 if ~isempty(vad)    % the best is to use a VAD from a VAD detector
     vad_clean = single(vad>0.5);
     vad_clean = conv(vad_clean, ones(5,1), 'same')>0;
+    vad_clean(nFr+1:end) = [];
 elseif nFr>30       % or we use an eneragy based VAD
     power_noise_sig = mean([power_sig(:, 1:10) power_sig(:, end-10+1:end)], 2);
     energy_clean = sum(power_sig);
@@ -77,7 +81,7 @@ if DEBUG
     end
     plot(vad_clean*100, 'k'); hold off
     figure(2);
-    subplot(4,1,1); if useSoftMask==0; imagesc(log(power_sig)); end
+    subplot(4,1,1); if useSoftMask==0; imagesc(max(-10,log(power_sig))); end
     subplot(4,1,2); imagesc(mask_SNR); title(sprintf('SNR mask, %2.2f%% speech TF bins', sum(mask_SNR(:))/sum(vad_clean>0)/nBin*100));
     subplot(4,1,3); imagesc(mask_clean); title(sprintf('Clean mask by %s, %2.2f%% speech TF bins', cleanMaskType, sum(mask_clean(:))/sum(vad_clean>0)/nBin*100));
     subplot(4,1,4); imagesc(mask); title(sprintf('Final mask, %2.2f%% speech TF bins', sum(mask(:))/sum(vad_clean>0)/nBin*100));

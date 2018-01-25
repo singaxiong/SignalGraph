@@ -4,8 +4,8 @@ if nargin<5
 end
 inputDim = double(inputDim);
 
-layer{1} = InputNode(1,1);
-layer{end}.dim = [1 1]*inputDim;
+inputStreamIdx = 1;
+layer{1} = InputNode(1,inputStreamIdx,inputDim);
 
 for i=1:length(hiddenLayerSize)
     layer{end+1} = AffineNode(length(layer)+1);
@@ -20,7 +20,7 @@ for i=1:length(hiddenLayerSize)
 end
 
 layer{end+1} = AffineNode(length(layer)+1);
-if length(hiddenLayerSize)==0
+if isempty(hiddenLayerSize)
     layer{end}.dim = [outputDim inputDim];
 else
     layer{end}.dim = [outputDim hiddenLayerSize(end)];
@@ -31,12 +31,12 @@ if strcmpi(costFn, 'CrossEntropy')
     layer{end}.dim = [1 1]*outputDim;
 end
 
-layer{end+1} = InputNode(length(layer)+1,2);
-layer{end}.dim = [1 1]*inputDim;
-
+inputStreamIdx = inputStreamIdx +1;
 if strcmpi(costFn, 'CrossEntropy')
+    layer{end+1} = InputNode(length(layer)+1,inputStreamIdx, 1);
     layer{end+1} = CrossEntropyNode(length(layer)+1);
 else
+    layer{end+1} = InputNode(length(layer)+1,inputStreamIdx, outputDim);
     hasActivation = 0;
     switch LastActivation4MSE
         case 'linear'

@@ -2,7 +2,11 @@
 function gradOut = PadGradientVariableLength(grad, mask)
 [D,T] = size(grad);
 [nFr, nSeg] = size(mask);
-nFrActual = gather(sum(mask==0));
+if nFr == 1
+    nFrActual = ones(nFr, nSeg);
+else
+    nFrActual = gather(sum(mask==0));
+end
 if sum(nFrActual)~=T
     fprintf('Error: the number of valid frames is not the same as the size of gradient\n');
 end
