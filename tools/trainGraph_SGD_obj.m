@@ -89,20 +89,11 @@ for itr = startItr:para.maxItr
 
     pause(1);
 
-    % reshuffle data in every iteration
-%     switch para.IO.mode
-%         case 'normal'
-%         case 'dynamicPair'
-%             if ~exist('base_data', 'var'); base_data = data; end  % in the first time, we store data into base_data;
-%             data = GenDynamicPairs(base_data, para);
-%         case 'dynamicDistortion'
-%             if ~exist('base_data', 'var'); base_data = data; end  % in the first time, we store data into base_data;
-%             para.IO.DynamicDistortion.single = para.single;
-%             [data, para] = GenDynamicDistortion(base_data, para.IO.DynamicDistortion);
-%         case 'dynamicMixture'
-%             if ~exist('base_data', 'var'); base_data = data; end  % in the first time, we store data into base_data;
-%             [data, para] = GenDynamicMixture(base_data, para);
-%     end
+    % generate the data for current iteration. In normal mode, we do
+    % nothing and use the same data for every iteration. If the mode is
+    % dynamicSimulation, we will generate distorted speech again for each
+    % iteration. 
+    data = data.GenIterationData();
     
     % shuffle the training data, separate them into data blocks. One block
     % will be read into the memory. 

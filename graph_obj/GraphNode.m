@@ -12,7 +12,7 @@ classdef GraphNode
         a = [];     % activation
         mask = [];  % mask of whether a particular frame of a sequence is valid
         grad = [];  % gradient of data
-        dim = [];   % feature dimension of the output
+        dim = [0 0];   % feature dimension of the output
         rho = [];   % the statistics for L1 norm
         
         % configurations
@@ -23,9 +23,9 @@ classdef GraphNode
     end
     
     methods
-        function obj = GraphNode(name, myIdx)
+        function obj = GraphNode(name,dimOut)
             obj.name = name;
-            obj.myIdx = myIdx;
+            obj.dim(1) = dimOut;
         end
         function obj = forward(obj, prev_layers)
             if obj.L1weight>0

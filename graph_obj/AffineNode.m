@@ -1,8 +1,8 @@
 classdef AffineNode < GraphNodeUpdatable
     
     methods
-        function obj = AffineNode(myIdx)
-            obj = obj@GraphNodeUpdatable('affine', myIdx);
+        function obj = AffineNode(dimOut)
+            obj = obj@GraphNodeUpdatable('affine', dimOut);
         end
         
         function obj = initialize(obj, gauss, negbias, r)

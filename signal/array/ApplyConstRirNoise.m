@@ -49,12 +49,22 @@ if ~isempty(NOISE)
     if useGPU
         NOISE = gpuArray(NOISE);
     end
-    NOISE_ref=NOISE(:,1);
+
+    nCh = size(rev_y,2);
+    if nCh>1 && size(NOISE,2) == 1     % if we use single channel noise to mix with multi-channel input, we add randomness to the noise.
+        randomness4noise = randn(size(NOISE,1), nCh);
+        alpha = 0.5;
+        randomness4noise = bsxfun(@times, randomness4noise, abs(NOISE)*alpha);    % scale the randomness by the noise itself.
+        % for noise sample with higher absolute amplitude, we use larger randomness and vice versa
+        NOISE2 = bsxfun(@plus, randomness4noise, NOISE);
+    end
     
+    NOISE_ref=NOISE(:,1);
     iPn = diag(1./mean(NOISE_ref.^2,1));
     Px = diag(mean(direct_signal.^2,1));
     Msnr = sqrt(10^(-SNRdB/10)*iPn*Px);
     scaled_NOISE = NOISE*Msnr;
+    
     y = bsxfun(@plus, rev_y, scaled_NOISE);
 else
     y = rev_y;

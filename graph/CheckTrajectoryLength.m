@@ -4,7 +4,7 @@
 %
 function [mask, variableLength] = CheckTrajectoryLength(data)
 
-mask = squeeze(data(1,:,:)) == -1e10;
+mask = permute(data(1,:,:), [2 3 1]) == -1e10;
 
 variableLength = sum(mask(:));
 

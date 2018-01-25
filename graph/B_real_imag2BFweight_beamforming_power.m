@@ -23,6 +23,7 @@ else
     grad = cell2mat_gpu(grad);
     grad = PadGradientVariableLength(grad, maskWeight);
 end
+grad = conj(grad);
 
 end
 

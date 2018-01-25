@@ -1,8 +1,8 @@
 classdef SigmoidNode < GraphNode
     
     methods
-        function obj = SigmoidNode(myIdx)
-            obj = obj@GraphNode('Sigmoid', myIdx);
+        function obj = SigmoidNode(dimOut)
+            obj = obj@GraphNode('Sigmoid',dimOut);
         end
         
         function obj = forward(obj,prev_layers)

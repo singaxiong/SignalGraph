@@ -1,4 +1,4 @@
-function visualize1stLayer_weight(W, blk_m, blk_n, patch_m, orderedByNorm, normalizeWeight)
+function visualizeLayerWeight(W, blk_m, blk_n, patch_m, orderedByNorm, normalizeWeight)
 if nargin<6
     normalizeWeight=0;
 end

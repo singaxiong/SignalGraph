@@ -13,8 +13,6 @@ classdef SignalGraph
         function obj = SignalGraph()
         end
         
-        
-        
         function obj = initialize(obj, useGaussInit, useNegbiasInit)
             if nargin<3; useNegbiasInit = 0; end
             if nargin<2; useGaussInit = 0; end
@@ -34,7 +32,7 @@ classdef SignalGraph
                 end
             end
             
-            for i=1:length(obj.WeightTyingSet)
+            for i=1:length(obj.WeightTyingSet)    % not tested yet
                 currTyingSet = obj.WeightTyingSet{i};
                 [dimMismatch, isTranspose] = VerifyTiedLayers(obj.layer(currTyingSet));
                 
@@ -58,7 +56,7 @@ classdef SignalGraph
             % set weight update order 
             obj = obj.genWeightUpdateOrder();
             % 
-            obj.layer = DetermineGradientPass(obj.layer);
+            obj = obj.DetermineGradientPass();
             
         end
          
@@ -67,22 +65,21 @@ classdef SignalGraph
         
         function [cost_func_tmp, obj] = forwardBackward(obj, batch_data, para, mode)
             layer = obj.layer;
-            precision = para.precision;
             
             % Run forward propogation
-            for i=1:obj.nLayer
-                if isfield(layer{i}, 'prev')
-                    prev_layers = layer(i+layer{i}.prev);    
+            for i=1:length(obj.layer)
+                if layer{i}.prev>0
+                    prev_layers = {}; 
                 else
-                    prev_layers = {};
+                    prev_layers = layer(i+layer{i}.prev);    
                 end
                 switch lower(layer{i}.name)
                     case 'ignore'
                         % do nothing
-                    case 'input'
+                    case {'input', 'weight2activation'}
                         layer{i}.a = batch_data{layer{i}.prev};
                     otherwise
-                        layer{i} = layer{i}.forward(prev_layers, precision);
+                        layer{i} = layer{i}.forward(prev_layers);
                 end
             end
             
@@ -442,14 +439,14 @@ classdef SignalGraph
     methods (Access = protected)
         function obj = genWeightUpdateOrder(obj)
             % define the set of parameters to be updated
-            obj.weightUpdateOrder = obj.WeightTyingSet;
-            already_in_set = cell2mat(obj.weightUpdateOrder);
+            obj.WeightUpdateOrder = obj.WeightTyingSet;
+            already_in_set = cell2mat(obj.WeightUpdateOrder);
             
             for i=length(obj.layer):-1:1
-                if IsUpdatableNode(obj.layer{i}.name)==0; continue; end
-                if obj.layer{i}.update == 0; continue; end
+                if ~isprop(obj.layer{i}, 'updateWeight'); continue; end
+                if obj.layer{i}.updateWeight + obj.layer{i}.updateBias == 0; continue; end
                 if ismember(i, already_in_set); continue; end
-                obj.weightUpdateOrder{end+1} = i;
+                obj.WeightUpdateOrder{end+1} = i;
                 already_in_set(end+1) = i;
             end
         end
@@ -465,29 +462,45 @@ classdef SignalGraph
         end
         
         
-        function obj = DetermineGradientPass(obj,layer)
+        function obj = DetermineGradientPass(obj)
             % find the parent of every layer
-            parent = DetermineLayerParent(layer);
+            parent = obj.DetermineLayerParent();
             
-            skipBP = zeros(length(layer),1);
-            for i=1:length(layer)
-                if isfield(layer{i}, 'skipBP')
-                    skipBP(i) = layer{i}.skipBP;
+            skipBP = zeros(length(obj.layer),1);
+            for i=1:length(obj.layer)
+                if isprop(obj.layer{i}, 'skipBP')
+                    skipBP(i) = obj.layer{i}.skipBP;
                 end
             end
             
-            update = zeros(length(layer),1);
-            for i=1:length(layer)
-                if isfield(layer{i}, 'update')
-                    update(i) = layer{i}.update;
+            update = zeros(length(obj.layer),1);
+            for i=1:length(obj.layer)
+                if isprop(obj.layer{i}, 'updateWeight')
+                    update(i) = obj.layer{i}.updateWeight + obj.layer{i}.updateBias;
                 end
             end
             
-            for i=1:length(layer)
-                if IsUpdatableNode(layer{i}.name)==0; continue; end
+            for i=1:length(obj.layer)
+                if IsUpdatableNode(obj.layer{i}.name)==0; continue; end
                 if skipBP(i); continue; end
                 
-                layer{i}.passGradBack = sum(update(parent{i}))>0;
+                obj.layer{i}.skipGrad = sum(update(parent{i}))==0;
+            end
+        end
+        
+        % find the parent of every layer
+        function parent = DetermineLayerParent(obj)
+            for i=1:length(obj.layer)
+                switch lower(obj.layer{i}.name)
+                    case {'weight2activation', 'input'}
+                        parent{i} = [];
+                    otherwise
+                        immediateParent = i+obj.layer{i}.prev;
+                        parent{i} = [];
+                        for j=immediateParent
+                            parent{i} = [parent{i} j parent{j}];
+                        end
+                end
             end
         end
         
@@ -513,7 +526,6 @@ classdef SignalGraph
             end
             
         end
-        
     end
 end
 

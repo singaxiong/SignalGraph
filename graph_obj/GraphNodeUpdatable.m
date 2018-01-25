@@ -14,8 +14,8 @@ classdef GraphNodeUpdatable < GraphNode
     end
     
     methods
-        function obj = GraphNodeUpdatable(name, myIdx)
-            obj = obj@GraphNode(name, myIdx);
+        function obj = GraphNodeUpdatable(name, dimOut)
+            obj = obj@GraphNode(name, dimOut);
         end
         function obj = initialize(obj)
         end

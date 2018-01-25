@@ -156,12 +156,17 @@ for i=1:nLayer
             if para.checkGradient; layer{i}.doDithering=0; end
             [layer{i}.a, layer{i}.validFrameMask] = F_stft(prev_layers{1}, layer{i});
             
+            
+        case 'spatialcov'
+            layer{i}.a = F_SpatialCov(prev_layers, layer{i});
         case 'spatialcovmask'
             layer{i}.a = F_SpatialCovMask(prev_layers, layer{i});       % do not support variable length yet
         case 'spatialcovsplitmask'
             layer{i}.a = F_SpatialCovSplitMask(prev_layers, layer{i});       % do not support variable length yet
         case 'mvdr_spatialcov'
-            layer{i} = F_MVDR_spatialCov(prev_layers{1}, layer{i});       % do not support variable length yet
+            layer{i}.a = F_MVDR_spatialCov(prev_layers{1}, layer{i});       % do not support variable length yet
+        case 'spatialcovfeature'
+            layer{i}.a = F_SpatialCovFeature(prev_layers, layer{i});
             
         case 'cov'
             layer{i}.a = F_cov(prev_layers{1}.a);       % do not support variable length yet
@@ -189,6 +194,8 @@ for i=1:nLayer
             layer{i}.a = F_jointCost(prev_layers{1}, layer{i});
     	case 'cross_entropy'
     		[layer{i}.a, layer{i}.acc] = F_cross_entropy(prev_layers, layer{i});
+    	case 'multi_logistic'
+    		[layer{i}.a, layer{i}.acc] = F_multi_logistic(prev_layers, layer{i});
     	case 'multi_cross_entropy'
     		[layer{i}.a, layer{i}.acc] = F_multi_cross_entropy(prev_layers, layer{i});
         case 'lstm'
@@ -327,6 +334,8 @@ for i=nLayer:-1:1
     switch lower(layer{i}.name)
         case {'input', 'idx2vec', 'enframe', 'comp_gcc', 'stft'} % do nothing
         
+        case 'linear'
+            layer{i}.grad = B_linear(future_layers, layer{i});
         case 'frame_select'
             layer{i}.grad = B_frame_select(prev_layers{1}, future_layers, layer{i});
         case 'reshape'
@@ -370,6 +379,10 @@ for i=nLayer:-1:1
     		% layer{i}.grad = B_cross_entropy(layer(i+layer{i}.prev));
         case 'logistic'
             layer{i}.grad = B_logistic(prev_layers, layer{i});
+            layer{i}.grad = SetCostWeightOnGrad(layer{i}.grad, para.cost_func, i);
+            
+        case 'multi_logistic'
+            layer{i}.grad = B_multi_logistic(prev_layers, layer{i});
             layer{i}.grad = SetCostWeightOnGrad(layer{i}.grad, para.cost_func, i);
             
         % temporal layers: require sequential training
@@ -421,12 +434,12 @@ for i=nLayer:-1:1
 %             layer{i}.grad = B_tdoa2weight_beamforming_power(X, beamform_layer, after_power_layer, layer{i});
     		layer{i}.grad = B_tdoa2weight(future_layers, layer{i});
         case 'real_imag2bfweight'
-            beamform_layer = layer{i+layer{i}.next};
-            [X] = prepareBeamforming(layer(i+layer{i}.next+beamform_layer.prev));
-            power_layer = layer{i+beamform_layer.next+layer{i}.next};
-            after_power_layer = layer{i+beamform_layer.next+layer{i}.next+power_layer.next};
-            layer{i}.grad = B_real_imag2BFweight_beamforming_power(X, beamform_layer, after_power_layer, layer{i}, layer{i-1}.a);
-            % layer{i}.grad = B_real_imag2BFweight(layer{i+layer{i}.next}.grad, size(layer{i+layer{i}.prev}.a,2));
+%             beamform_layer = layer{i+layer{i}.next};
+%             [X] = prepareBeamforming(layer(i+layer{i}.next+beamform_layer.prev));
+%             power_layer = layer{i+beamform_layer.next+layer{i}.next};
+%             after_power_layer = layer{i+beamform_layer.next+layer{i}.next+power_layer.next};
+%             layer{i}.grad = B_real_imag2BFweight_beamforming_power(X, beamform_layer, after_power_layer, layer{i}, layer{i-1}.a);
+            layer{i}.grad = B_real_imag2BFweight(future_layers, layer{i}, size(layer{i+layer{i}.prev}.a,2));
         case 'realimag2complex'
             layer{i}.grad = B_realImag2complex(future_layers, layer{i});
         case 'spatialcovmask'

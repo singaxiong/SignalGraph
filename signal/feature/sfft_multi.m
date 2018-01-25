@@ -78,3 +78,10 @@ x_store = bsxfun(@times, x_store, window);
 
 fft_x = fft(x_store,FFT_length);
 
+N = FFT_length;
+n = 0:N-1;
+k = 0:N-1;
+DFT_Trans = exp(-sqrt(-1)*2*pi*n(:)*k(:)'/N);
+spec = DFT_Trans(1:N/2+1,1:frame_size) * squeeze(x_store(:,1,:));
+
+end
