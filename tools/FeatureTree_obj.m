@@ -10,10 +10,11 @@ for i=1:length(layer)
 end
 para.NET.sentenceMinibatch = 1;
 visible = visible.ShuffleData(para);
+randomOrder = 0;
 
 output = {}; layerOut = {};
 for blk_i = 1:visible.nBlock
-    minibatch = visible.PrepareMinibatch(para.precision, 1, para.NET.batchSize, blk_i);
+    minibatch = visible.PrepareMinibatch(para.precision, 1, para.NET.batchSize, blk_i,randomOrder);
     nMinibatch = size(minibatch,2);
     
     for utt_i = 1:nMinibatch

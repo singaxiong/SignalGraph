@@ -73,7 +73,7 @@ classdef GraphInput
         end
         
         
-        function minibatch = PrepareMinibatch(obj, dataType, sentenceBasedMinibatch, batchSize, blockIdx)
+        function minibatch = PrepareMinibatch(obj, dataType, sentenceBasedMinibatch, batchSize, blockIdx, randomOrder)
             currSentIdx = obj.sentIdxInBlock{blockIdx};
             nUtt = length(currSentIdx);
             feat = cell(obj.nStream, nUtt);
@@ -86,7 +86,11 @@ classdef GraphInput
                 nSeqInMB = batchSize;
                 nSeq = size(feat,2);
                 obj.nMiniBatch = ceil(nSeq/nSeqInMB);
-                randSegIdx = randperm(nSeq);
+                if randomOrder
+                    randSegIdx = randperm(nSeq);
+                else
+                    randSegIdx = 1:nSeq;
+                end
                 for i=1:obj.nStream
                     featInStream = cell2mat_tensor3D(feat(i,:));
                     featInStream(:,:,randSegIdx) = featInStream;    % randomlize the patches
@@ -97,7 +101,11 @@ classdef GraphInput
             else                                        % use randomly ordered frames as minibatch
                 nFr = cellfun('size', feat(1,:),2);   % get the number of frames in each utterance
                 % generate random frame index
-                randFrameIdxInBlock = randperm(sum(nFr));   % if we don't use sentence minibatch, all data streams must be synchronized. It is enough to just use the first stream to compute number of frames
+                if randomOrder
+                    randFrameIdxInBlock = randperm(sum(nFr));   % if we don't use sentence minibatch, all data streams must be synchronized. It is enough to just use the first stream to compute number of frames
+                else
+                    randFrameIdxInBlock = 1:sum(nFr);
+                end
                 for i=1:obj.nStream
                     if isVAD(i); continue; end
                     feat_random{i} = cell2mat(feat(i,:));

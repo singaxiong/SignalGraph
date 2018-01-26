@@ -73,6 +73,7 @@ end
 nHourSeen = 0;
 nHourSeen_reduce_lr = 0.5;       % this equals to about 0.5 hours of speech features if frame rate is 100Hz
 next_Milestone = nHourSeen_reduce_lr*1;
+randomOrder = 1;
 
 if isfield(para, 'saveModelEveryXhours')
     next_Milestong_save = para.saveModelEveryXhours;
@@ -133,12 +134,12 @@ for itr = startItr:para.maxItr
         
         % prepare minibatches
         if blk_i == 1 || ~para.IO.asyncFileRead
-            minibatch = data.PrepareMinibatch(para.precision, para.NET.sequential, para.NET.batchSize, blk_i);
+            minibatch = data.PrepareMinibatch(para.precision, para.NET.sequential, para.NET.batchSize, blk_i, randomOrder);
         else
             minibatch = fetchOutputs(MinibatchJob);     % collect the data from the work. It will block the main thread if the worker hasn't finished. 
         end
         if para.IO.asyncFileRead && blk_i<data.nBlock   % call a worker to load the next block of data in background
-            MinibatchJob = parfeval(WorkerPool,@data.PrepareMinibatch,1, para.precision, para.NET.sequential, para.NET.batchSize, blk_i+1);
+            MinibatchJob = parfeval(WorkerPool,@data.PrepareMinibatch,1, para.precision, para.NET.sequential, para.NET.batchSize, blk_i+1, randomOrder);
         end
         
         % ----------- train the network on current block ------------- %

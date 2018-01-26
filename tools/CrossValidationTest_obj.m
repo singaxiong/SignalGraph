@@ -10,6 +10,7 @@ data = data.ShuffleData(para);
 cost_cv = [];
 if para.useGPU; 	cost_cv= gpuArray(cost_cv);        end
 cost_cv_pure = cost_cv; subcost = cost_cv;    subacc = cost_cv;
+randomOrder = 0;
 
 nTestSample = [];
 for blk_i = 1:data.nBlock
@@ -20,12 +21,12 @@ for blk_i = 1:data.nBlock
     end
     
     if blk_i == 1 || ~para.IO.asyncFileRead
-        minibatch = data.PrepareMinibatch(para.precision, para.NET.sequential, para.NET.batchSize, blk_i);
+        minibatch = data.PrepareMinibatch(para.precision, para.NET.sequential, para.NET.batchSize, blk_i, randomOrder);
     else
         minibatch = fetchOutputs(MinibatchJob);     % collect the data from the work. It will block the main thread if the worker hasn't finished.
     end
     if ~isempty(WorkerPool) && para.IO.asyncFileRead && blk_i<data.nBlock   % call a worker to load the next block of data in background
-        MinibatchJob = parfeval(WorkerPool,@data.PrepareMinibatch,1, para.precision, para.NET.sequential, para.NET.batchSize, blk_i+1);
+        MinibatchJob = parfeval(WorkerPool,@data.PrepareMinibatch,1, para.precision, para.NET.sequential, para.NET.batchSize, blk_i+1, randomOrder);
     end
     
     nMiniBatch = size(minibatch,2);
