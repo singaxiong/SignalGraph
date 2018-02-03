@@ -22,14 +22,14 @@ for i=1:length(files)
         % read in multichannel waveforms
         if isfield(reader, 'multiArrayFiles') && reader.multiArrayFiles     % when the different channels are stored in different files
             for j=1:length(files{i})
-                [tmp_wav, fs] = Reader_waveform_core(files{i}{j}, reader.fs);
+                [tmp_wav, fs] = Reader_waveform_core(files{i}{j}, reader);
                 if j==1
                     wav = zeros(length(files{i}), length(tmp_wav));
                 end
                 wav(j,:) = tmp_wav;
             end
         else                                                                % when the different channels are stored in the same file
-            [wav, fs] = Reader_waveform_core(files{i}, reader.fs);
+            [wav, fs] = Reader_waveform_core(files{i}, reader);
         end
         % optional selection of channels
         if isfield(reader, 'useChannel')
