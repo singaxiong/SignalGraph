@@ -6,7 +6,7 @@
 %
 function covMat = ComputeCovMask(data, mask)
 
-weight = sqrt(bsxfun(@times, mask, 1./sum(mask)));
+weight = sqrt(bsxfun(@times, mask, 1./sum(mask,2)));
 data_scaled = bsxfun(@times, data, weight);
 data_cell = num2cell(data_scaled, [1 2]);       % convert to cell array and call cellfun for speed
 tmp = cellfun(@(x) gather(x*x'), data_cell, 'UniformOutput', 0);
