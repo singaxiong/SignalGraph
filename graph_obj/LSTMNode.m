@@ -1,4 +1,0 @@
-classdef LSTM < GraphNode
-    
-    
-end

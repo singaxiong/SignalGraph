@@ -13,3 +13,4 @@ examples/enhancement/nnet/*
 examples/separation/debug/*
 examples/separation/nnet/*
 examples/generative/*
+design_notes/*

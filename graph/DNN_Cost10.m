@@ -164,7 +164,7 @@ for i=1:nLayer
         case 'spatialcovsplitmask'
             layer{i}.a = F_SpatialCovSplitMask(prev_layers, layer{i});       % do not support variable length yet
         case 'mvdr_spatialcov'
-            layer{i}.a = F_MVDR_spatialCov(prev_layers{1}, layer{i});       % do not support variable length yet
+            layer{i} = F_MVDR_spatialCov(prev_layers{1}, layer{i});       % do not support variable length yet
         case 'spatialcovfeature'
             layer{i}.a = F_SpatialCovFeature(prev_layers, layer{i});
             

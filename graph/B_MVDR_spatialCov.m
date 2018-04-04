@@ -29,7 +29,7 @@ if N>1
     XUtt = ExtractVariableLengthTrajectory(X, validMask);
     for i=1:N
         grad{i} = GetGradUtt(reshape(XUtt{i},D,C,size(XUtt{i},2)),YUtt{i},phi_s(:,:,:,:,i), phi_n(:,:,:,:,i), ...
-            weight(:,:,i), lambda(:,:,:,:,i), future_gradUtt{i}, noiseCovL2);
+            weight(:,:,i), lambda(:,:,:,:,i), future_gradUtt{i}, future_grad2(:,:,i), noiseCovL2);
     end
     grad = cell2mat_gpu(grad);
     grad = permute(grad, [1 3 2]);

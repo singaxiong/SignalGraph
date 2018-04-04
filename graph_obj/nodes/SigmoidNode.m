@@ -6,24 +6,28 @@ classdef SigmoidNode < GraphNode
         end
         
         function obj = forward(obj,prev_layers)
+            obj = obj.preprocessingForward(prev_layers);
+            
             input = prev_layers{1}.a;
             obj.a = sigmoid(input);
-            obj = forward@GraphNode(prev_layers);
+            obj = forward@GraphNode(obj, prev_layers);
         end
         
-        function obj = backward(obj,future_layers, prev_layers)
+        function obj = backward(obj,prev_layers, future_layers)
             if obj.skipGrad || obj.skipBP
                 return;
             end
             
-            future_grad = GetFutureGrad(future_layers);
+            future_grad = obj.GetFutureGrad(future_layers);
             
-            if isfield(curr_layer, 'rho')
+            if obj.L1weight>0 
                 tmp = -obj.L1target./max(1e-3,obj.rho) + (1-obj.L1target)./max(1e-3,(1-obj.rho));
                 future_grad = future_grad + repmat(obj.L1weight * tmp, 1, size(future_grad,2));
             end
             
-            obj.grad = future_grad .* obj.a .* (1-obj.a);
+            obj.grad{1} = future_grad .* obj.a .* (1-obj.a);
+
+            obj = backward@GraphNode(obj, prev_layers, future_layers);
         end
         
     end

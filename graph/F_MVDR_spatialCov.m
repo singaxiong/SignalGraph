@@ -32,11 +32,12 @@ noiseCov_cell = num2cell(noiseCov, [1 2]);
 if noiseCovL2 > 0
     eig_val = cellfun(@GetEigVal, noiseCov_cell, 'UniformOutput', 0);
     eig_val = cell2mat(eig_val);
-    noise_floor = eig_val(end,:,:) * noiseCovL2;    
+    noise_floor = eig_val(end,:,:,:,:) * noiseCovL2;
+    noise_floor(:) = 100;
     % because our noise floor depends on noise covariance and network
     % parameters, it will not be able to pass through gradient check. This
     % is because we didn't consider this dependancy in the backpropagation.
-    % But this should not have much effect on the training. 
+    % But this should not have much effect on the training.
     noise_floor_cell = num2cell(noise_floor, 1);
     noiseCov_cell = cellfun(@DiagLoading, noiseCov_cell, noise_floor_cell, 'UniformOutput', 0);
 end

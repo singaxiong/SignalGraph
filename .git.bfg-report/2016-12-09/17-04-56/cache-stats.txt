@@ -1,0 +1,4 @@
+(apply,CacheStats{hitCount=115, missCount=147, loadSuccessCount=147, loadExceptionCount=0, totalLoadTime=2897813654, evictionCount=0})
+(tree,CacheStats{hitCount=499, missCount=281, loadSuccessCount=269, loadExceptionCount=0, totalLoadTime=2426453728, evictionCount=0})
+(commit,CacheStats{hitCount=79, missCount=75, loadSuccessCount=75, loadExceptionCount=0, totalLoadTime=779388340, evictionCount=0})
+(tag,CacheStats{hitCount=0, missCount=0, loadSuccessCount=0, loadExceptionCount=0, totalLoadTime=0, evictionCount=0})

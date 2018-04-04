@@ -17,7 +17,7 @@ end
 
 M = size(input,1);%the number of channels in the array
 N = size(input,2);%%total length of input signal
-window = hamming(winSize);
+window = my_hamming(winSize);
 
 winShift = round(winSize * (1-overlap));
 X = my_enframe(input', winSize, winShift, 1-overlap/2);

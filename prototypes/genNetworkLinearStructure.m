@@ -1,7 +1,14 @@
-function layer = genNetworkFeedForward_obj_auto(inputDim, hiddenLayerSize, outputDim, costFn, LastActivation4MSE)
-if nargin<5
-    LastActivation4MSE = 'linear';
+% generate a network with linear structure using descriptive config
+
+function layer = genNetworkLinearStructure(config)
+
+for i=1:length(config)
+    currConfig = config{i};
+    
+    
 end
+
+
 inputDim = double(inputDim);
 
 inputStreamIdx = 1;

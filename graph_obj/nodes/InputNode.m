@@ -3,9 +3,9 @@ classdef InputNode < GraphNode
     end
     methods
         function obj = InputNode(inputIndex, dimOut)
-            obj = obj@GraphNode('input', dimOut);
+            obj = obj@GraphNode('Input', dimOut);
             obj.prev = inputIndex;
-            obj.dim(2) = dimOut;
+            obj.dim(3:4) = obj.dim(1:2);
         end
     end
     
