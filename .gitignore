@@ -13,4 +13,5 @@ examples/enhancement/nnet/*
 examples/separation/debug/*
 examples/separation/nnet/*
 examples/generative/*
+.git.bfg-report/*
 design_notes/*
