@@ -1,5 +1,3 @@
-% Given multi-channel data and speaker profiles, perform speech separation
-
 classdef MicArray
     properties
         nCh = 2;
